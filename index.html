@@ -137,7 +137,8 @@
     </div>
 
     <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZT0TI69GZp0zphQgSh_MvicnNIvUtup59ucD-0vqrl-SpOGFcK7DT0h0TmEuDcw5Mdg/exec";
+        // Đã cập nhật lại đúng URL Web App từ ảnh màn hình Apps Script của bạn
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymskkZM2IzdEcDaRpVE_xFlYz9OESLt9YiVJ5yvYMuOQjb5D53i1GC3Nw_7izWXxiFOg/exec";
 
         window.onload = function() {
             loadDataFromSheet();
@@ -188,9 +189,9 @@
                 <td>${row[6] || ''}</td>
                 <td>${row[7] || ''}</td>
                 <td class="text-center">${row[8] || ''}</td>
-                <td class="text-right">${row[9] || ''}</td>
-                <td class="text-right">${row[10] || ''}</td>
-                <td class="text-right">${row[11] || ''}</td>
+                <td class="text-right">${row[9] !== undefined ? row[9] : ''}</td>
+                <td class="text-right">${row[10] !== undefined ? row[10] : ''}</td>
+                <td class="text-right">${row[11] !== undefined ? row[11] : ''}</td>
                 <td>${row[12] || ''}</td>
                 <td>${row[13] || ''}</td>
                 <td>${row[14] || ''}</td>
@@ -265,16 +266,15 @@
 
                 fetch(GOOGLE_SCRIPT_URL, {
                     method: "POST",
-                    mode: "no-cors",
                     headers: {
-                        "Content-Type": "text/plain"
+                        "Content-Type": "text/plain;charset=utf-8"
                     },
                     body: payload
                 })
                 .then(() => {
                     showLoading(false);
                     alert("Đã gửi dữ liệu thành công! Đang tải lại danh sách...");
-                    setTimeout(loadDataFromSheet, 2000);
+                    setTimeout(loadDataFromSheet, 1500);
                 })
                 .catch(err => {
                     console.error("Lỗi khi tải dữ liệu:", err);
