@@ -122,10 +122,10 @@
                     <th>Số lượng mua</th>
                     <th>Đơn giá</th>
                     <th>Giá trị mua</th>
-                    <th>Giá cost</th>
                     <th>Chiết khấu</th>
-                    <th>Sell in</th>
-                    <th>Sell out</th>
+                    <th>Số lượng trả lại</th>
+                    <th>Giá trị trả lại</th>
+                    <th>Giá trị giảm giá</th>
                 </tr>
             </thead>
             <tbody>
@@ -156,7 +156,36 @@
     </div>
 
     <script>
-        // Xử lý đọc file Excel và nạp vào Bảng
+        // Hàm chuyển đổi dữ liệu ô Ngày từ Excel (Số Serial hoặc Object Date) thành dd/mm/yyyy
+        function formatDate(value) {
+            if (!value) return '';
+            
+            // Trường hợp dữ liệu dạng Date object
+            if (value instanceof Date) {
+                var d = value.getDate().toString().padStart(2, '0');
+                var m = (value.getMonth() + 1).toString().padStart(2, '0');
+                var y = value.getFullYear();
+                return `${d}/${m}/${y}`;
+            }
+
+            // Trường hợp dữ liệu là số sê-ri ngày của Excel (ví dụ 46290)
+            if (typeof value === 'number' || !isNaN(value)) {
+                var num = Number(value);
+                if (num > 30000 && num < 60000) { // Khoảng giá trị phù hợp với Serial Date
+                    var date = XLSX.SSF.parse_date_code(num);
+                    if (date) {
+                        var d = date.d.toString().padStart(2, '0');
+                        var m = date.m.toString().padStart(2, '0');
+                        var y = date.y;
+                        return `${d}/${m}/${y}`;
+                    }
+                }
+            }
+
+            return value;
+        }
+
+        // Xử lý đọc file Excel
         function importExcel(input) {
             var file = input.files[0];
             if (!file) return;
@@ -164,19 +193,17 @@
             var reader = new FileReader();
             reader.onload = function(e) {
                 var data = new Uint8Array(e.target.result);
-                var workbook = XLSX.read(data, {type: 'array'});
+                // Đọc file với tùy chọn chuyển đổi cellDates
+                var workbook = XLSX.read(data, {type: 'array', cellDates: true, dateNF: 'dd/mm/yyyy'});
                 var firstSheetName = workbook.SheetNames[0];
                 var worksheet = workbook.Sheets[firstSheetName];
                 
-                // Chuyển sheet thành mảng dữ liệu (bỏ qua dòng tiêu đề nếu cần)
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, raw: true});
                 var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
                 
-                // Bắt đầu đọc từ dòng thứ 2 (chỉ số 1) để bỏ qua tiêu đề cột trong Excel
                 for (var i = 1; i < jsonData.length; i++) {
                     var row = jsonData[i];
-                    if (row.length === 0) continue;
+                    if (!row || row.length === 0) continue;
 
                     var newRow = tbody.insertRow();
                     newRow.innerHTML = `
@@ -184,10 +211,10 @@
                             <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
                             <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
                         </td>
-                        <td class="text-center">${row[0] || ''}</td>
-                        <td class="text-center">${row[1] || ''}</td>
+                        <td class="text-center">${formatDate(row[0])}</td>
+                        <td class="text-center">${formatDate(row[1])}</td>
                         <td>${row[2] || ''}</td>
-                        <td class="text-center">${row[3] || ''}</td>
+                        <td class="text-center">${formatDate(row[3])}</td>
                         <td>${row[4] || ''}</td>
                         <td>${row[5] || ''}</td>
                         <td>${row[6] || ''}</td>
@@ -202,7 +229,7 @@
                         <td>${row[15] || ''}</td>
                     `;
                 }
-                input.value = ''; // Reset input file
+                input.value = '';
             };
             reader.readAsArrayBuffer(file);
         }
