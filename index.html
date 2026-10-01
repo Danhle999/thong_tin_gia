@@ -131,13 +131,12 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Dữ liệu sẽ được tự động tải từ Google Sheet vào đây -->
+                <!-- Dữ liệu từ Google Sheet hiển thị ở đây -->
             </tbody>
         </table>
     </div>
 
     <script>
-        // Dán URL Web App Google Apps Script của anh vào đây:
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZT0TI69GZp0zphQgSh_MvicnNIvUtup59ucD-0vqrl-SpOGFcK7DT0h0TmEuDcw5Mdg/exec";
 
         window.onload = function() {
@@ -151,20 +150,25 @@
         // Tải dữ liệu từ Google Sheets về hiển thị
         function loadDataFromSheet() {
             showLoading(true);
-            fetch(GOOGLE_SCRIPT_URL)
-                .then(res => res.json())
-                .then(data => {
-                    var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
-                    tbody.innerHTML = "";
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "GET",
+                redirect: "follow"
+            })
+            .then(res => res.json())
+            .then(data => {
+                var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+                tbody.innerHTML = "";
+                if (Array.isArray(data)) {
                     data.forEach(row => {
                         appendRowToTable(row);
                     });
-                    showLoading(false);
-                })
-                .catch(err => {
-                    console.error(err);
-                    showLoading(false);
-                });
+                }
+                showLoading(false);
+            })
+            .catch(err => {
+                console.error("Lỗi khi tải dữ liệu:", err);
+                showLoading(false);
+            });
         }
 
         function appendRowToTable(row) {
@@ -217,72 +221,71 @@
             return value;
         }
 
-// Tải Excel lên và gửi dữ liệu lưu thẳng vào Google Sheet
-function importExcel(input) {
-    var file = input.files[0];
-    if (!file) return;
+        // Tải Excel lên và gửi dữ liệu lưu thẳng vào Google Sheet
+        function importExcel(input) {
+            var file = input.files[0];
+            if (!file) return;
 
-    showLoading(true);
-    var reader = new FileReader();
-    reader.onload = function(e) {
-        var data = new Uint8Array(e.target.result);
-        var workbook = XLSX.read(data, {type: 'array', cellDates: true, dateNF: 'dd/mm/yyyy'});
-        var firstSheetName = workbook.SheetNames[0];
-        var worksheet = workbook.Sheets[firstSheetName];
-        
-        var jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, raw: true});
-        var rowsToUpload = [];
+            showLoading(true);
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, {type: 'array', cellDates: true, dateNF: 'dd/mm/yyyy'});
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+                
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, raw: true});
+                var rowsToUpload = [];
 
-        for (var i = 1; i < jsonData.length; i++) {
-            var row = jsonData[i];
-            if (!row || row.length === 0) continue;
-            var processedRow = [
-                formatDate(row[0]),
-                formatDate(row[1]),
-                row[2] || '',
-                formatDate(row[3]),
-                row[4] || '',
-                row[5] || '',
-                row[6] || '',
-                row[7] || '',
-                row[8] || '',
-                row[9] || '',
-                row[10] || '',
-                row[11] || '',
-                row[12] || '',
-                row[13] || '',
-                row[14] || '',
-                row[15] || ''
-            ];
-            rowsToUpload.push(processedRow);
+                for (var i = 1; i < jsonData.length; i++) {
+                    var row = jsonData[i];
+                    if (!row || row.length === 0) continue;
+                    var processedRow = [
+                        formatDate(row[0]),
+                        formatDate(row[1]),
+                        row[2] || '',
+                        formatDate(row[3]),
+                        row[4] || '',
+                        row[5] || '',
+                        row[6] || '',
+                        row[7] || '',
+                        row[8] || '',
+                        row[9] || '',
+                        row[10] || '',
+                        row[11] || '',
+                        row[12] || '',
+                        row[13] || '',
+                        row[14] || '',
+                        row[15] || ''
+                    ];
+                    rowsToUpload.push(processedRow);
+                }
+
+                var payload = JSON.stringify({ action: "appendRows", rows: rowsToUpload });
+
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: {
+                        "Content-Type": "text/plain"
+                    },
+                    body: payload
+                })
+                .then(() => {
+                    showLoading(false);
+                    alert("Đã gửi dữ liệu thành công! Đang tải lại danh sách...");
+                    setTimeout(loadDataFromSheet, 2000);
+                })
+                .catch(err => {
+                    console.error("Lỗi khi tải dữ liệu:", err);
+                    showLoading(false);
+                    alert("Lỗi khi đồng bộ dữ liệu!");
+                });
+
+                input.value = '';
+            };
+            reader.readAsArrayBuffer(file);
         }
-
-        var payload = JSON.stringify({ action: "appendRows", rows: rowsToUpload });
-
-        // Sử dụng fetch với mode no-cors hoặc x-www-form-urlencoded để tránh lỗi CORS
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-                "Content-Type": "text/plain"
-            },
-            body: payload
-        })
-        .then(() => {
-            showLoading(false);
-            alert("Đã gửi dữ liệu lưu vào Google Sheet! Đang tải lại dữ liệu...");
-            setTimeout(loadDataFromSheet, 2000); // Đợi 2s để Google Sheet xử lý xong dữ liệu
-        })
-        .catch(err => {
-            console.error(err);
-            showLoading(false);
-            alert("Lỗi khi đồng bộ dữ liệu!");
-        });
-
-        input.value = '';
-    };
-    reader.readAsArrayBuffer(file);
-}
 
         // Lọc dữ liệu
         function filterTable() {
@@ -295,7 +298,7 @@ function importExcel(input) {
                 inputs.forEach(function(input) {
                     var colIndex = parseInt(input.getAttribute('data-col'));
                     var filterValue = input.value.toLowerCase().trim();
-                    var cellText = tr.cells[colIndex].innerText.toLowerCase();
+                    var cellText = tr.cells[colIndex] ? tr.cells[colIndex].innerText.toLowerCase() : '';
 
                     if (filterValue !== "" && cellText.indexOf(filterValue) === -1) {
                         showRow = false;
