@@ -114,23 +114,37 @@
             <thead>
                 <tr>
                     <th style="width: 90px;">Thao tác</th>
-                    <th>Ngày hạch toán</th>
-                    <th>Ngày chứng từ</th>
-                    <th>Số chứng từ</th>
-                    <th>Ngày hóa đơn</th>
-                    <th>Số hóa đơn</th>
-                    <!-- 3 Cột có ô lọc tìm kiếm -->
+                    <th>
+                        Ngày hạch toán<br>
+                        <input type="text" class="filter-input" data-col="1" placeholder="🔍 Lọc ngày..." onkeyup="filterTable()">
+                    </th>
+                    <th>
+                        Ngày chứng từ<br>
+                        <input type="text" class="filter-input" data-col="2" placeholder="🔍 Lọc ngày..." onkeyup="filterTable()">
+                    </th>
+                    <th>
+                        Số chứng từ<br>
+                        <input type="text" class="filter-input" data-col="3" placeholder="🔍 Lọc số CT..." onkeyup="filterTable()">
+                    </th>
+                    <th>
+                        Ngày hóa đơn<br>
+                        <input type="text" class="filter-input" data-col="4" placeholder="🔍 Lọc ngày..." onkeyup="filterTable()">
+                    </th>
+                    <th>
+                        Số hóa đơn<br>
+                        <input type="text" class="filter-input" data-col="5" placeholder="🔍 Lọc số HĐ..." onkeyup="filterTable()">
+                    </th>
                     <th>
                         Tên nhà cung cấp<br>
-                        <input type="text" class="filter-input" placeholder="🔍 Lọc NCC..." onkeyup="filterTable()">
+                        <input type="text" class="filter-input" data-col="6" placeholder="🔍 Lọc NCC..." onkeyup="filterTable()">
                     </th>
                     <th>
                         Mã hàng<br>
-                        <input type="text" class="filter-input" placeholder="🔍 Lọc Mã..." onkeyup="filterTable()">
+                        <input type="text" class="filter-input" data-col="7" placeholder="🔍 Lọc Mã..." onkeyup="filterTable()">
                     </th>
                     <th>
                         Tên hàng<br>
-                        <input type="text" class="filter-input" placeholder="🔍 Lọc Tên hàng..." onkeyup="filterTable()">
+                        <input type="text" class="filter-input" data-col="8" placeholder="🔍 Lọc Tên hàng..." onkeyup="filterTable()">
                     </th>
                     <th>ĐVT</th>
                     <th>Số lượng mua</th>
@@ -226,7 +240,7 @@
     </div>
 
     <script>
-        // Hàm Lọc Dữ Liệu Tự Động dựa trên các ô Input Lọc
+        // Hàm Lọc Dữ Liệu Tự Động đa cột
         function filterTable() {
             var inputs = document.querySelectorAll('.filter-input');
             var table = document.getElementById("dataTable");
@@ -234,12 +248,10 @@
 
             trs.forEach(function(tr) {
                 var showRow = true;
-                
-                // Cột Tên NCC = chỉ số 6, Mã hàng = 7, Tên hàng = 8
-                var colIndexes = [6, 7, 8];
 
-                colIndexes.forEach(function(colIndex, idx) {
-                    var filterValue = inputs[idx].value.toLowerCase().trim();
+                inputs.forEach(function(input) {
+                    var colIndex = parseInt(input.getAttribute('data-col'));
+                    var filterValue = input.value.toLowerCase().trim();
                     var cellText = tr.cells[colIndex].innerText.toLowerCase();
 
                     if (filterValue !== "" && cellText.indexOf(filterValue) === -1) {
@@ -283,7 +295,7 @@
 
             tr.querySelector('.btn-save').style.display = 'none';
             tr.querySelector('.btn-edit').style.display = 'inline-block';
-            filterTable(); // Chạy lại bộ lọc sau khi lưu
+            filterTable();
         }
 
         // Hàm Thêm Dòng Mới
