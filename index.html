@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sổ Ghi Chép Nhập Hàng</title>
-    <!-- Nhúng thư viện đọc file Excel SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * {
@@ -52,11 +51,6 @@
         .text-right { text-align: right; }
         .font-bold { font-weight: bold; }
         
-        .total-row {
-            background-color: #eee0c9 !important;
-            font-weight: bold;
-        }
-        
         .filter-input {
             width: 100%;
             margin-top: 4px;
@@ -93,6 +87,13 @@
         .btn-edit { background-color: #ffc107; color: #000; }
         .btn-save { background-color: #007bff; color: white; display: none; }
         .editable-input { width: 100%; padding: 2px 4px; border: 1px solid #007bff; }
+        
+        #loading {
+            display: none;
+            font-weight: bold;
+            color: #007bff;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -103,6 +104,7 @@
         <button class="btn btn-add" onclick="addRow()">+ Thêm dòng thủ công</button>
         <button class="btn btn-upload" onclick="document.getElementById('excelFile').click()">📥 Tải lên từ Excel</button>
         <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
+        <span id="loading">⏳ Đang đồng bộ dữ liệu với Google Sheet...</span>
     </div>
 
     <div class="table-container">
@@ -122,56 +124,87 @@
                     <th>Số lượng mua</th>
                     <th>Đơn giá</th>
                     <th>Giá trị mua</th>
-                    <th>Giá cost</th>
                     <th>Chiết khấu</th>
-                    <th>Sale in</th>
-                    <th>Sale out</th>
+                    <th>Số lượng trả lại</th>
+                    <th>Giá trị trả lại</th>
+                    <th>Giá trị giảm giá</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="text-center">
-                        <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
-                        <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
-                    </td>
-                    <td class="text-center">09/05/2025</td>
-                    <td class="text-center">09/05/2025</td>
-                    <td>NK0905202501</td>
-                    <td class="text-center">09/05/2025</td>
-                    <td>9021</td>
-                    <td>CÔNG TY CỔ PHẦN CÔNG NGHỆ LÊ PHỤNG</td>
-                    <td>Tai Nghe LOGITECH H390</td>
-                    <td>Tai Nghe LOGITECH H390</td>
-                    <td class="text-center">Cái</td>
-                    <td class="text-right qty">10</td>
-                    <td class="text-right">634.000</td>
-                    <td class="text-right price">6.340.000</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
+                <!-- Dữ liệu sẽ được tự động tải từ Google Sheet vào đây -->
             </tbody>
         </table>
     </div>
 
     <script>
-        // Hàm chuyển đổi dữ liệu ô Ngày từ Excel (Số Serial hoặc Object Date) thành dd/mm/yyyy
+        // Dán URL Web App Google Apps Script của anh vào đây:
+        const GOOGLE_SCRIPT_URL = "DÁN_URL_WEB_APP_CỦA_ANH_VÀO_ĐÂY";
+
+        window.onload = function() {
+            loadDataFromSheet();
+        };
+
+        function showLoading(show) {
+            document.getElementById("loading").style.display = show ? "inline" : "none";
+        }
+
+        // Tải dữ liệu từ Google Sheets về hiển thị
+        function loadDataFromSheet() {
+            showLoading(true);
+            fetch(GOOGLE_SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => {
+                    var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+                    tbody.innerHTML = "";
+                    data.forEach(row => {
+                        appendRowToTable(row);
+                    });
+                    showLoading(false);
+                })
+                .catch(err => {
+                    console.error(err);
+                    showLoading(false);
+                });
+        }
+
+        function appendRowToTable(row) {
+            var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+            var newRow = tbody.insertRow();
+            newRow.innerHTML = `
+                <td class="text-center">
+                    <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
+                    <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
+                </td>
+                <td class="text-center">${row[0] || ''}</td>
+                <td class="text-center">${row[1] || ''}</td>
+                <td>${row[2] || ''}</td>
+                <td class="text-center">${row[3] || ''}</td>
+                <td>${row[4] || ''}</td>
+                <td>${row[5] || ''}</td>
+                <td>${row[6] || ''}</td>
+                <td>${row[7] || ''}</td>
+                <td class="text-center">${row[8] || ''}</td>
+                <td class="text-right">${row[9] || ''}</td>
+                <td class="text-right">${row[10] || ''}</td>
+                <td class="text-right">${row[11] || ''}</td>
+                <td>${row[12] || ''}</td>
+                <td>${row[13] || ''}</td>
+                <td>${row[14] || ''}</td>
+                <td>${row[15] || ''}</td>
+            `;
+        }
+
         function formatDate(value) {
             if (!value) return '';
-            
-            // Trường hợp dữ liệu dạng Date object
             if (value instanceof Date) {
                 var d = value.getDate().toString().padStart(2, '0');
                 var m = (value.getMonth() + 1).toString().padStart(2, '0');
                 var y = value.getFullYear();
                 return `${d}/${m}/${y}`;
             }
-
-            // Trường hợp dữ liệu là số sê-ri ngày của Excel (ví dụ 46290)
             if (typeof value === 'number' || !isNaN(value)) {
                 var num = Number(value);
-                if (num > 30000 && num < 60000) { // Khoảng giá trị phù hợp với Serial Date
+                if (num > 30000 && num < 60000) {
                     var date = XLSX.SSF.parse_date_code(num);
                     if (date) {
                         var d = date.d.toString().padStart(2, '0');
@@ -181,54 +214,66 @@
                     }
                 }
             }
-
             return value;
         }
 
-        // Xử lý đọc file Excel
+        // Tải Excel lên và gửi dữ liệu lưu thẳng vào Google Sheet
         function importExcel(input) {
             var file = input.files[0];
             if (!file) return;
 
+            showLoading(true);
             var reader = new FileReader();
             reader.onload = function(e) {
                 var data = new Uint8Array(e.target.result);
-                // Đọc file với tùy chọn chuyển đổi cellDates
                 var workbook = XLSX.read(data, {type: 'array', cellDates: true, dateNF: 'dd/mm/yyyy'});
                 var firstSheetName = workbook.SheetNames[0];
                 var worksheet = workbook.Sheets[firstSheetName];
                 
                 var jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1, raw: true});
-                var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
-                
+                var rowsToUpload = [];
+
                 for (var i = 1; i < jsonData.length; i++) {
                     var row = jsonData[i];
                     if (!row || row.length === 0) continue;
-
-                    var newRow = tbody.insertRow();
-                    newRow.innerHTML = `
-                        <td class="text-center">
-                            <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
-                            <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
-                        </td>
-                        <td class="text-center">${formatDate(row[0])}</td>
-                        <td class="text-center">${formatDate(row[1])}</td>
-                        <td>${row[2] || ''}</td>
-                        <td class="text-center">${formatDate(row[3])}</td>
-                        <td>${row[4] || ''}</td>
-                        <td>${row[5] || ''}</td>
-                        <td>${row[6] || ''}</td>
-                        <td>${row[7] || ''}</td>
-                        <td class="text-center">${row[8] || ''}</td>
-                        <td class="text-right">${row[9] || ''}</td>
-                        <td class="text-right">${row[10] || ''}</td>
-                        <td class="text-right">${row[11] || ''}</td>
-                        <td>${row[12] || ''}</td>
-                        <td>${row[13] || ''}</td>
-                        <td>${row[14] || ''}</td>
-                        <td>${row[15] || ''}</td>
-                    `;
+                    var processedRow = [
+                        formatDate(row[0]),
+                        formatDate(row[1]),
+                        row[2] || '',
+                        formatDate(row[3]),
+                        row[4] || '',
+                        row[5] || '',
+                        row[6] || '',
+                        row[7] || '',
+                        row[8] || '',
+                        row[9] || '',
+                        row[10] || '',
+                        row[11] || '',
+                        row[12] || '',
+                        row[13] || '',
+                        row[14] || '',
+                        row[15] || ''
+                    ];
+                    rowsToUpload.push(processedRow);
                 }
+
+                // Gửi dữ liệu lên Google Sheets API
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "appendRows", rows: rowsToUpload })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    showLoading(false);
+                    alert("Đã lưu thành công " + rowsToUpload.length + " dòng vào Google Sheet!");
+                    loadDataFromSheet();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showLoading(false);
+                    alert("Lỗi khi đồng bộ dữ liệu!");
+                });
+
                 input.value = '';
             };
             reader.readAsArrayBuffer(file);
@@ -255,7 +300,6 @@
             });
         }
 
-        // Chỉnh sửa dòng
         function editRow(btn) {
             var tr = btn.closest('tr');
             var cells = tr.querySelectorAll('td');
@@ -267,7 +311,6 @@
             tr.querySelector('.btn-save').style.display = 'inline-block';
         }
 
-        // Lưu dòng
         function saveRow(btn) {
             var tr = btn.closest('tr');
             var cells = tr.querySelectorAll('td');
@@ -280,29 +323,8 @@
             filterTable();
         }
 
-        // Thêm dòng thủ công
         function addRow() {
-            var table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
-            var newRow = table.insertRow();
-            newRow.innerHTML = `
-                <td class="text-center">
-                    <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
-                    <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
-                </td>
-                <td class="text-center">---</td>
-                <td class="text-center">---</td>
-                <td>---</td>
-                <td class="text-center">---</td>
-                <td>---</td>
-                <td>---</td>
-                <td>---</td>
-                <td>---</td>
-                <td class="text-center">Cái</td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-                <td class="text-right">0</td>
-                <td></td><td></td><td></td><td></td>
-            `;
+            appendRowToTable(['---', '---', '---', '---', '---', '---', '---', '---', 'Cái', 0, 0, 0, '', '', '', '']);
         }
     </script>
 </body>
