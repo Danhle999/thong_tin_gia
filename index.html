@@ -35,15 +35,8 @@
             background-color: #e6e6e6;
             color: #000;
             font-weight: bold;
-            position: relative;
             text-align: center;
-        }
-        .filter-btn {
-            display: inline-block;
-            float: right;
-            font-size: 9px;
-            color: #555;
-            cursor: pointer;
+            vertical-align: top;
         }
         tr:nth-child(even) {
             background-color: #fafafa;
@@ -60,7 +53,23 @@
             font-weight: bold;
         }
         
-        /* Cấu hình các nút chức năng */
+        /* Cấu hình ô Filter/Lọc */
+        .filter-input {
+            width: 100%;
+            margin-top: 4px;
+            padding: 3px 5px;
+            font-size: 11px;
+            font-weight: normal;
+            border: 1px solid #aaa;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        .filter-input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        /* Nút thao tác */
         .btn-add {
             margin-bottom: 10px;
             padding: 8px 15px;
@@ -86,7 +95,6 @@
         .btn-save { background-color: #007bff; color: white; display: none; }
         .btn-save:hover { background-color: #0069d9; }
         
-        /* Ô input khi chuyển sang chế độ sửa */
         .editable-input {
             width: 100%;
             padding: 2px 4px;
@@ -106,22 +114,32 @@
             <thead>
                 <tr>
                     <th style="width: 90px;">Thao tác</th>
-                    <th>Ngày hạch toán <span class="filter-btn">▼</span></th>
-                    <th>Ngày chứng từ <span class="filter-btn">▼</span></th>
-                    <th>Số chứng từ <span class="filter-btn">▼</span></th>
-                    <th>Ngày hóa đơn <span class="filter-btn">▼</span></th>
-                    <th>Số hóa đơn <span class="filter-btn">▼</span></th>
-                    <th>Tên nhà cung cấp <span class="filter-btn">▼</span></th>
-                    <th>Mã hàng <span class="filter-btn">▼</span></th>
-                    <th>Tên hàng <span class="filter-btn">▼</span></th>
-                    <th>ĐVT <span class="filter-btn">▼</span></th>
-                    <th>Số lượng mua <span class="filter-btn">▼</span></th>
-                    <th>Đơn giá <span class="filter-btn">▼</span></th>
-                    <th>Giá trị mua <span class="filter-btn">▼</span></th>
-                    <th>Chiết khấu <span class="filter-btn">▼</span></th>
-                    <th>Số lượng trả lại <span class="filter-btn">▼</span></th>
-                    <th>Giá trị trả lại <span class="filter-btn">▼</span></th>
-                    <th>Giá trị giảm giá <span class="filter-btn">▼</span></th>
+                    <th>Ngày hạch toán</th>
+                    <th>Ngày chứng từ</th>
+                    <th>Số chứng từ</th>
+                    <th>Ngày hóa đơn</th>
+                    <th>Số hóa đơn</th>
+                    <!-- 3 Cột có ô lọc tìm kiếm -->
+                    <th>
+                        Tên nhà cung cấp<br>
+                        <input type="text" class="filter-input" placeholder="🔍 Lọc NCC..." onkeyup="filterTable()">
+                    </th>
+                    <th>
+                        Mã hàng<br>
+                        <input type="text" class="filter-input" placeholder="🔍 Lọc Mã..." onkeyup="filterTable()">
+                    </th>
+                    <th>
+                        Tên hàng<br>
+                        <input type="text" class="filter-input" placeholder="🔍 Lọc Tên hàng..." onkeyup="filterTable()">
+                    </th>
+                    <th>ĐVT</th>
+                    <th>Số lượng mua</th>
+                    <th>Đơn giá</th>
+                    <th>Giá trị mua</th>
+                    <th>Chiết khấu</th>
+                    <th>Số lượng trả lại</th>
+                    <th>Giá trị trả lại</th>
+                    <th>Giá trị giảm giá</th>
                 </tr>
             </thead>
             <tbody>
@@ -208,23 +226,50 @@
     </div>
 
     <script>
-        // Hàm chuyển dòng thành các ô nhập liệu (Input) để chỉnh sửa
+        // Hàm Lọc Dữ Liệu Tự Động dựa trên các ô Input Lọc
+        function filterTable() {
+            var inputs = document.querySelectorAll('.filter-input');
+            var table = document.getElementById("dataTable");
+            var trs = table.querySelectorAll("tbody tr");
+
+            trs.forEach(function(tr) {
+                var showRow = true;
+                
+                // Cột Tên NCC = chỉ số 6, Mã hàng = 7, Tên hàng = 8
+                var colIndexes = [6, 7, 8];
+
+                colIndexes.forEach(function(colIndex, idx) {
+                    var filterValue = inputs[idx].value.toLowerCase().trim();
+                    var cellText = tr.cells[colIndex].innerText.toLowerCase();
+
+                    if (filterValue !== "" && cellText.indexOf(filterValue) === -1) {
+                        showRow = false;
+                    }
+                });
+
+                if (showRow) {
+                    tr.style.display = "";
+                } else {
+                    tr.style.display = "none";
+                }
+            });
+        }
+
+        // Hàm Chuyển Dòng Thành Ô Nhập Để Chỉnh Sửa
         function editRow(btn) {
             var tr = btn.closest('tr');
             var cells = tr.querySelectorAll('td');
             
-            // Bỏ qua cột Thao tác (cột 0)
             for (var i = 1; i < cells.length; i++) {
                 var currentText = cells[i].innerText;
                 cells[i].innerHTML = `<input type="text" class="editable-input" value="${currentText}">`;
             }
 
-            // Chuyển nút Sửa -> Lưu
             tr.querySelector('.btn-edit').style.display = 'none';
             tr.querySelector('.btn-save').style.display = 'inline-block';
         }
 
-        // Hàm lưu lại dữ liệu sau khi sửa
+        // Hàm Lưu Dữ Liệu Sau Khi Sửa
         function saveRow(btn) {
             var tr = btn.closest('tr');
             var cells = tr.querySelectorAll('td');
@@ -236,12 +281,12 @@
                 }
             }
 
-            // Chuyển nút Lưu -> Sửa
             tr.querySelector('.btn-save').style.display = 'none';
             tr.querySelector('.btn-edit').style.display = 'inline-block';
+            filterTable(); // Chạy lại bộ lọc sau khi lưu
         }
 
-        // Hàm thêm dòng mới với đầy đủ nút Sửa/Lưu
+        // Hàm Thêm Dòng Mới
         function addRow() {
             var table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
             var newRow = table.insertRow();
