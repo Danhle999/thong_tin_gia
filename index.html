@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sổ Ghi Chép Nhập Hàng</title>
+    <!-- Nhúng thư viện đọc file Excel SheetJS -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -13,6 +15,12 @@
         body {
             background-color: #f5f5f5;
             margin: 20px;
+        }
+        .toolbar {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         .table-container {
             width: 100%;
@@ -35,22 +43,11 @@
             background-color: #e6e6e6;
             color: #000;
             font-weight: bold;
-            position: relative;
             text-align: center;
+            vertical-align: top;
         }
-        .filter-btn {
-            display: inline-block;
-            float: right;
-            font-size: 9px;
-            color: #555;
-            cursor: pointer;
-        }
-        tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-        tr:hover {
-            background-color: #e8f4fe;
-        }
+        tr:nth-child(even) { background-color: #fafafa; }
+        tr:hover { background-color: #e8f4fe; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .font-bold { font-weight: bold; }
@@ -60,18 +57,30 @@
             font-weight: bold;
         }
         
-        /* Cấu hình các nút chức năng */
-        .btn-add {
-            margin-bottom: 10px;
+        .filter-input {
+            width: 100%;
+            margin-top: 4px;
+            padding: 3px 5px;
+            font-size: 11px;
+            font-weight: normal;
+            border: 1px solid #aaa;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        .btn {
             padding: 8px 15px;
-            background-color: #28a745;
-            color: white;
             border: none;
             border-radius: 3px;
             cursor: pointer;
             font-weight: bold;
+            color: white;
         }
+        .btn-add { background-color: #28a745; }
         .btn-add:hover { background-color: #218838; }
+        
+        .btn-upload { background-color: #17a2b8; }
+        .btn-upload:hover { background-color: #138496; }
 
         .btn-action {
             padding: 3px 8px;
@@ -82,46 +91,41 @@
             margin-right: 2px;
         }
         .btn-edit { background-color: #ffc107; color: #000; }
-        .btn-edit:hover { background-color: #e0a800; }
         .btn-save { background-color: #007bff; color: white; display: none; }
-        .btn-save:hover { background-color: #0069d9; }
-        
-        /* Ô input khi chuyển sang chế độ sửa */
-        .editable-input {
-            width: 100%;
-            padding: 2px 4px;
-            box-sizing: border-box;
-            border: 1px solid #007bff;
-            border-radius: 2px;
-        }
+        .editable-input { width: 100%; padding: 2px 4px; border: 1px solid #007bff; }
     </style>
 </head>
 <body>
 
     <h2>SỔ GHI CHÉP NHẬP HÀNG</h2>
-    <button class="btn-add" onclick="addRow()">+ Thêm dòng mới</button>
+    
+    <div class="toolbar">
+        <button class="btn btn-add" onclick="addRow()">+ Thêm dòng thủ công</button>
+        <button class="btn btn-upload" onclick="document.getElementById('excelFile').click()">📥 Tải lên từ Excel</button>
+        <input type="file" id="excelFile" accept=".xlsx, .xls" style="display: none;" onchange="importExcel(this)">
+    </div>
 
     <div class="table-container">
         <table id="dataTable">
             <thead>
                 <tr>
                     <th style="width: 90px;">Thao tác</th>
-                    <th>Ngày hạch toán <span class="filter-btn">▼</span></th>
-                    <th>Ngày chứng từ <span class="filter-btn">▼</span></th>
-                    <th>Số chứng từ <span class="filter-btn">▼</span></th>
-                    <th>Ngày hóa đơn <span class="filter-btn">▼</span></th>
-                    <th>Số hóa đơn <span class="filter-btn">▼</span></th>
-                    <th>Tên nhà cung cấp <span class="filter-btn">▼</span></th>
-                    <th>Mã hàng <span class="filter-btn">▼</span></th>
-                    <th>Tên hàng <span class="filter-btn">▼</span></th>
-                    <th>ĐVT <span class="filter-btn">▼</span></th>
-                    <th>Số lượng mua <span class="filter-btn">▼</span></th>
-                    <th>Đơn giá <span class="filter-btn">▼</span></th>
-                    <th>Giá trị mua <span class="filter-btn">▼</span></th>
-                    <th>Chiết khấu <span class="filter-btn">▼</span></th>
-                    <th>Số lượng trả lại <span class="filter-btn">▼</span></th>
-                    <th>Giá trị trả lại <span class="filter-btn">▼</span></th>
-                    <th>Giá trị giảm giá <span class="filter-btn">▼</span></th>
+                    <th>Ngày hạch toán<br><input type="text" class="filter-input" data-col="1" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th>Ngày chứng từ<br><input type="text" class="filter-input" data-col="2" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th>Số chứng từ<br><input type="text" class="filter-input" data-col="3" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th>Ngày hóa đơn<br><input type="text" class="filter-input" data-col="4" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th>Số hóa đơn<br><input type="text" class="filter-input" data-col="5" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th>Tên nhà cung cấp<br><input type="text" class="filter-input" data-col="6" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th>Mã hàng<br><input type="text" class="filter-input" data-col="7" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th>Tên hàng<br><input type="text" class="filter-input" data-col="8" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th>ĐVT</th>
+                    <th>Số lượng mua</th>
+                    <th>Đơn giá</th>
+                    <th>Giá trị mua</th>
+                    <th>Chiết khấu</th>
+                    <th>Số lượng trả lại</th>
+                    <th>Giá trị trả lại</th>
+                    <th>Giá trị giảm giá</th>
                 </tr>
             </thead>
             <tbody>
@@ -147,126 +151,130 @@
                     <td></td>
                     <td></td>
                 </tr>
-                <tr>
-                    <td class="text-center">
-                        <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
-                        <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
-                    </td>
-                    <td class="text-center">10/05/2025</td>
-                    <td class="text-center">10/05/2025</td>
-                    <td>NK1005202501</td>
-                    <td class="text-center">10/05/2025</td>
-                    <td>10705</td>
-                    <td>CÔNG TY TNHH MỘT THÀNH VIÊN THƯƠNG MẠI DỊCH VỤ TIN HỌC LÊ HUY</td>
-                    <td>DAY DISPLAYPORT 1.8m Y-5118CA UNITEK (10476)</td>
-                    <td>Dây tín hiệu Displayport có đầu giắc 1.8m Y-5118CA Unitek (10476)</td>
-                    <td class="text-center">Cái</td>
-                    <td class="text-right qty">10</td>
-                    <td class="text-right">205.000</td>
-                    <td class="text-right price">2.050.000</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td class="text-center">
-                        <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
-                        <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
-                    </td>
-                    <td class="text-center">10/05/2025</td>
-                    <td class="text-center">10/05/2025</td>
-                    <td>NK1005202502</td>
-                    <td class="text-center">10/05/2025</td>
-                    <td>12673</td>
-                    <td>CÔNG TY TNHH MỘT THÀNH VIÊN BẢO VINH</td>
-                    <td>MAY IN HP PRO 4003DN</td>
-                    <td>Máy in HP LaserJet Pro 4003DN_2Z609A</td>
-                    <td class="text-center">Cái</td>
-                    <td class="text-right qty">7</td>
-                    <td class="text-right">5.250.000</td>
-                    <td class="text-right price">36.750.000</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
             </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td colspan="10" class="text-center font-bold">Tổng cộng</td>
-                    <td class="text-right font-bold" id="totalQty">27</td>
-                    <td></td>
-                    <td class="text-right font-bold" id="totalPrice">45.140.000</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-            </tfoot>
         </table>
     </div>
 
     <script>
-        // Hàm chuyển dòng thành các ô nhập liệu (Input) để chỉnh sửa
+        // Xử lý đọc file Excel và nạp vào Bảng
+        function importExcel(input) {
+            var file = input.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, {type: 'array'});
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+                
+                // Chuyển sheet thành mảng dữ liệu (bỏ qua dòng tiêu đề nếu cần)
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+
+                var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+                
+                // Bắt đầu đọc từ dòng thứ 2 (chỉ số 1) để bỏ qua tiêu đề cột trong Excel
+                for (var i = 1; i < jsonData.length; i++) {
+                    var row = jsonData[i];
+                    if (row.length === 0) continue;
+
+                    var newRow = tbody.insertRow();
+                    newRow.innerHTML = `
+                        <td class="text-center">
+                            <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
+                            <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
+                        </td>
+                        <td class="text-center">${row[0] || ''}</td>
+                        <td class="text-center">${row[1] || ''}</td>
+                        <td>${row[2] || ''}</td>
+                        <td class="text-center">${row[3] || ''}</td>
+                        <td>${row[4] || ''}</td>
+                        <td>${row[5] || ''}</td>
+                        <td>${row[6] || ''}</td>
+                        <td>${row[7] || ''}</td>
+                        <td class="text-center">${row[8] || ''}</td>
+                        <td class="text-right">${row[9] || ''}</td>
+                        <td class="text-right">${row[10] || ''}</td>
+                        <td class="text-right">${row[11] || ''}</td>
+                        <td>${row[12] || ''}</td>
+                        <td>${row[13] || ''}</td>
+                        <td>${row[14] || ''}</td>
+                        <td>${row[15] || ''}</td>
+                    `;
+                }
+                input.value = ''; // Reset input file
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Lọc dữ liệu
+        function filterTable() {
+            var inputs = document.querySelectorAll('.filter-input');
+            var table = document.getElementById("dataTable");
+            var trs = table.querySelectorAll("tbody tr");
+
+            trs.forEach(function(tr) {
+                var showRow = true;
+                inputs.forEach(function(input) {
+                    var colIndex = parseInt(input.getAttribute('data-col'));
+                    var filterValue = input.value.toLowerCase().trim();
+                    var cellText = tr.cells[colIndex].innerText.toLowerCase();
+
+                    if (filterValue !== "" && cellText.indexOf(filterValue) === -1) {
+                        showRow = false;
+                    }
+                });
+                tr.style.display = showRow ? "" : "none";
+            });
+        }
+
+        // Chỉnh sửa dòng
         function editRow(btn) {
             var tr = btn.closest('tr');
             var cells = tr.querySelectorAll('td');
-            
-            // Bỏ qua cột Thao tác (cột 0)
             for (var i = 1; i < cells.length; i++) {
                 var currentText = cells[i].innerText;
                 cells[i].innerHTML = `<input type="text" class="editable-input" value="${currentText}">`;
             }
-
-            // Chuyển nút Sửa -> Lưu
             tr.querySelector('.btn-edit').style.display = 'none';
             tr.querySelector('.btn-save').style.display = 'inline-block';
         }
 
-        // Hàm lưu lại dữ liệu sau khi sửa
+        // Lưu dòng
         function saveRow(btn) {
             var tr = btn.closest('tr');
             var cells = tr.querySelectorAll('td');
-            
             for (var i = 1; i < cells.length; i++) {
                 var input = cells[i].querySelector('input');
-                if (input) {
-                    cells[i].innerText = input.value;
-                }
+                if (input) cells[i].innerText = input.value;
             }
-
-            // Chuyển nút Lưu -> Sửa
             tr.querySelector('.btn-save').style.display = 'none';
             tr.querySelector('.btn-edit').style.display = 'inline-block';
+            filterTable();
         }
 
-        // Hàm thêm dòng mới với đầy đủ nút Sửa/Lưu
+        // Thêm dòng thủ công
         function addRow() {
             var table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
             var newRow = table.insertRow();
-            
             newRow.innerHTML = `
                 <td class="text-center">
                     <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
                     <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
                 </td>
-                <td class="text-center">11/05/2025</td>
-                <td class="text-center">11/05/2025</td>
-                <td>NK1105202501</td>
-                <td class="text-center">11/05/2025</td>
-                <td>12345</td>
-                <td>CÔNG TY TNHH MỚI</td>
-                <td>MA_HANG_MOI</td>
-                <td>Tên sản phẩm mới nhập</td>
+                <td class="text-center">---</td>
+                <td class="text-center">---</td>
+                <td>---</td>
+                <td class="text-center">---</td>
+                <td>---</td>
+                <td>---</td>
+                <td>---</td>
+                <td>---</td>
                 <td class="text-center">Cái</td>
-                <td class="text-right qty">1</td>
-                <td class="text-right">1.000.000</td>
-                <td class="text-right price">1.000.000</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td class="text-right">0</td>
+                <td class="text-right">0</td>
+                <td class="text-right">0</td>
+                <td></td><td></td><td></td><td></td>
             `;
         }
     </script>
