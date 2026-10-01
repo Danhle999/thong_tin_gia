@@ -94,6 +94,17 @@
             color: #007bff;
             margin-left: 10px;
         }
+
+        /* --- TÙY CHỈNH KÍCH THƯỚC VÀ KIỂU CỘT --- */
+        .col-action { min-width: 80px; width: 80px; }
+        .col-date { min-width: 110px; width: 110px; }
+        .col-code { min-width: 110px; width: 120px; }
+        .col-inv { min-width: 90px; width: 100px; }
+        .col-vendor { min-width: 280px; white-space: normal; } /* Tên nhà cung cấp cho phép xuống hàng nếu cần */
+        .col-product-code { min-width: 120px; }
+        .col-product-name { min-width: 250px; white-space: normal; } /* Tên hàng cho phép xuống hàng */
+        .col-unit { min-width: 60px; width: 60px; }
+        .col-num { min-width: 100px; }
     </style>
 </head>
 <body>
@@ -111,23 +122,23 @@
         <table id="dataTable">
             <thead>
                 <tr>
-                    <th style="width: 90px;">Thao tác</th>
-                    <th>Ngày hạch toán<br><input type="text" class="filter-input" data-col="1" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
-                    <th>Ngày chứng từ<br><input type="text" class="filter-input" data-col="2" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
-                    <th>Số chứng từ<br><input type="text" class="filter-input" data-col="3" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
-                    <th>Ngày hóa đơn<br><input type="text" class="filter-input" data-col="4" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
-                    <th>Số hóa đơn<br><input type="text" class="filter-input" data-col="5" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
-                    <th>Tên nhà cung cấp<br><input type="text" class="filter-input" data-col="6" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
-                    <th>Mã hàng<br><input type="text" class="filter-input" data-col="7" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
-                    <th>Tên hàng<br><input type="text" class="filter-input" data-col="8" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
-                    <th>ĐVT</th>
-                    <th>Số lượng mua</th>
-                    <th>Đơn giá</th>
-                    <th>Giá trị mua</th>
-                    <th>Chiết khấu</th>
-                    <th>Số lượng trả lại</th>
-                    <th>Giá trị trả lại</th>
-                    <th>Giá trị giảm giá</th>
+                    <th class="col-action">Thao tác</th>
+                    <th class="col-date">Ngày hạch toán<br><input type="text" class="filter-input" data-col="1" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th class="col-date">Ngày chứng từ<br><input type="text" class="filter-input" data-col="2" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th class="col-code">Số chứng từ<br><input type="text" class="filter-input" data-col="3" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th class="col-date">Ngày hóa đơn<br><input type="text" class="filter-input" data-col="4" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th class="col-inv">Số hóa đơn<br><input type="text" class="filter-input" data-col="5" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th class="col-vendor">Tên nhà cung cấp<br><input type="text" class="filter-input" data-col="6" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th class="col-product-code">Mã hàng<br><input type="text" class="filter-input" data-col="7" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th class="col-product-name">Tên hàng<br><input type="text" class="filter-input" data-col="8" placeholder="🔍 Lọc..." onkeyup="filterTable()"></th>
+                    <th class="col-unit">ĐVT</th>
+                    <th class="col-num">Số lượng mua</th>
+                    <th class="col-num">Đơn giá</th>
+                    <th class="col-num">Giá trị mua</th>
+                    <th class="col-num">Chiết khấu</th>
+                    <th class="col-num">Số lượng trả lại</th>
+                    <th class="col-num">Giá trị trả lại</th>
+                    <th class="col-num">Giá trị giảm giá</th>
                 </tr>
             </thead>
             <tbody>
@@ -137,7 +148,6 @@
     </div>
 
     <script>
-        // Đã cập nhật lại đúng URL Web App từ ảnh màn hình Apps Script của bạn
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymskkZM2IzdEcDaRpVE_xFlYz9OESLt9YiVJ5yvYMuOQjb5D53i1GC3Nw_7izWXxiFOg/exec";
 
         window.onload = function() {
@@ -148,7 +158,7 @@
             document.getElementById("loading").style.display = show ? "inline" : "none";
         }
 
-        // Tải dữ liệu từ Google Sheets về hiển thị
+        // Tải dữ liệu từ Google Sheets
         function loadDataFromSheet() {
             showLoading(true);
             fetch(GOOGLE_SCRIPT_URL, {
@@ -172,44 +182,33 @@
             });
         }
 
-        function appendRowToTable(row) {
-            var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
-            var newRow = tbody.insertRow();
-            newRow.innerHTML = `
-                <td class="text-center">
-                    <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
-                    <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
-                </td>
-                <td class="text-center">${row[0] || ''}</td>
-                <td class="text-center">${row[1] || ''}</td>
-                <td>${row[2] || ''}</td>
-                <td class="text-center">${row[3] || ''}</td>
-                <td>${row[4] || ''}</td>
-                <td>${row[5] || ''}</td>
-                <td>${row[6] || ''}</td>
-                <td>${row[7] || ''}</td>
-                <td class="text-center">${row[8] || ''}</td>
-                <td class="text-right">${row[9] !== undefined ? row[9] : ''}</td>
-                <td class="text-right">${row[10] !== undefined ? row[10] : ''}</td>
-                <td class="text-right">${row[11] !== undefined ? row[11] : ''}</td>
-                <td>${row[12] || ''}</td>
-                <td>${row[13] || ''}</td>
-                <td>${row[14] || ''}</td>
-                <td>${row[15] || ''}</td>
-            `;
-        }
-
+        // Hàm chuyển đổi tất cả dạng ngày (chuỗi ISO, số Excel, đối tượng Date) về dạng dd/mm/yyyy
         function formatDate(value) {
             if (!value) return '';
+            
+            // Xử lý chuỗi ISO Date từ Google Sheets (VD: 2026-09-23T17:00:00.000Z)
+            if (typeof value === 'string' && value.includes('T')) {
+                var dObj = new Date(value);
+                if (!isNaN(dObj.getTime())) {
+                    var d = dObj.getDate().toString().padStart(2, '0');
+                    var m = (dObj.getMonth() + 1).toString().padStart(2, '0');
+                    var y = dObj.getFullYear();
+                    return `${d}/${m}/${y}`;
+                }
+            }
+
+            // Xử lý đối tượng Date
             if (value instanceof Date) {
                 var d = value.getDate().toString().padStart(2, '0');
                 var m = (value.getMonth() + 1).toString().padStart(2, '0');
                 var y = value.getFullYear();
                 return `${d}/${m}/${y}`;
             }
-            if (typeof value === 'number' || !isNaN(value)) {
+
+            // Xử lý Số Serial Date của Excel
+            if (typeof value === 'number' || (!isNaN(value) && Number(value) > 30000 && Number(value) < 60000)) {
                 var num = Number(value);
-                if (num > 30000 && num < 60000) {
+                if (typeof XLSX !== 'undefined' && XLSX.SSF) {
                     var date = XLSX.SSF.parse_date_code(num);
                     if (date) {
                         var d = date.d.toString().padStart(2, '0');
@@ -219,7 +218,35 @@
                     }
                 }
             }
+            
             return value;
+        }
+
+        function appendRowToTable(row) {
+            var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+            var newRow = tbody.insertRow();
+            newRow.innerHTML = `
+                <td class="text-center col-action">
+                    <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
+                    <button class="btn-action btn-save" onclick="saveRow(this)">Lưu</button>
+                </td>
+                <td class="text-center col-date">${formatDate(row[0])}</td>
+                <td class="text-center col-date">${formatDate(row[1])}</td>
+                <td class="col-code">${row[2] || ''}</td>
+                <td class="text-center col-date">${formatDate(row[3])}</td>
+                <td class="col-inv">${row[4] || ''}</td>
+                <td class="col-vendor">${row[5] || ''}</td>
+                <td class="col-product-code">${row[6] || ''}</td>
+                <td class="col-product-name">${row[7] || ''}</td>
+                <td class="text-center col-unit">${row[8] || ''}</td>
+                <td class="text-right col-num">${row[9] !== undefined ? row[9] : ''}</td>
+                <td class="text-right col-num">${row[10] !== undefined ? row[10] : ''}</td>
+                <td class="text-right col-num">${row[11] !== undefined ? row[11] : ''}</td>
+                <td class="col-num">${row[12] || ''}</td>
+                <td class="col-num">${row[13] || ''}</td>
+                <td class="col-num">${row[14] || ''}</td>
+                <td class="col-num">${row[15] || ''}</td>
+            `;
         }
 
         // Tải Excel lên và gửi dữ liệu lưu thẳng vào Google Sheet
