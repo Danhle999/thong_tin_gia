@@ -3,20 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Web Đầu Tiên</title>
+    <title>Sổ Ghi Chép Nhập Hàng</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background-color: #f4f4f9;
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 13px;
         }
-        h1 { color: #0066cc; }
-        p { font-size: 18px; color: #333; }
+        body {
+            background-color: #f5f5f5;
+            margin: 20px;
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: #ffffff;
+            border: 1px solid #c0c0c0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            white-space: nowrap;
+        }
+        th, td {
+            border: 1px solid #d0d0d0;
+            padding: 6px 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #e6e6e6;
+            color: #000;
+            font-weight: bold;
+            position: relative;
+            text-align: center;
+        }
+        .filter-btn {
+            display: inline-block;
+            float: right;
+            font-size: 9px;
+            color: #555;
+            cursor: pointer;
+        }
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        tr:hover {
+            background-color: #e8f4fe;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: bold; }
+        
+        .total-row {
+            background-color: #eee0c9 !important;
+            font-weight: bold;
+        }
+        
+        .btn-add {
+            margin-bottom: 10px;
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-add:hover {
+            background-color: #218838;
+        }
     </style>
 </head>
 <body>
-    <h1>Chào mừng đến với trang web của tôi!</h1>
-    <p>Trang web này được lưu trữ miễn phí trên GitHub Pages.</p>
+
+    <h2>SỔ GHI CHÉP NHẬP HÀNG</h2>
+    <button class="btn-add" onclick="addRow()">+ Thêm dòng mới</button>
+
+    <div class="table-container">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Ngày hạch toán <span class="filter-btn">▼</span></th>
+                    <th>Ngày chứng từ <span class="filter-btn">▼</span></th>
+                    <th>Số chứng từ <span class="filter-btn">▼</span></th>
+                    <th>Ngày hóa đơn <span class="filter-btn">▼</span></th>
+                    <th>Số hóa đơn <span class="filter-btn">▼</span></th>
+                    <th>Tên nhà cung cấp <span class="filter-btn">▼</span></th>
+                    <th>Mã hàng <span class="filter-btn">▼</span></th>
+                    <th>Tên hàng <span class="filter-btn">▼</span></th>
+                    <th>ĐVT <span class="filter-btn">▼</span></th>
+                    <th>Số lượng mua <span class="filter-btn">▼</span></th>
+                    <th>Đơn giá <span class="filter-btn">▼</span></th>
+                    <th>Giá trị mua <span class="filter-btn">▼</span></th>
+                    <th>Chiết khấu <span class="filter-btn">▼</span></th>
+                    <th>Số lượng trả lại <span class="filter-btn">▼</span></th>
+                    <th>Giá trị trả lại <span class="filter-btn">▼</span></th>
+                    <th>Giá trị giảm giá <span class="filter-btn">▼</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">09/05/2025</td>
+                    <td class="text-center">09/05/2025</td>
+                    <td>NK0905202501</td>
+                    <td class="text-center">09/05/2025</td>
+                    <td>9021</td>
+                    <td>CÔNG TY CỔ PHẦN CÔNG NGHỆ LÊ PHỤNG</td>
+                    <td>Tai Nghe LOGITECH H390</td>
+                    <td>Tai Nghe LOGITECH H390</td>
+                    <td class="text-center">Cái</td>
+                    <td class="text-right qty">10</td>
+                    <td class="text-right">634.000</td>
+                    <td class="text-right price">6.340.000</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">10/05/2025</td>
+                    <td class="text-center">10/05/2025</td>
+                    <td>NK1005202501</td>
+                    <td class="text-center">10/05/2025</td>
+                    <td>10705</td>
+                    <td>CÔNG TY TNHH MỘT THÀNH VIÊN THƯƠNG MẠI DỊCH VỤ TIN HỌC  LÊ HUY</td>
+                    <td>DAY DISPLAYPORT 1.8m Y-5118CA UNITEK (10476)</td>
+                    <td>Dây tín hiệu Displayport có đầu giắc 1.8m Y-5118CA Unitek (10476)</td>
+                    <td class="text-center">Cái</td>
+                    <td class="text-right qty">10</td>
+                    <td class="text-right">205.000</td>
+                    <td class="text-right price">2.050.000</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td class="text-center">10/05/2025</td>
+                    <td class="text-center">10/05/2025</td>
+                    <td>NK1005202502</td>
+                    <td class="text-center">10/05/2025</td>
+                    <td>12673</td>
+                    <td>CÔNG TY TNHH MỘT THÀNH VIÊN BẢO VINH</td>
+                    <td>MAY IN HP PRO 4003DN</td>
+                    <td>Máy in HP LaserJet Pro 4003DN_2Z609A</td>
+                    <td class="text-center">Cái</td>
+                    <td class="text-right qty">7</td>
+                    <td class="text-right">5.250.000</td>
+                    <td class="text-right price">36.750.000</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="9" class="text-center font-bold">Tổng cộng</td>
+                    <td class="text-right font-bold" id="totalQty">27</td>
+                    <td></td>
+                    <td class="text-right font-bold" id="totalPrice">45.140.000</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <script>
+        function addRow() {
+            var table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+            var newRow = table.insertRow();
+            
+            // Mẫu dòng trống để người dùng nhập
+            newRow.innerHTML = `
+                <td class="text-center">11/05/2025</td>
+                <td class="text-center">11/05/2025</td>
+                <td>NK1105202501</td>
+                <td class="text-center">11/05/2025</td>
+                <td>12345</td>
+                <td>CÔNG TY TNHH MỚI</td>
+                <td>MA_HANG_MOI</td>
+                <td>Tên sản phẩm mới nhập</td>
+                <td class="text-center">Cái</td>
+                <td class="text-right qty">1</td>
+                <td class="text-right">1.000.000</td>
+                <td class="text-right price">1.000.000</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            `;
+        }
+    </script>
 </body>
 </html>
