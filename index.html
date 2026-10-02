@@ -100,9 +100,9 @@
         .col-date { min-width: 110px; width: 110px; }
         .col-code { min-width: 110px; width: 120px; }
         .col-inv { min-width: 90px; width: 100px; }
-        .col-vendor { min-width: 280px; white-space: normal; } /* Tên nhà cung cấp cho phép xuống hàng nếu cần */
+        .col-vendor { min-width: 280px; white-space: normal; }
         .col-product-code { min-width: 120px; }
-        .col-product-name { min-width: 250px; white-space: normal; } /* Tên hàng cho phép xuống hàng */
+        .col-product-name { min-width: 250px; white-space: normal; }
         .col-unit { min-width: 60px; width: 60px; }
         .col-num { min-width: 100px; }
     </style>
@@ -170,8 +170,8 @@
                 var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
                 tbody.innerHTML = "";
                 if (Array.isArray(data)) {
-                    data.forEach(row => {
-                        appendRowToTable(row);
+                    data.forEach((row, index) => {
+                        appendRowToTable(row, index);
                     });
                 }
                 showLoading(false);
@@ -182,11 +182,10 @@
             });
         }
 
-        // Hàm chuyển đổi tất cả dạng ngày (chuỗi ISO, số Excel, đối tượng Date) về dạng dd/mm/yyyy
+        // Hàm chuyển đổi các dạng ngày về dd/mm/yyyy
         function formatDate(value) {
             if (!value) return '';
             
-            // Xử lý chuỗi ISO Date từ Google Sheets (VD: 2026-09-23T17:00:00.000Z)
             if (typeof value === 'string' && value.includes('T')) {
                 var dObj = new Date(value);
                 if (!isNaN(dObj.getTime())) {
@@ -197,7 +196,6 @@
                 }
             }
 
-            // Xử lý đối tượng Date
             if (value instanceof Date) {
                 var d = value.getDate().toString().padStart(2, '0');
                 var m = (value.getMonth() + 1).toString().padStart(2, '0');
@@ -205,7 +203,6 @@
                 return `${d}/${m}/${y}`;
             }
 
-            // Xử lý Số Serial Date của Excel
             if (typeof value === 'number' || (!isNaN(value) && Number(value) > 30000 && Number(value) < 60000)) {
                 var num = Number(value);
                 if (typeof XLSX !== 'undefined' && XLSX.SSF) {
@@ -222,9 +219,14 @@
             return value;
         }
 
-        function appendRowToTable(row) {
+        function appendRowToTable(row, index) {
             var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
             var newRow = tbody.insertRow();
+            
+            // Gán chỉ số dòng trong Google Sheet (Index + 2 do dòng 1 là Tiêu đề)
+            var sheetRowIndex = (index !== undefined && index !== null) ? (index + 2) : -1;
+            newRow.setAttribute('data-sheet-row', sheetRowIndex);
+
             newRow.innerHTML = `
                 <td class="text-center col-action">
                     <button class="btn-action btn-edit" onclick="editRow(this)">Sửa</button>
@@ -249,7 +251,92 @@
             `;
         }
 
-        // Tải Excel lên và gửi dữ liệu lưu thẳng vào Google Sheet
+        function editRow(btn) {
+            var tr = btn.closest('tr');
+            var cells = tr.querySelectorAll('td');
+            for (var i = 1; i < cells.length; i++) {
+                var currentText = cells[i].innerText;
+                cells[i].innerHTML = `<input type="text" class="editable-input" value="${currentText.replace(/"/g, '&quot;')}">`;
+            }
+            tr.querySelector('.btn-edit').style.display = 'none';
+            tr.querySelector('.btn-save').style.display = 'inline-block';
+        }
+
+        // HÀM LƯU DỮ LIỆU ĐÃ SỬA VỀ GOOGLE SHEET
+        function saveRow(btn) {
+            var tr = btn.closest('tr');
+            var cells = tr.querySelectorAll('td');
+            var updatedData = [];
+
+            // Thu thập giá trị từ ô input
+            for (var i = 1; i < cells.length; i++) {
+                var input = cells[i].querySelector('input');
+                var val = input ? input.value : cells[i].innerText;
+                updatedData.push(val);
+                cells[i].innerText = val;
+            }
+
+            tr.querySelector('.btn-save').style.display = 'none';
+            tr.querySelector('.btn-edit').style.display = 'inline-block';
+
+            var sheetRowIndex = tr.getAttribute('data-sheet-row');
+
+            showLoading(true);
+
+            var payload;
+            if (sheetRowIndex && sheetRowIndex !== "-1") {
+                // Sửa dòng đã có sẵn trên Google Sheet
+                payload = JSON.stringify({
+                    action: "updateRow",
+                    rowIndex: parseInt(sheetRowIndex),
+                    rowData: updatedData
+                });
+            } else {
+                // Nếu là dòng mới thêm thủ công chưa có trên Sheet -> Tạo dòng mới
+                payload = JSON.stringify({
+                    action: "appendRows",
+                    rows: [updatedData]
+                });
+            }
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: payload
+            })
+            .then(res => res.json())
+            .then(res => {
+                showLoading(false);
+                alert("Đã lưu thành công vào Google Sheet!");
+                loadDataFromSheet(); // Tải lại để đảm bảo dữ liệu đồng bộ
+            })
+            .catch(err => {
+                console.error("Lỗi khi lưu dòng:", err);
+                showLoading(false);
+                alert("Đã gửi yêu cầu lưu! Đang tải lại...");
+                setTimeout(loadDataFromSheet, 1200);
+            });
+
+            filterTable();
+        }
+
+        function addRow() {
+            var today = new Date();
+            var d = today.getDate().toString().padStart(2, '0');
+            var m = (today.getMonth() + 1).toString().padStart(2, '0');
+            var y = today.getFullYear();
+            var currentDateStr = `${d}/${m}/${y}`;
+
+            // Tạo một dòng trắng tạm thời
+            var emptyRow = [currentDateStr, currentDateStr, '', currentDateStr, '', '', '', '', 'Cái', 0, 0, 0, 0, 0, 0, 0];
+            appendRowToTable(emptyRow, null);
+
+            // Bật chế độ sửa ngay lập tức cho dòng mới tạo
+            var tbody = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+            var lastRow = tbody.rows[tbody.rows.length - 1];
+            editRow(lastRow.querySelector('.btn-edit'));
+        }
+
         function importExcel(input) {
             var file = input.files[0];
             if (!file) return;
@@ -293,14 +380,12 @@
 
                 fetch(GOOGLE_SCRIPT_URL, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "text/plain;charset=utf-8"
-                    },
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: payload
                 })
                 .then(() => {
                     showLoading(false);
-                    alert("Đã gửi dữ liệu thành công! Đang tải lại danh sách...");
+                    alert("Đã tải dữ liệu thành công!");
                     setTimeout(loadDataFromSheet, 1500);
                 })
                 .catch(err => {
@@ -314,7 +399,6 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Lọc dữ liệu
         function filterTable() {
             var inputs = document.querySelectorAll('.filter-input');
             var table = document.getElementById("dataTable");
@@ -333,33 +417,6 @@
                 });
                 tr.style.display = showRow ? "" : "none";
             });
-        }
-
-        function editRow(btn) {
-            var tr = btn.closest('tr');
-            var cells = tr.querySelectorAll('td');
-            for (var i = 1; i < cells.length; i++) {
-                var currentText = cells[i].innerText;
-                cells[i].innerHTML = `<input type="text" class="editable-input" value="${currentText}">`;
-            }
-            tr.querySelector('.btn-edit').style.display = 'none';
-            tr.querySelector('.btn-save').style.display = 'inline-block';
-        }
-
-        function saveRow(btn) {
-            var tr = btn.closest('tr');
-            var cells = tr.querySelectorAll('td');
-            for (var i = 1; i < cells.length; i++) {
-                var input = cells[i].querySelector('input');
-                if (input) cells[i].innerText = input.value;
-            }
-            tr.querySelector('.btn-save').style.display = 'none';
-            tr.querySelector('.btn-edit').style.display = 'inline-block';
-            filterTable();
-        }
-
-        function addRow() {
-            appendRowToTable(['---', '---', '---', '---', '---', '---', '---', '---', 'Cái', 0, 0, 0, '', '', '', '']);
         }
     </script>
 </body>
