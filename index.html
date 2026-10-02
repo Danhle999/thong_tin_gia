@@ -262,63 +262,55 @@
             tr.querySelector('.btn-save').style.display = 'inline-block';
         }
 
-        // HÀM LƯU DỮ LIỆU ĐÃ SỬA VỀ GOOGLE SHEET
-        function saveRow(btn) {
-            var tr = btn.closest('tr');
-            var cells = tr.querySelectorAll('td');
-            var updatedData = [];
+function saveRow(btn) {
+    // 1. Chống reload trang nếu nút bấm nằm trong Form
+    if (event) event.preventDefault();
 
-            // Thu thập giá trị từ ô input
-            for (var i = 1; i < cells.length; i++) {
-                var input = cells[i].querySelector('input');
-                var val = input ? input.value : cells[i].innerText;
-                updatedData.push(val);
-                cells[i].innerText = val;
-            }
+    var tr = btn.closest('tr');
+    var cells = tr.querySelectorAll('td');
+    var updatedData = [];
 
-            tr.querySelector('.btn-save').style.display = 'none';
-            tr.querySelector('.btn-edit').style.display = 'inline-block';
+    // Lấy dữ liệu từ các ô input
+    for (var i = 1; i < cells.length; i++) {
+        var input = cells[i].querySelector('input');
+        var val = input ? input.value : cells[i].innerText;
+        updatedData.push(val);
+    }
 
-            var sheetRowIndex = tr.getAttribute('data-sheet-row');
+    var sheetRowIndex = tr.getAttribute('data-sheet-row');
 
-            showLoading(true);
+    // Hiện trạng thái đang đồng bộ (thông báo màu vàng trên giao diện của bạn)
+    showLoading(true);
 
-            var payload;
-            if (sheetRowIndex && sheetRowIndex !== "-1") {
-                // Sửa dòng đã có sẵn trên Google Sheet
-                payload = JSON.stringify({
-                    action: "updateRow",
-                    rowIndex: parseInt(sheetRowIndex),
-                    rowData: updatedData
-                });
-            } else {
-                // Nếu là dòng mới thêm thủ công chưa có trên Sheet -> Tạo dòng mới
-                payload = JSON.stringify({
-                    action: "appendRows",
-                    rows: [updatedData]
-                });
-            }
+    var payload = JSON.stringify({
+        action: (sheetRowIndex && sheetRowIndex !== "-1") ? "updateRow" : "appendRows",
+        rowIndex: parseInt(sheetRowIndex),
+        rowData: updatedData,
+        rows: [updatedData]
+    });
 
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: payload
-            })
-            .then(res => res.json())
-            .then(res => {
-                showLoading(false);
-                alert("Đã lưu thành công vào Google Sheet!");
-                loadDataFromSheet(); // Tải lại để đảm bảo dữ liệu đồng bộ
-            })
-            .catch(err => {
-                console.error("Lỗi khi lưu dòng:", err);
-                showLoading(false);
-                alert("Đã gửi yêu cầu lưu! Đang tải lại...");
-                setTimeout(loadDataFromSheet, 1200);
-            });
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: payload
+    })
+    .then(() => {
+        showLoading(false);
+        alert("Đã lưu thành công vào Google Sheet!");
 
-            filterTable();
-        }
+        // ⚠️ ĐIỂM CỐT LÕI: Tăng thời gian chờ lên 4 giây (4000ms) 
+        // để Google Sheet hoàn tất việc lưu dữ liệu rồi mới tải lại bảng
+        setTimeout(function() {
+            loadDataFromSheet();
+        }, 4000); 
+    })
+    .catch(err => {
+        console.error("Lỗi:", err);
+        showLoading(false);
+        alert("Có lỗi kết nối!");
+    });
+}
 
         function addRow() {
             var today = new Date();
