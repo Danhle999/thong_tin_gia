@@ -14,16 +14,18 @@
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .table-responsive { max-height: 70vh; overflow-y: auto; }
+        .table-responsive { max-height: 65vh; overflow-y: auto; }
         th { background-color: #0d6efd !important; color: white !important; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
         td { vertical-align: middle; white-space: nowrap; }
         .editable-input { width: 100%; min-width: 100px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; }
+        .filter-input { width: 100%; min-width: 80px; padding: 2px 5px; font-size: 0.85rem; border-radius: 4px; border: 1px solid #ced4da; }
         #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-<!-- Màn hình chờ khi gọi API -->
+<!-- Màn hình chờ kết nối API -->
 <div id="loadingSpinner">
     <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
         <span class="visually-hidden">Đang kết nối Google Sheet...</span>
@@ -32,9 +34,37 @@
 
 <div class="container-fluid my-4">
     <div class="table-container">
-        <h3 class="mb-4 text-primary"><i class="fa-solid fa-boxes-packing me-2"></i>Quản Lý Dữ Liệu Nhập Kho</h3>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="text-primary m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Quản Lý Dữ Liệu Nhập Kho</h3>
+            <span class="badge bg-info text-dark" id="rowCountBadge">Tổng dòng: 0</span>
+        </div>
+
+        <!-- BỘ LỌC TÌM KIẾM NÂNG CAO -->
+        <div class="filter-card">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-1"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
+                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-1"><i class="fa-solid fa-calendar me-1"></i>Từ ngày (Ngày HT):</label>
+                    <input type="date" id="fromDateInput" class="form-control form-control-sm" onchange="applyFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-1"><i class="fa-solid fa-calendar me-1"></i>Đến ngày (Ngày HT):</label>
+                    <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyFilters()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-1"><i class="fa-solid fa-building me-1"></i>Tên / Mã NCC:</label>
+                    <input type="text" id="nccFilterInput" class="form-control form-control-sm" placeholder="Nhập tên hoặc mã NCC..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-1">
+                    <button class="btn btn-sm btn-secondary w-100" onclick="resetFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
+                </div>
+            </div>
+        </div>
         
-        <!-- Các nút thao tác -->
+        <!-- NÚT THAO TÁC -->
         <div class="row mb-3">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng</button>
@@ -48,7 +78,7 @@
             </div>
         </div>
 
-        <!-- Bảng hiển thị dữ liệu -->
+        <!-- BẢNG DỮ LIỆU -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle" id="dataTable">
                 <thead>
@@ -71,9 +101,29 @@
                         <th>Chi Phí</th>
                         <th>Giá Trị Giảm</th>
                     </tr>
+                    <!-- Hàng ô lọc riêng từng cột -->
+                    <tr class="bg-light">
+                        <td class="text-center"><i class="fa-solid fa-filter text-muted"></i></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="0" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="1" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="2" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="3" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="4" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="5" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="6" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="7" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="8" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="9" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="10" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="11" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="12" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="13" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="14" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="15" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                    </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <!-- Dữ liệu render bằng Javascript -->
+                    <!-- Dữ liệu render tại đây -->
                 </tbody>
             </table>
         </div>
@@ -82,7 +132,9 @@
 
 <script>
     // URL Web App của bạn
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlzLBNTu_Cqh9ieOjTNqXfT-OJ1GprPC5mowAN_kqm3HpbyKOQcdZgZqjFgMqos-SJDw/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7nYKdrm1gtnph5CYUfbrbxMC5hEz7dQ9ig9V47YOR6j6X7BBZQD558zhwtm23OUXBBg/exec";
+
+    var globalRawData = []; // Lưu trữ toàn bộ dữ liệu thô từ Sheet
 
     document.addEventListener("DOMContentLoaded", function() {
         loadDataFromSheet();
@@ -92,7 +144,7 @@
         document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
     }
 
-    // 1. Lấy toàn bộ dữ liệu từ Google Sheet (GET)
+    // 1. Tải dữ liệu từ Google Sheet (GET)
     function loadDataFromSheet() {
         showLoading(true);
         fetch(GOOGLE_SCRIPT_URL, {
@@ -103,7 +155,8 @@
         .then(data => {
             showLoading(false);
             if (data.result === "success") {
-                renderTable(data.data);
+                globalRawData = data.data || [];
+                applyFilters(); // Render và áp dụng bộ lọc
             } else {
                 alert("Lỗi tải dữ liệu: " + data.error);
             }
@@ -111,24 +164,90 @@
         .catch(err => {
             showLoading(false);
             console.error("Lỗi kết nối API:", err);
-            alert("Không thể kết nối đến Google Sheet. Vui lòng kiểm tra lại đường dẫn Web App.");
+            alert("Không thể kết nối đến máy chủ Google Apps Script.");
         });
     }
 
-    // 2. Render dữ liệu ra bảng HTML
-    function renderTable(rows) {
+    // 2. Logic Áp Dụng Tất Cả Bộ Lọc
+    function applyFilters() {
+        var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
+        var fromDate = document.getElementById('fromDateInput').value;
+        var toDate = document.getElementById('toDateInput').value;
+        var nccKeyword = document.getElementById('nccFilterInput').value.toLowerCase().trim();
+
+        // Thu thập các bộ lọc ở từng cột riêng biệt
+        var colFilters = {};
+        document.querySelectorAll('.col-filter').forEach(function(input) {
+            var colIdx = input.getAttribute('data-col');
+            var val = input.value.toLowerCase().trim();
+            if (val) colFilters[colIdx] = val;
+        });
+
         var tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        rows.forEach(function(row, index) {
-            appendRowToTable(row, index);
+        var visibleCount = 0;
+
+        globalRawData.forEach(function(row, index) {
+            var isVisible = true;
+
+            // a. Lọc theo từ khóa toàn cục (Global Search)
+            if (globalKeyword) {
+                var rowText = row.join(' ').toLowerCase();
+                if (!rowText.includes(globalKeyword)) isVisible = false;
+            }
+
+            // b. Lọc theo khoảng ngày (Ngày HT - Cột 0)
+            if (isVisible && (fromDate || toDate)) {
+                var rawDate = row[0] ? String(row[0]).split('T')[0] : '';
+                if (fromDate && rawDate < fromDate) isVisible = false;
+                if (toDate && rawDate > toDate) isVisible = false;
+            }
+
+            // c. Lọc theo Mã/Tên NCC (Cột 4 & Cột 5)
+            if (isVisible && nccKeyword) {
+                var maNcc = row[4] ? String(row[4]).toLowerCase() : '';
+                var tenNcc = row[5] ? String(row[5]).toLowerCase() : '';
+                if (!maNcc.includes(nccKeyword) && !tenNcc.includes(nccKeyword)) {
+                    isVisible = false;
+                }
+            }
+
+            // d. Lọc riêng theo từng cột
+            if (isVisible) {
+                for (var colIdx in colFilters) {
+                    var cellVal = row[colIdx] !== undefined ? String(row[colIdx]).toLowerCase() : '';
+                    if (!cellVal.includes(colFilters[colIdx])) {
+                        isVisible = false;
+                        break;
+                    }
+                }
+            }
+
+            // Nếu thỏa mãn tất cả điều kiện thì vẽ dòng đó ra bảng
+            if (isVisible) {
+                appendRowToTable(row, index);
+                visibleCount++;
+            }
         });
+
+        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${visibleCount} / ${globalRawData.length} dòng`;
     }
 
+    // 3. Xóa tất cả bộ lọc
+    function resetFilters() {
+        document.getElementById('globalSearchInput').value = '';
+        document.getElementById('fromDateInput').value = '';
+        document.getElementById('toDateInput').value = '';
+        document.getElementById('nccFilterInput').value = '';
+        document.querySelectorAll('.col-filter').forEach(i => i.value = '');
+        applyFilters();
+    }
+
+    // 4. Render 1 dòng ra HTML
     function appendRowToTable(rowData, index) {
         var tbody = document.getElementById('tableBody');
         var tr = document.createElement('tr');
         
-        // Dòng 1 trong Google Sheet là tiêu đề -> Dòng dữ liệu đầu tiên (index 0) tương ứng dòng 2 trên Sheet
         var sheetRowIndex = (index !== undefined && index !== null) ? (index + 2) : -1;
         tr.setAttribute('data-sheet-row', sheetRowIndex);
 
@@ -140,7 +259,6 @@
         var cellsHtml = actionTd;
         for (var i = 0; i < 16; i++) {
             var val = (rowData && rowData[i] !== undefined) ? rowData[i] : '';
-            // Chuẩn hóa hiển thị định dạng ngày tháng ISO dạng YYYY-MM-DD
             if (typeof val === 'string' && val.includes('T00:00:00')) {
                 val = val.split('T')[0];
             }
@@ -152,25 +270,24 @@
         return tr;
     }
 
-    // 3. Tạo một dòng mới để điền dữ liệu
+    // 5. Thêm dòng mới
     function addRow() {
         var now = new Date();
         var currentDateStr = now.toISOString().split('T')[0];
-
-        // Mảng mẫu với 16 cột
         var emptyRow = [currentDateStr, currentDateStr, '', currentDateStr, '', '', '', '', 'Cái', 0, 0, 0, 0, 0, 0, 0];
-        var newRow = appendRowToTable(emptyRow, null);
         
-        // Mở chế độ nhập liệu ngay cho dòng mới
+        // Thêm vào dữ liệu thô toàn cục
+        globalRawData.push(emptyRow);
+        
+        var newRow = appendRowToTable(emptyRow, globalRawData.length - 1);
         editRow(newRow.querySelector('.btn-edit'));
     }
 
-    // 4. Mở các ô input để chỉnh sửa dòng
+    // 6. Chỉnh sửa dòng
     function editRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
 
-        // Bỏ qua cột 0 (Cột Thao Tác)
         for (var i = 1; i < cells.length; i++) {
             var currentText = cells[i].innerText.trim();
             cells[i].innerHTML = `<input type="text" class="editable-input" value="${currentText}">`;
@@ -180,7 +297,7 @@
         tr.querySelector('.btn-save').style.display = 'inline-block';
     }
 
-    // 5. Lưu dòng chỉnh sửa hoặc thêm dòng mới lên Google Sheet (POST)
+    // 7. Lưu dữ liệu lên Google Sheet (POST)
     function saveRow(btn) {
         if (event) event.preventDefault();
 
@@ -188,7 +305,6 @@
         var cells = tr.querySelectorAll('td');
         var updatedData = [];
 
-        // Thu thập thông tin từ các ô Input (Cột 1 đến 16)
         for (var i = 1; i < cells.length; i++) {
             var input = cells[i].querySelector('input');
             var val = input ? input.value.trim() : cells[i].innerText.trim();
@@ -213,44 +329,27 @@
                 "Content-Type": "text/plain;charset=utf-8"
             },
             body: payload,
-            redirect: "follow" // Bắt buộc phải có để xử lý redirect từ Google
+            redirect: "follow"
         })
         .then(res => res.json())
         .then(data => {
             showLoading(false);
             if (data.result === "success") {
-                // Khôi phục giao diện dạng chữ
-                for (var i = 1; i < cells.length; i++) {
-                    cells[i].innerText = updatedData[i - 1];
-                }
-                tr.querySelector('.btn-save').style.display = 'none';
-                tr.querySelector('.btn-edit').style.display = 'inline-block';
-                
                 alert("Đã lưu dữ liệu vào Google Sheet thành công!");
-                
-                // Tải lại bảng để cập nhật chỉ số dòng chuẩn xác
                 loadDataFromSheet();
             } else {
-                alert("Lỗi từ Google Apps Script: " + data.error);
+                alert("Lỗi từ máy chủ: " + data.error);
             }
         })
         .catch(err => {
             showLoading(false);
-            console.error("Lỗi khi kết nối API:", err);
-            
-            // Khôi phục giao diện nếu gặp phản hồi không chuẩn MIME type nhưng ghi nhận thành công
-            for (var i = 1; i < cells.length; i++) {
-                cells[i].innerText = updatedData[i - 1];
-            }
-            tr.querySelector('.btn-save').style.display = 'none';
-            tr.querySelector('.btn-edit').style.display = 'inline-block';
-
+            console.error("Lỗi gửi dữ liệu:", err);
             alert("Đã gửi thông tin lưu! Đang tải lại danh sách...");
             setTimeout(loadDataFromSheet, 1500);
         });
     }
 
-    // 6. Tải file Excel hàng loạt đẩy lên Google Sheet
+    // 8. Tải từ Excel
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
@@ -259,7 +358,6 @@
         reader.onload = function(e) {
             var data = new Uint8Array(e.target.result);
             var workbook = XLSX.read(data, { type: 'array' });
-
             var firstSheetName = workbook.SheetNames[0];
             var worksheet = workbook.Sheets[firstSheetName];
 
@@ -271,7 +369,6 @@
                 return;
             }
 
-            // Đồng bộ hoá mỗi dòng phải đủ 16 cột
             rowsToAppend = rowsToAppend.map(row => {
                 var newRow = [];
                 for (var i = 0; i < 16; i++) {
@@ -306,7 +403,7 @@
             .catch(err => {
                 showLoading(false);
                 console.error("Lỗi:", err);
-                alert("Đã gửi dữ liệu Excel! Đang làm mới dữ liệu...");
+                alert("Đã gửi dữ liệu Excel! Đang làm mới danh sách...");
                 setTimeout(loadDataFromSheet, 2000);
             });
         };
