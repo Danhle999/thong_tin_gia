@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- SheetJS cho Đọc Excel -->
+    <!-- SheetJS đọc file Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
@@ -23,9 +23,10 @@
 </head>
 <body>
 
+<!-- Màn hình chờ khi gọi API -->
 <div id="loadingSpinner">
     <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-        <span class="visually-hidden">Đang xử lý...</span>
+        <span class="visually-hidden">Đang kết nối Google Sheet...</span>
     </div>
 </div>
 
@@ -33,7 +34,7 @@
     <div class="table-container">
         <h3 class="mb-4 text-primary"><i class="fa-solid fa-boxes-packing me-2"></i>Quản Lý Dữ Liệu Nhập Kho</h3>
         
-        <!-- Nút Thao Tác -->
+        <!-- Các nút thao tác -->
         <div class="row mb-3">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng</button>
@@ -47,7 +48,7 @@
             </div>
         </div>
 
-        <!-- Bảng Dữ Liệu -->
+        <!-- Bảng hiển thị dữ liệu -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle" id="dataTable">
                 <thead>
@@ -72,7 +73,7 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <!-- Dữ liệu render tại đây -->
+                    <!-- Dữ liệu render bằng Javascript -->
                 </tbody>
             </table>
         </div>
@@ -80,8 +81,8 @@
 </div>
 
 <script>
-    // ⚠️ ĐỔI THÀNH URL WEB APP CỦA BẠN
-    const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
+    // URL Web App của bạn
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7nYKdrm1gtnph5CYUfbrbxMC5hEz7dQ9ig9V47YOR6j6X7BBZQD558zhwtm23OUXBBg/exec";
 
     document.addEventListener("DOMContentLoaded", function() {
         loadDataFromSheet();
@@ -91,7 +92,7 @@
         document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
     }
 
-    // 1. Tải dữ liệu từ Google Sheet
+    // 1. Lấy toàn bộ dữ liệu từ Google Sheet (GET)
     function loadDataFromSheet() {
         showLoading(true);
         fetch(GOOGLE_SCRIPT_URL, {
@@ -109,12 +110,12 @@
         })
         .catch(err => {
             showLoading(false);
-            console.error("Lỗi kết nối:", err);
-            alert("Không thể kết nối đến máy chủ Google Apps Script.");
+            console.error("Lỗi kết nối API:", err);
+            alert("Không thể kết nối đến Google Sheet. Vui lòng kiểm tra lại đường dẫn Web App.");
         });
     }
 
-    // 2. Hiển thị bảng
+    // 2. Render dữ liệu ra bảng HTML
     function renderTable(rows) {
         var tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
@@ -127,7 +128,7 @@
         var tbody = document.getElementById('tableBody');
         var tr = document.createElement('tr');
         
-        // Tính toán đúng chỉ số dòng trên Google Sheet (Dòng 1 là Tiêu đề => Index 0 là Dòng 2)
+        // Dòng 1 trong Google Sheet là tiêu đề -> Dòng dữ liệu đầu tiên (index 0) tương ứng dòng 2 trên Sheet
         var sheetRowIndex = (index !== undefined && index !== null) ? (index + 2) : -1;
         tr.setAttribute('data-sheet-row', sheetRowIndex);
 
@@ -139,7 +140,7 @@
         var cellsHtml = actionTd;
         for (var i = 0; i < 16; i++) {
             var val = (rowData && rowData[i] !== undefined) ? rowData[i] : '';
-            // Định dạng ngày tháng nếu là ISO String từ Sheet
+            // Chuẩn hóa hiển thị định dạng ngày tháng ISO dạng YYYY-MM-DD
             if (typeof val === 'string' && val.includes('T00:00:00')) {
                 val = val.split('T')[0];
             }
@@ -151,20 +152,20 @@
         return tr;
     }
 
-    // 3. Thêm dòng trống mới
+    // 3. Tạo một dòng mới để điền dữ liệu
     function addRow() {
         var now = new Date();
         var currentDateStr = now.toISOString().split('T')[0];
 
-        // Khởi tạo mảng đúng 16 cột dữ liệu
+        // Mảng mẫu với 16 cột
         var emptyRow = [currentDateStr, currentDateStr, '', currentDateStr, '', '', '', '', 'Cái', 0, 0, 0, 0, 0, 0, 0];
         var newRow = appendRowToTable(emptyRow, null);
         
-        // Tự động chuyển sang chế độ chỉnh sửa dòng vừa tạo
+        // Mở chế độ nhập liệu ngay cho dòng mới
         editRow(newRow.querySelector('.btn-edit'));
     }
 
-    // 4. Bật chế độ sửa dòng
+    // 4. Mở các ô input để chỉnh sửa dòng
     function editRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
@@ -179,7 +180,7 @@
         tr.querySelector('.btn-save').style.display = 'inline-block';
     }
 
-    // 5. Lưu dòng (Tạo mới hoặc Cập nhật)
+    // 5. Lưu dòng chỉnh sửa hoặc thêm dòng mới lên Google Sheet (POST)
     function saveRow(btn) {
         if (event) event.preventDefault();
 
@@ -187,7 +188,7 @@
         var cells = tr.querySelectorAll('td');
         var updatedData = [];
 
-        // Lấy dữ liệu từ các input (Cột 1 đến 16)
+        // Thu thập thông tin từ các ô Input (Cột 1 đến 16)
         for (var i = 1; i < cells.length; i++) {
             var input = cells[i].querySelector('input');
             var val = input ? input.value.trim() : cells[i].innerText.trim();
@@ -201,7 +202,7 @@
             action: isUpdate ? "updateRow" : "appendRows",
             rowIndex: parseInt(sheetRowIndex),
             rowData: updatedData,
-            rows: [updatedData] // Bọc trong mảng 2 chiều cho cả trường hợp append
+            rows: [updatedData]
         });
 
         showLoading(true);
@@ -212,22 +213,22 @@
                 "Content-Type": "text/plain;charset=utf-8"
             },
             body: payload,
-            redirect: "follow" // BẮT BUỘC PHẢI CÓ
+            redirect: "follow" // Bắt buộc phải có để xử lý redirect từ Google
         })
         .then(res => res.json())
         .then(data => {
             showLoading(false);
             if (data.result === "success") {
-                // Đổi hiển thị giao diện về dạng text thường
+                // Khôi phục giao diện dạng chữ
                 for (var i = 1; i < cells.length; i++) {
                     cells[i].innerText = updatedData[i - 1];
                 }
                 tr.querySelector('.btn-save').style.display = 'none';
                 tr.querySelector('.btn-edit').style.display = 'inline-block';
                 
-                alert("Đã lưu dữ liệu thành công!");
+                alert("Đã lưu dữ liệu vào Google Sheet thành công!");
                 
-                // Tải lại bảng để làm mới các chỉ số dòng (Row Index) từ Google Sheet
+                // Tải lại bảng để cập nhật chỉ số dòng chuẩn xác
                 loadDataFromSheet();
             } else {
                 alert("Lỗi từ Google Apps Script: " + data.error);
@@ -235,21 +236,21 @@
         })
         .catch(err => {
             showLoading(false);
-            console.error("Lỗi khi gửi yêu cầu:", err);
+            console.error("Lỗi khi kết nối API:", err);
             
-            // Xử lý fallback cho giao diện
+            // Khôi phục giao diện nếu gặp phản hồi không chuẩn MIME type nhưng ghi nhận thành công
             for (var i = 1; i < cells.length; i++) {
                 cells[i].innerText = updatedData[i - 1];
             }
             tr.querySelector('.btn-save').style.display = 'none';
             tr.querySelector('.btn-edit').style.display = 'inline-block';
 
-            alert("Đã gửi thông tin lưu! Đang cập nhật lại danh sách...");
+            alert("Đã gửi thông tin lưu! Đang tải lại danh sách...");
             setTimeout(loadDataFromSheet, 1500);
         });
     }
 
-    // 6. Nhập hàng loạt từ Excel
+    // 6. Tải file Excel hàng loạt đẩy lên Google Sheet
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
@@ -262,20 +263,19 @@
             var firstSheetName = workbook.SheetNames[0];
             var worksheet = workbook.Sheets[firstSheetName];
 
-            // Đọc từ dòng thứ 2 (bỏ qua tiêu đề tiêu chuẩn)
             var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             var rowsToAppend = excelData.slice(1).filter(r => r.length > 0);
 
             if (rowsToAppend.length === 0) {
-                alert("File Excel trống hoặc không đúng định dạng!");
+                alert("File Excel không có dữ liệu!");
                 return;
             }
 
-            // Đảm bảo mỗi dòng có đủ 16 cột
+            // Đồng bộ hoá mỗi dòng phải đủ 16 cột
             rowsToAppend = rowsToAppend.map(row => {
                 var newRow = [];
                 for (var i = 0; i < 16; i++) {
-                    newRow.push(row[i] !== undefined ? row[i] : '');
+                    newRow.push(row[i] !== undefined ? String(row[i]) : '');
                 }
                 return newRow;
             });
@@ -300,13 +300,13 @@
                     alert(`Đã nhập thành công ${rowsToAppend.length} dòng từ Excel!`);
                     loadDataFromSheet();
                 } else {
-                    alert("Lỗi nhập Excel: " + data.error);
+                    alert("Lỗi khi nhập Excel: " + data.error);
                 }
             })
             .catch(err => {
                 showLoading(false);
                 console.error("Lỗi:", err);
-                alert("Đã gửi file Excel! Đang cập nhật dữ liệu...");
+                alert("Đã gửi dữ liệu Excel! Đang làm mới dữ liệu...");
                 setTimeout(loadDataFromSheet, 2000);
             });
         };
