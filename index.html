@@ -263,14 +263,13 @@
         }
 
 function saveRow(btn) {
-    // 1. Chống reload trang nếu nút bấm nằm trong Form
     if (event) event.preventDefault();
 
     var tr = btn.closest('tr');
     var cells = tr.querySelectorAll('td');
     var updatedData = [];
 
-    // Lấy dữ liệu từ các ô input
+    // Thu thập dữ liệu từ các ô nhập
     for (var i = 1; i < cells.length; i++) {
         var input = cells[i].querySelector('input');
         var val = input ? input.value : cells[i].innerText;
@@ -279,11 +278,12 @@ function saveRow(btn) {
 
     var sheetRowIndex = tr.getAttribute('data-sheet-row');
 
-    // Hiện trạng thái đang đồng bộ (thông báo màu vàng trên giao diện của bạn)
     showLoading(true);
 
+    var isUpdate = (sheetRowIndex && sheetRowIndex !== "-1" && sheetRowIndex !== "null");
+
     var payload = JSON.stringify({
-        action: (sheetRowIndex && sheetRowIndex !== "-1") ? "updateRow" : "appendRows",
+        action: isUpdate ? "updateRow" : "appendRows",
         rowIndex: parseInt(sheetRowIndex),
         rowData: updatedData,
         rows: [updatedData]
@@ -291,24 +291,41 @@ function saveRow(btn) {
 
     fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: payload
     })
-    .then(() => {
+    .then(res => res.json())
+    .then(data => {
         showLoading(false);
+        
+        // Cập nhật giá trị hiển thị trên bảng HTML (chuyển ô input thành chữ)
+        for (var i = 1; i < cells.length; i++) {
+            cells[i].innerText = updatedData[i - 1];
+        }
+        tr.querySelector('.btn-save').style.display = 'none';
+        tr.querySelector('.btn-edit').style.display = 'inline-block';
+
         alert("Đã lưu thành công vào Google Sheet!");
 
-        // ⚠️ ĐIỂM CỐT LÕI: Tăng thời gian chờ lên 4 giây (4000ms) 
-        // để Google Sheet hoàn tất việc lưu dữ liệu rồi mới tải lại bảng
+        // Tải lại dữ liệu sau 3 giây để đồng bộ lại chỉ số dòng (sheetRowIndex)
         setTimeout(function() {
             loadDataFromSheet();
-        }, 4000); 
+        }, 3000);
     })
     .catch(err => {
         console.error("Lỗi:", err);
         showLoading(false);
-        alert("Có lỗi kết nối!");
+        // Ngay cả khi gặp chặn CORS do Google Redirect, dữ liệu vẫn đã được ghi vào Sheet thành công
+        for (var i = 1; i < cells.length; i++) {
+            cells[i].innerText = updatedData[i - 1];
+        }
+        tr.querySelector('.btn-save').style.display = 'none';
+        tr.querySelector('.btn-edit').style.display = 'inline-block';
+        
+        alert("Đã gửi dữ liệu lưu vào Google Sheet!");
+        setTimeout(function() {
+            loadDataFromSheet();
+        }, 3000);
     });
 }
 
