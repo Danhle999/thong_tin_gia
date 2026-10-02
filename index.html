@@ -21,7 +21,7 @@
         .editable-input { width: 100%; min-width: 80px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; }
         .filter-input { width: 100%; min-width: 70px; padding: 2px 5px; font-size: 0.85rem; border-radius: 4px; border: 1px solid #ced4da; }
         
-        /* --- CẤU HÌNH THU HẸP VÀ ÉP TỰ ĐỘNG XUỐNG DÒNG CHO CỘT NCC & MÃ HÀNG --- */
+        /* Cấu hình chiều rộng gọn gàng cho các cột đặc thù */
         .col-ncc { 
             max-width: 200px !important; 
             min-width: 150px !important; 
@@ -31,8 +31,8 @@
         }
         
         .col-code { 
-            max-width: 800px !important; 
-            min-width: 500px !important; 
+            max-width: 130px !important; 
+            min-width: 100px !important; 
             white-space: normal !important; 
             word-break: break-all !important;
             font-family: monospace, sans-serif;
@@ -45,6 +45,8 @@
             white-space: normal !important;
             word-break: break-word !important;
         }
+
+        .text-right { text-align: right; }
 
         #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; justify-content: center; align-items: center; }
         .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
@@ -120,13 +122,13 @@
                         <th class="col-desc">Diễn Giải</th>
                         <th class="col-code">Mã Hàng</th>
                         <th>ĐVT</th>
-                        <th>Số Lượng</th>
-                        <th>Đơn Giá</th>
-                        <th>Thành Tiền</th>
-                        <th>Giá cost</th>
-                        <th>Chiết khấu</th>
-                        <th>Sell in</th>
-                        <th>Sell out</th>
+                        <th class="text-right">Số Lượng</th>
+                        <th class="text-right">Đơn Giá</th>
+                        <th class="text-right">Thành Tiền</th>
+                        <th class="text-right">CK (%)</th>
+                        <th class="text-right">Tiền CK</th>
+                        <th class="text-right">Chi Phí</th>
+                        <th class="text-right">Giá Trị Giảm</th>
                     </tr>
                     <!-- Hàng ô lọc riêng từng cột -->
                     <tr class="bg-light">
@@ -161,7 +163,8 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7nYKdrm1gtnph5CYUfbrbxMC5hEz7dQ9ig9V47YOR6j6X7BBZQD558zhwtm23OUXBBg/exec";
 
     var globalRawData = []; 
-    const DATE_COLUMNS = [0, 1, 3];
+    const DATE_COLUMNS = [0, 1, 3]; // Các cột Ngày HT, Ngày CT, Ngày Hạn TT
+    const NUMERIC_COLUMNS = [9, 10, 11, 12, 13, 14, 15]; // Các cột Số lượng, Đơn giá, Thành tiền...
 
     document.addEventListener("DOMContentLoaded", function() {
         loadDataFromSheet();
@@ -171,6 +174,7 @@
         document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
     }
 
+    // Chuyển mã số Excel Serial (vd 46291) về dạng YYYY-MM-DD
     function excelSerialToISO(serial) {
         if (typeof serial === 'number' || (!isNaN(serial) && !String(serial).includes('-') && !String(serial).includes('/'))) {
             var num = Number(serial);
@@ -182,6 +186,7 @@
         return serial;
     }
 
+    // Chuyển chuỗi ngày về dạng chuẩn YYYY-MM-DD
     function parseToISODate(val) {
         if (!val && val !== 0) return '';
         val = excelSerialToISO(val);
@@ -214,6 +219,7 @@
         return str;
     }
 
+    // Định dạng hiển thị ngày DD/MM/YYYY
     function formatDateVN(isoDateStr) {
         var iso = parseToISODate(isoDateStr);
         if (!iso || !iso.includes('-')) return isoDateStr || '';
@@ -224,6 +230,17 @@
         return isoDateStr;
     }
 
+    // Định dạng số tiếng Việt (phân cách hàng nghìn bằng dấu chấm '.', số thập phân bằng dấu phẩy ',')
+    function formatNumberVN(val) {
+        if (val === '' || val === null || val === undefined) return '';
+        var num = Number(val);
+        if (isNaN(num)) return val;
+        
+        // Nếu là số nguyên thì không hiện phần thập phân, nếu có phần thập phân thì hiện chữ số phù hợp
+        return num.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+    }
+
+    // 1. Tải dữ liệu từ Google Sheet
     function loadDataFromSheet() {
         showLoading(true);
         fetch(GOOGLE_SCRIPT_URL, {
@@ -247,6 +264,7 @@
         });
     }
 
+    // 2. Bộ Lọc Dữ Liệu
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
         var fromDate = document.getElementById('fromDateInput').value; 
@@ -268,7 +286,11 @@
             var isVisible = true;
 
             if (globalKeyword) {
-                var rowText = row.map((val, idx) => DATE_COLUMNS.includes(idx) ? formatDateVN(val) : val).join(' ').toLowerCase();
+                var rowText = row.map((val, idx) => {
+                    if (DATE_COLUMNS.includes(idx)) return formatDateVN(val);
+                    if (NUMERIC_COLUMNS.includes(idx)) return formatNumberVN(val);
+                    return val;
+                }).join(' ').toLowerCase();
                 if (!rowText.includes(globalKeyword)) isVisible = false;
             }
 
@@ -288,9 +310,12 @@
 
             if (isVisible) {
                 for (var colIdx in colFilters) {
-                    var cellVal = row[colIdx] !== undefined ? String(row[colIdx]) : '';
-                    if (DATE_COLUMNS.includes(parseInt(colIdx))) {
+                    var idx = parseInt(colIdx);
+                    var cellVal = row[idx] !== undefined ? String(row[idx]) : '';
+                    if (DATE_COLUMNS.includes(idx)) {
                         cellVal = formatDateVN(cellVal);
+                    } else if (NUMERIC_COLUMNS.includes(idx)) {
+                        cellVal = formatNumberVN(cellVal);
                     }
                     if (!cellVal.toLowerCase().includes(colFilters[colIdx])) {
                         isVisible = false;
@@ -317,6 +342,7 @@
         applyFilters();
     }
 
+    // 3. Render 1 Dòng dữ liệu
     function appendRowToTable(rowData, index) {
         var tbody = document.getElementById('tableBody');
         var tr = document.createElement('tr');
@@ -332,17 +358,22 @@
         var cellsHtml = actionTd;
         for (var i = 0; i < 16; i++) {
             var val = (rowData && rowData[i] !== undefined) ? rowData[i] : '';
+            var displayVal = val;
+            var alignClass = "";
+
             if (DATE_COLUMNS.includes(i)) {
-                val = formatDateVN(val); 
+                displayVal = formatDateVN(val); 
+            } else if (NUMERIC_COLUMNS.includes(i)) {
+                displayVal = formatNumberVN(val);
+                alignClass = "text-right";
             }
             
-            // Áp dụng class định dạng thu hẹp riêng từng cột
-            var customClass = "";
-            if (i === 4 || i === 5) customClass = "col-ncc"; // Mã NCC & Tên NCC
-            else if (i === 6) customClass = "col-desc";      // Diễn giải
-            else if (i === 7) customClass = "col-code";      // Mã hàng
+            var customClass = alignClass;
+            if (i === 4 || i === 5) customClass += " col-ncc"; 
+            else if (i === 6) customClass += " col-desc";      
+            else if (i === 7) customClass += " col-code";      
 
-            cellsHtml += `<td class="${customClass}" data-col="${i}">${val}</td>`;
+            cellsHtml += `<td class="${customClass.trim()}" data-col="${i}" data-raw-val="${val}">${displayVal}</td>`;
         }
 
         tr.innerHTML = cellsHtml;
@@ -350,6 +381,7 @@
         return tr;
     }
 
+    // 4. Thêm Dòng Trống
     function addRow() {
         var now = new Date();
         var currentDateISO = now.toISOString().split('T')[0];
@@ -360,30 +392,32 @@
         editRow(newRow.querySelector('.btn-edit'));
     }
 
+    // 5. Chỉnh Sửa Dòng (Đưa về giá trị thô)
     function editRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
 
         for (var i = 1; i < cells.length; i++) {
             var colIdx = i - 1;
-            var currentText = cells[i].innerText.trim();
+            // Lấy giá trị thô lưu trong attribute data-raw-val nếu có
+            var rawVal = cells[i].getAttribute('data-raw-val');
+            if (rawVal === null || rawVal === undefined) {
+                rawVal = cells[i].innerText.trim();
+            }
 
             if (DATE_COLUMNS.includes(colIdx)) {
-                var isoVal = parseToISODate(currentText);
+                var isoVal = parseToISODate(rawVal);
                 cells[i].innerHTML = `<input type="date" class="editable-input" value="${isoVal}">`;
             } else {
-                cells[i].innerHTML = `<input type="text" class="editable-input" value="${currentText}">`;
+                cells[i].innerHTML = `<input type="text" class="editable-input" value="${rawVal}">`;
             }
         }
 
         tr.querySelector('.btn-edit').style.display = 'none';
         tr.querySelector('.btn-save').style.display = 'inline-block';
     }
-// Ví dụ: Hiển thị 14580000 thành 14.580.000 hoặc 14,580,000.00
-function formatNumber(num) {
-    if (num === '' || num === null || isNaN(num)) return num;
-    return Number(num).toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+
+    // 6. Lưu Dòng Dữ Liệu
     function saveRow(btn) {
         if (event) event.preventDefault();
 
@@ -435,6 +469,7 @@ function formatNumber(num) {
         });
     }
 
+    // 7. Nhập Dữ Liệu Từ Excel
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
