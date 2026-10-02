@@ -379,7 +379,11 @@
         tr.querySelector('.btn-edit').style.display = 'none';
         tr.querySelector('.btn-save').style.display = 'inline-block';
     }
-
+// Ví dụ: Hiển thị 14580000 thành 14.580.000 hoặc 14,580,000.00
+function formatNumber(num) {
+    if (num === '' || num === null || isNaN(num)) return num;
+    return Number(num).toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
     function saveRow(btn) {
         if (event) event.preventDefault();
 
