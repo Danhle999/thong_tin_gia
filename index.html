@@ -17,8 +17,35 @@
         .table-responsive { max-height: 65vh; overflow-y: auto; }
         th { background-color: #0d6efd !important; color: white !important; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
         td { vertical-align: middle; white-space: nowrap; }
-        .editable-input { width: 100%; min-width: 100px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; }
-        .filter-input { width: 100%; min-width: 80px; padding: 2px 5px; font-size: 0.85rem; border-radius: 4px; border: 1px solid #ced4da; }
+        
+        .editable-input { width: 100%; min-width: 80px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; }
+        .filter-input { width: 100%; min-width: 70px; padding: 2px 5px; font-size: 0.85rem; border-radius: 4px; border: 1px solid #ced4da; }
+        
+        /* --- CẤU HÌNH THU HẸP VÀ ÉP TỰ ĐỘNG XUỐNG DÒNG CHO CỘT NCC & MÃ HÀNG --- */
+        .col-ncc { 
+            max-width: 200px !important; 
+            min-width: 150px !important; 
+            white-space: normal !important; 
+            word-break: break-word !important; 
+            font-size: 0.85rem;
+        }
+        
+        .col-code { 
+            max-width: 130px !important; 
+            min-width: 100px !important; 
+            white-space: normal !important; 
+            word-break: break-all !important;
+            font-family: monospace, sans-serif;
+            font-weight: 600;
+        }
+
+        .col-desc {
+            max-width: 250px !important;
+            min-width: 180px !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+        }
+
         #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; justify-content: center; align-items: center; }
         .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
     </style>
@@ -88,10 +115,10 @@
                         <th>Ngày CT</th>
                         <th>Số CT</th>
                         <th>Ngày Hạn TT</th>
-                        <th>Mã NCC</th>
-                        <th>Tên NCC</th>
-                        <th>Diễn Giải</th>
-                        <th>Mã Hàng</th>
+                        <th class="col-ncc">Mã NCC</th>
+                        <th class="col-ncc">Tên NCC</th>
+                        <th class="col-desc">Diễn Giải</th>
+                        <th class="col-code">Mã Hàng</th>
                         <th>ĐVT</th>
                         <th>Số Lượng</th>
                         <th>Đơn Giá</th>
@@ -108,10 +135,10 @@
                         <td><input type="text" class="filter-input col-filter" data-col="1" onkeyup="applyFilters()" placeholder="Lọc..."></td>
                         <td><input type="text" class="filter-input col-filter" data-col="2" onkeyup="applyFilters()" placeholder="Lọc..."></td>
                         <td><input type="text" class="filter-input col-filter" data-col="3" onkeyup="applyFilters()" placeholder="Lọc..."></td>
-                        <td><input type="text" class="filter-input col-filter" data-col="4" onkeyup="applyFilters()" placeholder="Lọc..."></td>
-                        <td><input type="text" class="filter-input col-filter" data-col="5" onkeyup="applyFilters()" placeholder="Lọc..."></td>
-                        <td><input type="text" class="filter-input col-filter" data-col="6" onkeyup="applyFilters()" placeholder="Lọc..."></td>
-                        <td><input type="text" class="filter-input col-filter" data-col="7" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td class="col-ncc"><input type="text" class="filter-input col-filter" data-col="4" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td class="col-ncc"><input type="text" class="filter-input col-filter" data-col="5" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td class="col-desc"><input type="text" class="filter-input col-filter" data-col="6" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td class="col-code"><input type="text" class="filter-input col-filter" data-col="7" onkeyup="applyFilters()" placeholder="Lọc..."></td>
                         <td><input type="text" class="filter-input col-filter" data-col="8" onkeyup="applyFilters()" placeholder="Lọc..."></td>
                         <td><input type="text" class="filter-input col-filter" data-col="9" onkeyup="applyFilters()" placeholder="Lọc..."></td>
                         <td><input type="text" class="filter-input col-filter" data-col="10" onkeyup="applyFilters()" placeholder="Lọc..."></td>
@@ -134,7 +161,6 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7nYKdrm1gtnph5CYUfbrbxMC5hEz7dQ9ig9V47YOR6j6X7BBZQD558zhwtm23OUXBBg/exec";
 
     var globalRawData = []; 
-    // Các chỉ số cột chứa ngày: 0 (Ngày HT), 1 (Ngày CT), 3 (Ngày Hạn TT)
     const DATE_COLUMNS = [0, 1, 3];
 
     document.addEventListener("DOMContentLoaded", function() {
@@ -145,7 +171,6 @@
         document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
     }
 
-    // Chuyển Excel Serial Date (vd: 46291) về dạng YYYY-MM-DD
     function excelSerialToISO(serial) {
         if (typeof serial === 'number' || (!isNaN(serial) && !String(serial).includes('-') && !String(serial).includes('/'))) {
             var num = Number(serial);
@@ -157,11 +182,8 @@
         return serial;
     }
 
-    // Hàm chuyển đổi chuỗi ngày bất kỳ về YYYY-MM-DD
     function parseToISODate(val) {
         if (!val && val !== 0) return '';
-        
-        // Kiểm tra xem có phải chuỗi số Excel Serial không
         val = excelSerialToISO(val);
 
         if (val instanceof Date) {
@@ -169,11 +191,8 @@
         }
 
         var str = String(val).trim();
-
-        // Xử lý chuỗi ISO dạng 2026-10-25T00:00:00
         if (str.includes('T')) str = str.split('T')[0];
 
-        // Nếu dạng DD/MM/YYYY
         if (str.includes('/')) {
             var parts = str.split('/');
             if (parts.length === 3) {
@@ -185,7 +204,6 @@
             }
         }
 
-        // Nếu dạng YYYY-MM-DD
         if (str.includes('-')) {
             var parts = str.split('-');
             if (parts.length === 3) {
@@ -196,7 +214,6 @@
         return str;
     }
 
-    // Hàm định dạng hiển thị ra giao diện: YYYY-MM-DD -> DD/MM/YYYY
     function formatDateVN(isoDateStr) {
         var iso = parseToISODate(isoDateStr);
         if (!iso || !iso.includes('-')) return isoDateStr || '';
@@ -207,7 +224,6 @@
         return isoDateStr;
     }
 
-    // 1. Tải dữ liệu từ Google Sheet
     function loadDataFromSheet() {
         showLoading(true);
         fetch(GOOGLE_SCRIPT_URL, {
@@ -231,7 +247,6 @@
         });
     }
 
-    // 2. Logic Bộ Lọc Dữ Liệu
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
         var fromDate = document.getElementById('fromDateInput').value; 
@@ -252,20 +267,17 @@
         globalRawData.forEach(function(row, index) {
             var isVisible = true;
 
-            // Lọc toàn cục
             if (globalKeyword) {
                 var rowText = row.map((val, idx) => DATE_COLUMNS.includes(idx) ? formatDateVN(val) : val).join(' ').toLowerCase();
                 if (!rowText.includes(globalKeyword)) isVisible = false;
             }
 
-            // Lọc theo khoảng ngày (Cột 0: Ngày HT)
             if (isVisible && (fromDate || toDate)) {
                 var rawDateISO = parseToISODate(row[0]);
                 if (fromDate && rawDateISO < fromDate) isVisible = false;
                 if (toDate && rawDateISO > toDate) isVisible = false;
             }
 
-            // Lọc theo Mã/Tên NCC
             if (isVisible && nccKeyword) {
                 var maNcc = row[4] ? String(row[4]).toLowerCase() : '';
                 var tenNcc = row[5] ? String(row[5]).toLowerCase() : '';
@@ -274,7 +286,6 @@
                 }
             }
 
-            // Lọc riêng từng cột
             if (isVisible) {
                 for (var colIdx in colFilters) {
                     var cellVal = row[colIdx] !== undefined ? String(row[colIdx]) : '';
@@ -306,7 +317,6 @@
         applyFilters();
     }
 
-    // 3. Render 1 dòng ra HTML
     function appendRowToTable(rowData, index) {
         var tbody = document.getElementById('tableBody');
         var tr = document.createElement('tr');
@@ -323,9 +333,16 @@
         for (var i = 0; i < 16; i++) {
             var val = (rowData && rowData[i] !== undefined) ? rowData[i] : '';
             if (DATE_COLUMNS.includes(i)) {
-                val = formatDateVN(val); // Hiển thị DD/MM/YYYY
+                val = formatDateVN(val); 
             }
-            cellsHtml += `<td data-col="${i}">${val}</td>`;
+            
+            // Áp dụng class định dạng thu hẹp riêng từng cột
+            var customClass = "";
+            if (i === 4 || i === 5) customClass = "col-ncc"; // Mã NCC & Tên NCC
+            else if (i === 6) customClass = "col-desc";      // Diễn giải
+            else if (i === 7) customClass = "col-code";      // Mã hàng
+
+            cellsHtml += `<td class="${customClass}" data-col="${i}">${val}</td>`;
         }
 
         tr.innerHTML = cellsHtml;
@@ -333,7 +350,6 @@
         return tr;
     }
 
-    // 4. Thêm dòng mới
     function addRow() {
         var now = new Date();
         var currentDateISO = now.toISOString().split('T')[0];
@@ -344,7 +360,6 @@
         editRow(newRow.querySelector('.btn-edit'));
     }
 
-    // 5. Chỉnh sửa dòng
     function editRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
@@ -365,7 +380,6 @@
         tr.querySelector('.btn-save').style.display = 'inline-block';
     }
 
-    // 6. Lưu dữ liệu lên Google Sheet
     function saveRow(btn) {
         if (event) event.preventDefault();
 
@@ -417,7 +431,6 @@
         });
     }
 
-    // 7. Xử lý tải dữ liệu từ Excel (Đã bổ sung đọc và parse ngày tự động)
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
@@ -425,7 +438,6 @@
         var reader = new FileReader();
         reader.onload = function(e) {
             var data = new Uint8Array(e.target.result);
-            // Thêm cellDates: true để đọc định dạng Ngày
             var workbook = XLSX.read(data, { type: 'array', cellDates: true });
             var firstSheetName = workbook.SheetNames[0];
             var worksheet = workbook.Sheets[firstSheetName];
@@ -443,7 +455,7 @@
                 for (var i = 0; i < 16; i++) {
                     var cellVal = row[i] !== undefined ? row[i] : '';
                     if (DATE_COLUMNS.includes(i)) {
-                        cellVal = parseToISODate(cellVal); // Tự động chuyển đổi mã Serial hoặc Date object sang YYYY-MM-DD
+                        cellVal = parseToISODate(cellVal); 
                     } else {
                         cellVal = String(cellVal);
                     }
