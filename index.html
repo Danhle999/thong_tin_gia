@@ -145,9 +145,29 @@
         document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
     }
 
+    // Chuyển Excel Serial Date (vd: 46291) về dạng YYYY-MM-DD
+    function excelSerialToISO(serial) {
+        if (typeof serial === 'number' || (!isNaN(serial) && !String(serial).includes('-') && !String(serial).includes('/'))) {
+            var num = Number(serial);
+            if (num > 20000 && num < 60000) { 
+                var date = new Date(Math.round((num - 25569) * 86400 * 1000));
+                return date.toISOString().split('T')[0];
+            }
+        }
+        return serial;
+    }
+
     // Hàm chuyển đổi chuỗi ngày bất kỳ về YYYY-MM-DD
     function parseToISODate(val) {
-        if (!val) return '';
+        if (!val && val !== 0) return '';
+        
+        // Kiểm tra xem có phải chuỗi số Excel Serial không
+        val = excelSerialToISO(val);
+
+        if (val instanceof Date) {
+            return val.toISOString().split('T')[0];
+        }
+
         var str = String(val).trim();
 
         // Xử lý chuỗi ISO dạng 2026-10-25T00:00:00
@@ -169,7 +189,7 @@
         if (str.includes('-')) {
             var parts = str.split('-');
             if (parts.length === 3) {
-                if (parts[0].length === 4) return str; // YYYY-MM-DD
+                if (parts[0].length === 4) return str; 
                 return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             }
         }
@@ -214,8 +234,8 @@
     // 2. Logic Bộ Lọc Dữ Liệu
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
-        var fromDate = document.getElementById('fromDateInput').value; // YYYY-MM-DD
-        var toDate = document.getElementById('toDateInput').value;     // YYYY-MM-DD
+        var fromDate = document.getElementById('fromDateInput').value; 
+        var toDate = document.getElementById('toDateInput').value;     
         var nccKeyword = document.getElementById('nccFilterInput').value.toLowerCase().trim();
 
         var colFilters = {};
@@ -286,7 +306,7 @@
         applyFilters();
     }
 
-    // 3. Render 1 dòng ra HTML (Đã định dạng ngày DD/MM/YYYY)
+    // 3. Render 1 dòng ra HTML
     function appendRowToTable(rowData, index) {
         var tbody = document.getElementById('tableBody');
         var tr = document.createElement('tr');
@@ -303,7 +323,7 @@
         for (var i = 0; i < 16; i++) {
             var val = (rowData && rowData[i] !== undefined) ? rowData[i] : '';
             if (DATE_COLUMNS.includes(i)) {
-                val = formatDateVN(val); // Chuyển sang DD/MM/YYYY
+                val = formatDateVN(val); // Hiển thị DD/MM/YYYY
             }
             cellsHtml += `<td data-col="${i}">${val}</td>`;
         }
@@ -324,7 +344,7 @@
         editRow(newRow.querySelector('.btn-edit'));
     }
 
-    // 5. Chỉnh sửa dòng (Chuyển cột ngày thành ô chọn Date Picker)
+    // 5. Chỉnh sửa dòng
     function editRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
@@ -397,7 +417,7 @@
         });
     }
 
-    // 7. Tải dữ liệu từ Excel
+    // 7. Xử lý tải dữ liệu từ Excel (Đã bổ sung đọc và parse ngày tự động)
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
@@ -405,7 +425,8 @@
         var reader = new FileReader();
         reader.onload = function(e) {
             var data = new Uint8Array(e.target.result);
-            var workbook = XLSX.read(data, { type: 'array' });
+            // Thêm cellDates: true để đọc định dạng Ngày
+            var workbook = XLSX.read(data, { type: 'array', cellDates: true });
             var firstSheetName = workbook.SheetNames[0];
             var worksheet = workbook.Sheets[firstSheetName];
 
@@ -420,9 +441,11 @@
             rowsToAppend = rowsToAppend.map(row => {
                 var newRow = [];
                 for (var i = 0; i < 16; i++) {
-                    var cellVal = row[i] !== undefined ? String(row[i]) : '';
+                    var cellVal = row[i] !== undefined ? row[i] : '';
                     if (DATE_COLUMNS.includes(i)) {
-                        cellVal = parseToISODate(cellVal);
+                        cellVal = parseToISODate(cellVal); // Tự động chuyển đổi mã Serial hoặc Date object sang YYYY-MM-DD
+                    } else {
+                        cellVal = String(cellVal);
                     }
                     newRow.push(cellVal);
                 }
