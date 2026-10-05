@@ -129,6 +129,7 @@
                         <th class="text-right">Chiết khấu</th>
                         <th class="text-right">Sell out</th>
                         <th class="text-right">Sell in</th>
+                        <th class="col-desc">Tên nhóm VTHH</th>
                     </tr>
                     <!-- Hàng ô lọc riêng từng cột -->
                     <tr class="bg-light">
@@ -149,6 +150,7 @@
                         <td><input type="text" class="filter-input col-filter" data-col="13" onkeyup="applyFilters()" placeholder="Lọc..."></td>
                         <td><input type="text" class="filter-input col-filter" data-col="14" onkeyup="applyFilters()" placeholder="Lọc..."></td>
                         <td><input type="text" class="filter-input col-filter" data-col="15" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td class="col-desc"><input type="text" class="filter-input col-filter" data-col="16" onkeyup="applyFilters()" placeholder="Lọc..."></td>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -163,6 +165,7 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7nYKdrm1gtnph5CYUfbrbxMC5hEz7dQ9ig9V47YOR6j6X7BBZQD558zhwtm23OUXBBg/exec";
 
     var globalRawData = []; 
+    const TOTAL_COLUMNS = 17; // Cập nhật tổng số cột là 17
     const DATE_COLUMNS = [0, 1, 3]; // Các cột Ngày HT, Ngày CT, Ngày Hạn TT
     const NUMERIC_COLUMNS = [9, 10, 11, 12, 13, 14, 15]; // Các cột Số lượng, Đơn giá, Thành tiền...
 
@@ -230,13 +233,11 @@
         return isoDateStr;
     }
 
-    // Định dạng số tiếng Việt (phân cách hàng nghìn bằng dấu chấm '.', số thập phân bằng dấu phẩy ',')
+    // Định dạng số tiếng Việt
     function formatNumberVN(val) {
         if (val === '' || val === null || val === undefined) return '';
         var num = Number(val);
         if (isNaN(num)) return val;
-        
-        // Nếu là số nguyên thì không hiện phần thập phân, nếu có phần thập phân thì hiện chữ số phù hợp
         return num.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
     }
 
@@ -356,7 +357,7 @@
         </td>`;
 
         var cellsHtml = actionTd;
-        for (var i = 0; i < 16; i++) {
+        for (var i = 0; i < TOTAL_COLUMNS; i++) {
             var val = (rowData && rowData[i] !== undefined) ? rowData[i] : '';
             var displayVal = val;
             var alignClass = "";
@@ -370,7 +371,7 @@
             
             var customClass = alignClass;
             if (i === 4 || i === 5) customClass += " col-ncc"; 
-            else if (i === 6) customClass += " col-desc";      
+            else if (i === 6 || i === 16) customClass += " col-desc"; // Định dạng chiều rộng cho Diễn giải & Tên nhóm VTHH    
             else if (i === 7) customClass += " col-code";      
 
             cellsHtml += `<td class="${customClass.trim()}" data-col="${i}" data-raw-val="${val}">${displayVal}</td>`;
@@ -385,21 +386,21 @@
     function addRow() {
         var now = new Date();
         var currentDateISO = now.toISOString().split('T')[0];
-        var emptyRow = [currentDateISO, currentDateISO, '', currentDateISO, '', '', '', '', 'Cái', 0, 0, 0, 0, 0, 0, 0];
+        // Thêm 1 phần tử rỗng cuối cùng cho cột Tên nhóm VTHH
+        var emptyRow = [currentDateISO, currentDateISO, '', currentDateISO, '', '', '', '', 'Cái', 0, 0, 0, 0, 0, 0, 0, ''];
         
         globalRawData.push(emptyRow);
         var newRow = appendRowToTable(emptyRow, globalRawData.length - 1);
         editRow(newRow.querySelector('.btn-edit'));
     }
 
-    // 5. Chỉnh Sửa Dòng (Đưa về giá trị thô)
+    // 5. Chỉnh Sửa Dòng
     function editRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
 
         for (var i = 1; i < cells.length; i++) {
             var colIdx = i - 1;
-            // Lấy giá trị thô lưu trong attribute data-raw-val nếu có
             var rawVal = cells[i].getAttribute('data-raw-val');
             if (rawVal === null || rawVal === undefined) {
                 rawVal = cells[i].innerText.trim();
@@ -491,7 +492,7 @@
 
             rowsToAppend = rowsToAppend.map(row => {
                 var newRow = [];
-                for (var i = 0; i < 16; i++) {
+                for (var i = 0; i < TOTAL_COLUMNS; i++) {
                     var cellVal = row[i] !== undefined ? row[i] : '';
                     if (DATE_COLUMNS.includes(i)) {
                         cellVal = parseToISODate(cellVal); 
