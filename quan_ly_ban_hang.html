@@ -14,7 +14,7 @@
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .table-responsive { max-height: 65vh; overflow-y: auto; }
+        .table-responsive { max-height: 60vh; overflow-y: auto; }
         th { background-color: #0d6efd !important; color: white !important; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
         td { vertical-align: middle; white-space: nowrap; }
         
@@ -50,6 +50,18 @@
 
         #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; justify-content: center; align-items: center; }
         .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+        
+        /* CSS cho Phân trang */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
     </style>
 </head>
 <body>
@@ -158,14 +170,39 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- THANH PHÂN TRANG (PAGINATION) -->
+        <div class="pagination-container">
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small">Hiển thị:</span>
+                <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto;" onchange="changePageSize()">
+                    <option value="25">25 dòng/trang</option>
+                    <option value="50" selected>50 dòng/trang</option>
+                    <option value="100">100 dòng/trang</option>
+                    <option value="200">200 dòng/trang</option>
+                    <option value="500">500 dòng/trang</option>
+                </select>
+                <span id="pageInfoSpan" class="text-muted small ms-2">Trang 1 / 1</span>
+            </div>
+
+            <nav>
+                <ul class="pagination pagination-sm m-0" id="paginationControls">
+                    <!-- Nút phân trang render tại đây -->
+                </ul>
+            </nav>
+        </div>
+
     </div>
 </div>
 
 <script>
-    // Bạn có thể thay đường dẫn Web App Google Apps Script dành riêng cho Quản lý bán hàng tại đây
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxEX4e6KNg7pPqSohK0FCcem6nxKiiTpqag2pjQwC3wtUtMP04tBbs1R1v9h5uq82xi/exec";
 
     var globalRawData = []; 
+    var filteredData = []; // Danh sách dữ liệu đã qua lọc
+    var currentPage = 1;
+    var pageSize = 50;
+
     const TOTAL_COLUMNS = 17;
     const DATE_COLUMNS = [2, 4]; // Các cột: Ngày ghi sổ (2), Ngày đề nghị trả lại (4)
     const NUMERIC_COLUMNS = [7, 8, 9, 10, 11, 12, 16]; // Các cột Số lượng bán, Thành tiền, Tổng tiền, Số lượng/Thành tiền/Tổng tiền trả lại, ĐƠN GIÁ
@@ -280,11 +317,9 @@
             if (val) colFilters[colIdx] = val;
         });
 
-        var tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        var visibleCount = 0;
+        filteredData = [];
 
-        globalRawData.forEach(function(row, index) {
+        globalRawData.forEach(function(row, originalIndex) {
             var isVisible = true;
 
             if (globalKeyword) {
@@ -328,12 +363,13 @@
             }
 
             if (isVisible) {
-                appendRowToTable(row, index);
-                visibleCount++;
+                // Lưu lại dòng kèm theo originalIndex để cập nhật chính xác dòng trên Sheet
+                filteredData.push({ rowData: row, originalIndex: originalIndex });
             }
         });
 
-        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${visibleCount} / ${globalRawData.length} dòng`;
+        currentPage = 1; // Reset về trang 1 sau khi lọc
+        renderTablePage();
     }
 
     function resetFilters() {
@@ -345,7 +381,83 @@
         applyFilters();
     }
 
-    // 3. Render 1 Dòng dữ liệu
+    // 3. Render Dữ liệu theo Trang (Pagination Render)
+    function renderTablePage() {
+        var tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        var totalItems = filteredData.length;
+        var totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        var startIndex = (currentPage - 1) * pageSize;
+        var endIndex = Math.min(startIndex + pageSize, totalItems);
+
+        // Chỉ render các dòng trong phạm vi trang hiện tại
+        for (var i = startIndex; i < endIndex; i++) {
+            var item = filteredData[i];
+            appendRowToTable(item.rowData, item.originalIndex);
+        }
+
+        // Cập nhật thông tin số lượng
+        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${totalItems} / ${globalRawData.length} dòng`;
+        document.getElementById('pageInfoSpan').innerText = `Trang ${currentPage} / ${totalPages} (Từ ${totalItems > 0 ? startIndex + 1 : 0} - ${endIndex})`;
+
+        renderPaginationControls(totalPages);
+    }
+
+    // Render các nút bấm chuyển trang
+    function renderPaginationControls(totalPages) {
+        var container = document.getElementById('paginationControls');
+        container.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        // Nút Đầu & Trước
+        container.innerHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(1); return false;"><i class="fa-solid fa-angles-left"></i></a>
+        </li>`;
+        container.innerHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(${currentPage - 1}); return false;"><i class="fa-solid fa-angle-left"></i></a>
+        </li>`;
+
+        // Tính toán danh sách số trang hiển thị (Tối đa 5 nút số)
+        var startPage = Math.max(1, currentPage - 2);
+        var endPage = Math.min(totalPages, startPage + 4);
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+
+        for (var p = startPage; p <= endPage; p++) {
+            var activeClass = (p === currentPage) ? 'active' : '';
+            container.innerHTML += `<li class="page-item ${activeClass}">
+                <a class="page-link" href="#" onclick="goToPage(${p}); return false;">${p}</a>
+            </li>`;
+        }
+
+        // Nút Sau & Cuối
+        container.innerHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(${currentPage + 1}); return false;"><i class="fa-solid fa-angle-right"></i></a>
+        </li>`;
+        container.innerHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToPage(${totalPages}); return false;"><i class="fa-solid fa-angles-right"></i></a>
+        </li>`;
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        renderTablePage();
+    }
+
+    function changePageSize() {
+        pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+        currentPage = 1;
+        renderTablePage();
+    }
+
+    // Render 1 Dòng dữ liệu ra DOM
     function appendRowToTable(rowData, index) {
         var tbody = document.getElementById('tableBody');
         var tr = document.createElement('tr');
@@ -392,8 +504,18 @@
         var emptyRow = ['', '', currentDateISO, '', '', '', '', 0, 0, 0, 0, 0, 0, '', 'Cái', 'Không', 0];
         
         globalRawData.push(emptyRow);
-        var newRow = appendRowToTable(emptyRow, globalRawData.length - 1);
-        editRow(newRow.querySelector('.btn-edit'));
+        applyFilters(); // Cập nhật lại danh sách sau khi thêm
+
+        // Tự động chuyển đến trang cuối cùng để người dùng sửa dòng mới
+        var totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+        goToPage(totalPages);
+
+        // Kích hoạt chế độ sửa cho dòng vừa thêm ở cuối bảng
+        var tbody = document.getElementById('tableBody');
+        var lastRow = tbody.lastElementChild;
+        if (lastRow) {
+            editRow(lastRow.querySelector('.btn-edit'));
+        }
     }
 
     // 5. Chỉnh Sửa Dòng
