@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Bán Hàng</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- SheetJS đọc file Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .table-responsive { max-height: 65vh; overflow-y: auto; }
+        th { background-color: #0d6efd !important; color: white !important; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        td { vertical-align: middle; white-space: nowrap; }
+        
+        .editable-input { width: 100%; min-width: 80px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; }
+        .filter-input { width: 100%; min-width: 70px; padding: 2px 5px; font-size: 0.85rem; border-radius: 4px; border: 1px solid #ced4da; }
+        
+        /* Cấu hình chiều rộng gọn gàng cho các cột đặc thù */
+        .col-customer { 
+            max-width: 250px !important; 
+            min-width: 150px !important; 
+            white-space: normal !important; 
+            word-break: break-word !important; 
+            font-size: 0.85rem;
+        }
+        
+        .col-code { 
+            max-width: 800px !important; 
+            min-width: 400px !important; 
+            white-space: normal !important; 
+            word-break: break-all !important;
+            font-family: monospace, sans-serif;
+            font-weight: 600;
+        }
+
+        .col-desc {
+            max-width: 250px !important;
+            min-width: 180px !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+        }
+
+        .text-right { text-align: right; }
+
+        #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 9999; justify-content: center; align-items: center; }
+        .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<!-- Màn hình chờ kết nối API -->
+<div id="loadingSpinner">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="visually-hidden">Đang kết nối Google Sheet...</span>
+    </div>
+</div>
+
+<div class="container-fluid my-4">
+    <div class="table-container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="text-primary m-0"><i class="fa-solid fa-cart-shopping me-2"></i>Quản Lý Dữ Liệu Bán Hàng</h3>
+            <span class="badge bg-info text-dark" id="rowCountBadge">Tổng dòng: 0</span>
+        </div>
+
+        <!-- BỘ LỌC TÌM KIẾM NÂNG CAO -->
+        <div class="filter-card">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-1"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
+                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-1"><i class="fa-solid fa-calendar me-1"></i>Từ ngày (Ngày ghi sổ):</label>
+                    <input type="date" id="fromDateInput" class="form-control form-control-sm" onchange="applyFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-1"><i class="fa-solid fa-calendar me-1"></i>Đến ngày (Ngày ghi sổ):</label>
+                    <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyFilters()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-1"><i class="fa-solid fa-user me-1"></i>Tên Khách Hàng:</label>
+                    <input type="text" id="customerFilterInput" class="form-control form-control-sm" placeholder="Nhập tên khách hàng..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-1">
+                    <button class="btn btn-sm btn-secondary w-100" onclick="resetFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NÚT THAO TÁC -->
+        <div class="row mb-3">
+            <div class="col-md-6 d-flex gap-2">
+                <button class="btn btn-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng</button>
+                <button class="btn btn-primary" onclick="loadDataFromSheet()"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Dữ Liệu</button>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end gap-2">
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
+                <button class="btn btn-outline-success" onclick="document.getElementById('excelFileInput').click()">
+                    <i class="fa-solid fa-file-excel me-1"></i>Nhập Từ Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- BẢNG DỮ LIỆU -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle" id="dataTable">
+                <thead>
+                    <tr>
+                        <th class="text-center">Thao Tác</th>
+                        <th class="col-customer">Tên khách hàng</th>
+                        <th>Số đơn hàng</th>
+                        <th>Ngày ghi sổ</th>
+                        <th>Số đề nghị trả lại</th>
+                        <th>Ngày đề nghị trả lại</th>
+                        <th class="col-code">Mã hàng hóa</th>
+                        <th class="col-desc">Diễn giải</th>
+                        <th class="text-right">Số lượng bán</th>
+                        <th class="text-right">Thành tiền bán</th>
+                        <th class="text-right">Tổng tiền bán</th>
+                        <th class="text-right">Số lượng trả lại</th>
+                        <th class="text-right">Thành tiền trả lại</th>
+                        <th class="text-right">Tổng tiền trả lại</th>
+                        <th>Người thực hiện</th>
+                        <th>Đơn vị</th>
+                        <th>Là combo hàng hóa</th>
+                        <th class="text-right">ĐƠN GIÁ</th>
+                    </tr>
+                    <!-- Hàng ô lọc riêng từng cột -->
+                    <tr class="bg-light">
+                        <td class="text-center"><i class="fa-solid fa-filter text-muted"></i></td>
+                        <td class="col-customer"><input type="text" class="filter-input col-filter" data-col="0" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="1" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="2" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="3" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="4" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td class="col-code"><input type="text" class="filter-input col-filter" data-col="5" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td class="col-desc"><input type="text" class="filter-input col-filter" data-col="6" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="7" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="8" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="9" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="10" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="11" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="12" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="13" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="14" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="15" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                        <td><input type="text" class="filter-input col-filter" data-col="16" onkeyup="applyFilters()" placeholder="Lọc..."></td>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Dữ liệu render tại đây -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Bạn có thể thay đường dẫn Web App Google Apps Script dành riêng cho Quản lý bán hàng tại đây
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7nYKdrm1gtnph5CYUfbrbxMC5hEz7dQ9ig9V47YOR6j6X7BBZQD558zhwtm23OUXBBg/exec";
+
+    var globalRawData = []; 
+    const TOTAL_COLUMNS = 17;
+    const DATE_COLUMNS = [2, 4]; // Các cột: Ngày ghi sổ (2), Ngày đề nghị trả lại (4)
+    const NUMERIC_COLUMNS = [7, 8, 9, 10, 11, 12, 16]; // Các cột Số lượng bán, Thành tiền, Tổng tiền, Số lượng/Thành tiền/Tổng tiền trả lại, ĐƠN GIÁ
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadDataFromSheet();
+    });
+
+    function showLoading(show) {
+        document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
+    }
+
+    // Chuyển mã số Excel Serial (vd 46291) về dạng YYYY-MM-DD
+    function excelSerialToISO(serial) {
+        if (typeof serial === 'number' || (!isNaN(serial) && !String(serial).includes('-') && !String(serial).includes('/'))) {
+            var num = Number(serial);
+            if (num > 20000 && num < 60000) { 
+                var date = new Date(Math.round((num - 25569) * 86400 * 1000));
+                return date.toISOString().split('T')[0];
+            }
+        }
+        return serial;
+    }
+
+    // Chuyển chuỗi ngày về dạng chuẩn YYYY-MM-DD
+    function parseToISODate(val) {
+        if (!val && val !== 0) return '';
+        val = excelSerialToISO(val);
+
+        if (val instanceof Date) {
+            return val.toISOString().split('T')[0];
+        }
+
+        var str = String(val).trim();
+        if (str.includes('T')) str = str.split('T')[0];
+
+        if (str.includes('/')) {
+            var parts = str.split('/');
+            if (parts.length === 3) {
+                var d = parts[0].padStart(2, '0');
+                var m = parts[1].padStart(2, '0');
+                var y = parts[2];
+                if (y.length === 2) y = '20' + y;
+                return `${y}-${m}-${d}`;
+            }
+        }
+
+        if (str.includes('-')) {
+            var parts = str.split('-');
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return str; 
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+        }
+        return str;
+    }
+
+    // Định dạng hiển thị ngày DD/MM/YYYY
+    function formatDateVN(isoDateStr) {
+        var iso = parseToISODate(isoDateStr);
+        if (!iso || !iso.includes('-')) return isoDateStr || '';
+        var parts = iso.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return isoDateStr;
+    }
+
+    // Định dạng số tiếng Việt
+    function formatNumberVN(val) {
+        if (val === '' || val === null || val === undefined) return '';
+        var num = Number(val);
+        if (isNaN(num)) return val;
+        return num.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+    }
+
+    // 1. Tải dữ liệu từ Google Sheet
+    function loadDataFromSheet() {
+        showLoading(true);
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "GET",
+            redirect: "follow"
+        })
+        .then(res => res.json())
+        .then(data => {
+            showLoading(false);
+            if (data.result === "success") {
+                globalRawData = data.data || [];
+                applyFilters();
+            } else {
+                alert("Lỗi tải dữ liệu: " + data.error);
+            }
+        })
+        .catch(err => {
+            showLoading(false);
+            console.error("Lỗi kết nối API:", err);
+            alert("Không thể kết nối đến máy chủ Google Apps Script.");
+        });
+    }
+
+    // 2. Bộ Lọc Dữ Liệu
+    function applyFilters() {
+        var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
+        var fromDate = document.getElementById('fromDateInput').value; 
+        var toDate = document.getElementById('toDateInput').value;     
+        var customerKeyword = document.getElementById('customerFilterInput').value.toLowerCase().trim();
+
+        var colFilters = {};
+        document.querySelectorAll('.col-filter').forEach(function(input) {
+            var colIdx = input.getAttribute('data-col');
+            var val = input.value.toLowerCase().trim();
+            if (val) colFilters[colIdx] = val;
+        });
+
+        var tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        var visibleCount = 0;
+
+        globalRawData.forEach(function(row, index) {
+            var isVisible = true;
+
+            if (globalKeyword) {
+                var rowText = row.map((val, idx) => {
+                    if (DATE_COLUMNS.includes(idx)) return formatDateVN(val);
+                    if (NUMERIC_COLUMNS.includes(idx)) return formatNumberVN(val);
+                    return val;
+                }).join(' ').toLowerCase();
+                if (!rowText.includes(globalKeyword)) isVisible = false;
+            }
+
+            // Lọc theo Ngày ghi sổ (Cột 2)
+            if (isVisible && (fromDate || toDate)) {
+                var rawDateISO = parseToISODate(row[2]);
+                if (fromDate && rawDateISO < fromDate) isVisible = false;
+                if (toDate && rawDateISO > toDate) isVisible = false;
+            }
+
+            // Lọc theo Tên khách hàng (Cột 0)
+            if (isVisible && customerKeyword) {
+                var customerName = row[0] ? String(row[0]).toLowerCase() : '';
+                if (!customerName.includes(customerKeyword)) {
+                    isVisible = false;
+                }
+            }
+
+            if (isVisible) {
+                for (var colIdx in colFilters) {
+                    var idx = parseInt(colIdx);
+                    var cellVal = row[idx] !== undefined ? String(row[idx]) : '';
+                    if (DATE_COLUMNS.includes(idx)) {
+                        cellVal = formatDateVN(cellVal);
+                    } else if (NUMERIC_COLUMNS.includes(idx)) {
+                        cellVal = formatNumberVN(cellVal);
+                    }
+                    if (!cellVal.toLowerCase().includes(colFilters[colIdx])) {
+                        isVisible = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isVisible) {
+                appendRowToTable(row, index);
+                visibleCount++;
+            }
+        });
+
+        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${visibleCount} / ${globalRawData.length} dòng`;
+    }
+
+    function resetFilters() {
+        document.getElementById('globalSearchInput').value = '';
+        document.getElementById('fromDateInput').value = '';
+        document.getElementById('toDateInput').value = '';
+        document.getElementById('customerFilterInput').value = '';
+        document.querySelectorAll('.col-filter').forEach(i => i.value = '');
+        applyFilters();
+    }
+
+    // 3. Render 1 Dòng dữ liệu
+    function appendRowToTable(rowData, index) {
+        var tbody = document.getElementById('tableBody');
+        var tr = document.createElement('tr');
+        
+        var sheetRowIndex = (index !== undefined && index !== null) ? (index + 2) : -1;
+        tr.setAttribute('data-sheet-row', sheetRowIndex);
+
+        var actionTd = `<td class="text-center">
+            <button class="btn btn-sm btn-warning btn-edit" onclick="editRow(this)"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button class="btn btn-sm btn-success btn-save" onclick="saveRow(this)" style="display:none;"><i class="fa-solid fa-floppy-disk"></i></button>
+        </td>`;
+
+        var cellsHtml = actionTd;
+        for (var i = 0; i < TOTAL_COLUMNS; i++) {
+            var val = (rowData && rowData[i] !== undefined) ? rowData[i] : '';
+            var displayVal = val;
+            var alignClass = "";
+
+            if (DATE_COLUMNS.includes(i)) {
+                displayVal = formatDateVN(val); 
+            } else if (NUMERIC_COLUMNS.includes(i)) {
+                displayVal = formatNumberVN(val);
+                alignClass = "text-right";
+            }
+            
+            var customClass = alignClass;
+            if (i === 0) customClass += " col-customer"; 
+            else if (i === 6) customClass += " col-desc"; 
+            else if (i === 5) customClass += " col-code";      
+
+            cellsHtml += `<td class="${customClass.trim()}" data-col="${i}" data-raw-val="${val}">${displayVal}</td>`;
+        }
+
+        tr.innerHTML = cellsHtml;
+        tbody.appendChild(tr);
+        return tr;
+    }
+
+    // 4. Thêm Dòng Trống
+    function addRow() {
+        var now = new Date();
+        var currentDateISO = now.toISOString().split('T')[0];
+        // Cấu trúc 17 cột dữ liệu bán hàng mẫu
+        var emptyRow = ['', '', currentDateISO, '', '', '', '', 0, 0, 0, 0, 0, 0, '', 'Cái', 'Không', 0];
+        
+        globalRawData.push(emptyRow);
+        var newRow = appendRowToTable(emptyRow, globalRawData.length - 1);
+        editRow(newRow.querySelector('.btn-edit'));
+    }
+
+    // 5. Chỉnh Sửa Dòng
+    function editRow(btn) {
+        var tr = btn.closest('tr');
+        var cells = tr.querySelectorAll('td');
+
+        for (var i = 1; i < cells.length; i++) {
+            var colIdx = i - 1;
+            var rawVal = cells[i].getAttribute('data-raw-val');
+            if (rawVal === null || rawVal === undefined) {
+                rawVal = cells[i].innerText.trim();
+            }
+
+            if (DATE_COLUMNS.includes(colIdx)) {
+                var isoVal = parseToISODate(rawVal);
+                cells[i].innerHTML = `<input type="date" class="editable-input" value="${isoVal}">`;
+            } else {
+                cells[i].innerHTML = `<input type="text" class="editable-input" value="${rawVal}">`;
+            }
+        }
+
+        tr.querySelector('.btn-edit').style.display = 'none';
+        tr.querySelector('.btn-save').style.display = 'inline-block';
+    }
+
+    // 6. Lưu Dòng Dữ Liệu
+    function saveRow(btn) {
+        if (event) event.preventDefault();
+
+        var tr = btn.closest('tr');
+        var cells = tr.querySelectorAll('td');
+        var updatedData = [];
+
+        for (var i = 1; i < cells.length; i++) {
+            var input = cells[i].querySelector('input');
+            var val = input ? input.value.trim() : cells[i].innerText.trim();
+            updatedData.push(val);
+        }
+
+        var sheetRowIndex = tr.getAttribute('data-sheet-row');
+        var isUpdate = (sheetRowIndex && sheetRowIndex !== "-1" && sheetRowIndex !== "null");
+
+        var payload = JSON.stringify({
+            action: isUpdate ? "updateRow" : "appendRows",
+            rowIndex: parseInt(sheetRowIndex),
+            rowData: updatedData,
+            rows: [updatedData]
+        });
+
+        showLoading(true);
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8"
+            },
+            body: payload,
+            redirect: "follow"
+        })
+        .then(res => res.json())
+        .then(data => {
+            showLoading(false);
+            if (data.result === "success") {
+                alert("Lưu dữ liệu thành công!");
+                loadDataFromSheet();
+            } else {
+                alert("Lỗi từ máy chủ: " + data.error);
+            }
+        })
+        .catch(err => {
+            showLoading(false);
+            console.error("Lỗi gửi dữ liệu:", err);
+            alert("Đã gửi dữ liệu thành công! Đang tải lại danh sách...");
+            setTimeout(loadDataFromSheet, 1500);
+        });
+    }
+
+    // 7. Nhập Dữ Liệu Từ Excel
+    function handleExcelUpload(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var data = new Uint8Array(e.target.result);
+            var workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            var firstSheetName = workbook.SheetNames[0];
+            var worksheet = workbook.Sheets[firstSheetName];
+
+            var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            var rowsToAppend = excelData.slice(1).filter(r => r.length > 0);
+
+            if (rowsToAppend.length === 0) {
+                alert("File Excel không có dữ liệu!");
+                return;
+            }
+
+            rowsToAppend = rowsToAppend.map(row => {
+                var newRow = [];
+                for (var i = 0; i < TOTAL_COLUMNS; i++) {
+                    var cellVal = row[i] !== undefined ? row[i] : '';
+                    if (DATE_COLUMNS.includes(i)) {
+                        cellVal = parseToISODate(cellVal); 
+                    } else {
+                        cellVal = String(cellVal);
+                    }
+                    newRow.push(cellVal);
+                }
+                return newRow;
+            });
+
+            showLoading(true);
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify({
+                    action: "appendRows",
+                    rows: rowsToAppend
+                }),
+                redirect: "follow"
+            })
+            .then(res => res.json())
+            .then(data => {
+                showLoading(false);
+                if (data.result === "success") {
+                    alert(`Đã nhập thành công ${rowsToAppend.length} dòng từ Excel!`);
+                    loadDataFromSheet();
+                } else {
+                    alert("Lỗi khi nhập Excel: " + data.error);
+                }
+            })
+            .catch(err => {
+                showLoading(false);
+                console.error("Lỗi:", err);
+                alert("Đã tải dữ liệu Excel lên! Đang tải lại danh sách...");
+                setTimeout(loadDataFromSheet, 2000);
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
