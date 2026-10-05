@@ -66,7 +66,7 @@
 <div id="loadingSpinner">
     <div class="text-center">
         <div class="spinner-border text-warning" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
-        <div class="mt-2 fw-bold text-dark">Đang đồng bộ dữ liệu...</div>
+        <div class="mt-2 fw-bold text-dark">Đang đồng bộ dữ liệu với Google Sheets...</div>
     </div>
 </div>
 
@@ -83,10 +83,10 @@
             <!-- NÚT CHUYỂN CHẾ ĐỘ XEM BẢNG -->
             <div class="btn-group view-mode-btn-group" role="group">
                 <button type="button" id="btnModeFull" class="btn btn-warning active" onclick="switchTableMode('FULL')">
-                    <i class="fa-solid fa-list-check me-1"></i> Phân Tích PC
+                    <i class="fa-solid fa-list-check me-1"></i> Phân Tích PC (31 Cột)
                 </button>
                 <button type="button" id="btnModePrice" class="btn btn-outline-dark" onclick="switchTableMode('PRICE')">
-                    <i class="fa-solid fa-tags me-1"></i> Phân Tích Laptop
+                    <i class="fa-solid fa-tags me-1"></i> Phân Tích Laptop (23 Cột)
                 </button>
             </div>
 
@@ -136,10 +136,10 @@
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle" id="dataTable">
                 <thead id="tableHeader">
-                    <!-- Dynamic Header sẽ render ở đây -->
+                    <!-- Dynamic Header render ở đây -->
                 </thead>
                 <tbody id="tableBody">
-                    <!-- Dynamic Rows sẽ render ở đây -->
+                    <!-- Dynamic Rows render ở đây -->
                 </tbody>
             </table>
         </div>
@@ -155,7 +155,7 @@
                     <option value="200">200 dòng/trang</option>
                     <option value="500">500 dòng/trang</option>
                 </select>
-                <span id="pageInfoSpan" class="text-muted small ms-2">Trang 1 / 1</span>
+                <span id="pageInfoSpan" class="text-muted small ms-2">Trang 0 / 0</span>
             </div>
 
             <nav>
@@ -172,7 +172,7 @@
     // URL Google Apps Script của bạn
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqA4_upkyao6YZsLcRuFiPEqlv33EC8tj3Ox8LIFSlM6tex2Yps_akpaFlMgxxB8Hh/exec";
 
-    // Khai báo Master Schema cho toàn bộ 31 Cột
+    // Khai báo Schema cho toàn bộ 31 Cột chuẩn Google Sheet
     const ALL_COLUMNS = [
         { key: 'ncc', label: 'NCC' },                                         // 0
         { key: 'sku', label: 'Mã Sản Phẩm (SKU) NPP, Hãng' },                 // 1
@@ -204,15 +204,11 @@
         { key: 'gia_ban_ktb_tm', label: 'GIÁ BÁN KTB TIỀN MẶT', numeric: true },// 27
         { key: 'gia_ban_ktb_cn', label: 'GIÁ BÁN KTB CÔNG NỢ', numeric: true },// 28
         { key: 'ngay_nhap_truoc', label: 'NGÀY NHẬP TRƯỚC', date: true },    // 29
-        { key: 'ngay_nhap_gan_nhat', label: 'NGÀY NHẬP GẦN NHẤT', date: true },// 30
-        { key: 'gia_de_xuat', label: 'GIÁ ĐỀ XUẤT', numeric: true }           // 31 (Cột mở rộng Bảng 2)
+        { key: 'ngay_nhap_gan_nhat', label: 'NGÀY NHẬP GẦN NHẤT', date: true } // 30
     ];
 
-    // Chỉ số index hiển thị cho Bảng 2: Bảng Giá & Đề Xuất (23 cột)
-    const PRICE_MODE_INDICES = [0, 1, 2, 4, 6, 7, 8, 9, 11, 10, 17, 18, 19, 21, 22, 23, 24, 25, 26, 20, 21, 29, 30, 31];
-
     var currentMode = 'FULL'; // 'FULL' (31 cột) hoặc 'PRICE' (23 cột)
-    var globalRawData = []; 
+    var globalRawData = [];  // Chỉ lưu dữ liệu thực từ Google Sheet
     var filteredData = []; 
     var currentPage = 1;
     var pageSize = 50;
@@ -226,7 +222,7 @@
         document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
     }
 
-    // Đổi Chế Độ Xem Bảng (Chuyển giữa 31 Cột và 23 Cột)
+    // Đổi Chế Độ Xem Bảng (31 Cột vs 23 Cột)
     function switchTableMode(mode) {
         if (currentMode === mode) return;
         currentMode = mode;
@@ -249,24 +245,24 @@
         applyFilters();
     }
 
-    // Lấy mảng cấu hình cột dựa vào Chế độ hiển thị hiện tại
+    // Lấy mảng cột tương ứng chế độ xem
     function getActiveColumns() {
         if (currentMode === 'FULL') {
-            return ALL_COLUMNS.slice(0, 31); // 31 Cột đầu tiên
+            return ALL_COLUMNS.slice(0, 31);
         } else {
-            // Lọc danh sách cột dành cho Bảng Giá Bán Đề Xuất
+            // Lọc 23 cột quan trọng cho Bảng Giá
             var cols = [
                 ALL_COLUMNS[0], ALL_COLUMNS[1], ALL_COLUMNS[2], ALL_COLUMNS[4], ALL_COLUMNS[6], 
                 ALL_COLUMNS[7], ALL_COLUMNS[8], ALL_COLUMNS[9], ALL_COLUMNS[11], ALL_COLUMNS[10],
                 ALL_COLUMNS[17], ALL_COLUMNS[18], ALL_COLUMNS[19], ALL_COLUMNS[21], ALL_COLUMNS[22],
                 ALL_COLUMNS[23], ALL_COLUMNS[24], ALL_COLUMNS[25], ALL_COLUMNS[26], ALL_COLUMNS[20],
-                ALL_COLUMNS[21], ALL_COLUMNS[27], ALL_COLUMNS[28], ALL_COLUMNS[29], ALL_COLUMNS[30], ALL_COLUMNS[31]
+                ALL_COLUMNS[27], ALL_COLUMNS[28], ALL_COLUMNS[30]
             ];
             return cols.filter(c => c !== undefined).slice(0, 23);
         }
     }
 
-    // Vẽ Tiêu Đề Bảng (Header) theo chế độ
+    // Vẽ Header Bảng
     function renderTableHeader() {
         var activeCols = getActiveColumns();
         var thead = document.getElementById('tableHeader');
@@ -274,9 +270,10 @@
         var headerHtml = `<tr><th class="text-center" style="width: 70px;">Thao Tác</th>`;
         var filterRowHtml = `<tr class="bg-light"><td class="text-center"><i class="fa-solid fa-filter text-muted"></i></td>`;
 
-        activeCols.forEach((col, idx) => {
+        activeCols.forEach(col => {
+            var colIndex = ALL_COLUMNS.findIndex(c => c.key === col.key);
             headerHtml += `<th class="${col.numeric ? 'text-right' : ''}">${col.label}</th>`;
-            filterRowHtml += `<td><input type="text" class="filter-input col-filter" data-col-index="${ALL_COLUMNS.findIndex(c => c.key === col.key)}" onkeyup="applyFilters()" placeholder="Lọc..."></td>`;
+            filterRowHtml += `<td><input type="text" class="filter-input col-filter" data-col-index="${colIndex}" onkeyup="applyFilters()" placeholder="Lọc..."></td>`;
         });
 
         headerHtml += `</tr>`;
@@ -285,7 +282,7 @@
         thead.innerHTML = headerHtml + filterRowHtml;
     }
 
-    // Format Ngày DD/MM/YYYY
+    // Format Ngày
     function formatDateVN(val) {
         if (!val) return '';
         var str = String(val).trim();
@@ -297,7 +294,7 @@
         return str;
     }
 
-    // Format Số Tiền
+    // Format Số
     function formatNumberVN(val) {
         if (val === '' || val === null || val === undefined) return '';
         var num = Number(val);
@@ -305,7 +302,7 @@
         return num.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
     }
 
-    // Load dữ liệu từ Google Sheets
+    // Load dữ liệu TỪ GOOGLE SHEETS THẬT
     function loadDataFromSheet() {
         showLoading(true);
         fetch(GOOGLE_SCRIPT_URL, { method: "GET", redirect: "follow" })
@@ -316,30 +313,16 @@
                 globalRawData = data.data || [];
                 applyFilters();
             } else {
-                alert("Lỗi tải dữ liệu: " + data.error);
+                alert("Lỗi tải dữ liệu từ Google Sheets: " + data.error);
             }
         })
         .catch(err => {
             showLoading(false);
-            console.error("Lỗi API:", err);
-            // Dữ liệu mẫu giả lập nếu không kết nối được Apps Script
-            generateSampleData();
+            console.error("Lỗi API kết nối:", err);
+            alert("Không thể kết nối đến Google Apps Script! Kiểm tra lại URL GOOGLE_SCRIPT_URL.");
+            globalRawData = [];
+            applyFilters();
         });
-    }
-
-    // Giả lập dữ liệu mẫu để thử nghiệm giao diện
-    function generateSampleData() {
-        globalRawData = [];
-        for (var i = 1; i <= 150; i++) {
-            globalRawData.push([
-                `NCC ${i % 5 + 1}`, `SKU-LAP-${1000 + i}`, `KTB-${2000 + i}`, `Laptop Gaming Pro Ultra ${i}`,
-                i % 2 === 0 ? 'Dell' : 'Asus', '15.6 Inch', 'Core i7 13700H', '16GB', '512GB NVMe', 'Windows 11',
-                'Office 2021', '2 Năm', 'Có', '6-Cell 86Wh', 'LED RGB', 'Nhôm', 'RTX 4060',
-                100, 45, 55, 10, 12, 'Không', 18000000, 17500000, 2.8, 18200000, 20500000, 21000000,
-                '2024-01-15', '2024-03-20', 20800000
-            ]);
-        }
-        applyFilters();
     }
 
     // Lọc dữ liệu
@@ -408,21 +391,28 @@
         applyFilters();
     }
 
-    // Render bảng theo trang
+    // Render Bảng theo trang
     function renderTablePage() {
         var tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
 
         var totalItems = filteredData.length;
-        var totalPages = Math.ceil(totalItems / pageSize) || 1;
+        var activeCols = getActiveColumns();
 
+        if (totalItems === 0) {
+            tbody.innerHTML = `<tr><td colspan="${activeCols.length + 1}" class="text-center text-muted py-4">Chưa có dữ liệu. Vui lòng nhấn <strong>'Thêm Sản Phẩm'</strong> hoặc <strong>'Nhập File Excel'</strong> để tải dữ liệu lên Google Sheets.</td></tr>`;
+            document.getElementById('rowCountBadge').innerText = `Hiển thị: 0 / 0 dòng`;
+            document.getElementById('pageInfoSpan').innerText = `Trang 0 / 0`;
+            renderPaginationControls(0);
+            return;
+        }
+
+        var totalPages = Math.ceil(totalItems / pageSize) || 1;
         if (currentPage > totalPages) currentPage = totalPages;
         if (currentPage < 1) currentPage = 1;
 
         var startIndex = (currentPage - 1) * pageSize;
         var endIndex = Math.min(startIndex + pageSize, totalItems);
-
-        var activeCols = getActiveColumns();
 
         for (var i = startIndex; i < endIndex; i++) {
             var item = filteredData[i];
@@ -430,7 +420,7 @@
         }
 
         document.getElementById('rowCountBadge').innerText = `Hiển thị: ${totalItems} / ${globalRawData.length} dòng`;
-        document.getElementById('pageInfoSpan').innerText = `Trang ${currentPage} / ${totalPages} (Từ ${totalItems > 0 ? startIndex + 1 : 0} - ${endIndex})`;
+        document.getElementById('pageInfoSpan').innerText = `Trang ${currentPage} / ${totalPages} (Từ ${startIndex + 1} - ${endIndex})`;
 
         renderPaginationControls(totalPages);
     }
@@ -469,7 +459,7 @@
         tbody.appendChild(tr);
     }
 
-    // Thanh Điều Hướng Phân Trang
+    // Phân trang
     function renderPaginationControls(totalPages) {
         var container = document.getElementById('paginationControls');
         container.innerHTML = '';
@@ -511,7 +501,7 @@
         renderTablePage();
     }
 
-    // Chỉnh Sửa Dòng
+    // Sửa dòng
     function editRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
@@ -532,7 +522,7 @@
         tr.querySelector('.btn-save').style.display = 'inline-block';
     }
 
-    // Lưu Dòng Dữ Liệu về Google Sheet
+    // Lưu dòng về Google Sheets
     function saveRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
@@ -563,7 +553,7 @@
         .then(data => {
             showLoading(false);
             if (data.result === "success") {
-                alert("Lưu thay đổi thành công!");
+                alert("Lưu dữ liệu thành công!");
                 loadDataFromSheet();
             } else {
                 alert("Lỗi từ máy chủ: " + data.error);
@@ -576,7 +566,7 @@
         });
     }
 
-    // Thêm Dòng Mới
+    // Thêm dòng mới
     function addRow() {
         var emptyRow = new Array(ALL_COLUMNS.length).fill('');
         globalRawData.push(emptyRow);
@@ -632,11 +622,3 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-```
-
-### Các ưu điểm nổi bật:
-1. **Bộ nút chuyển đổi ở góc trên bên phải**:
-   * **Bảng Cấu Hình Full (31 Cột)**: Chứa toàn bộ các thông số kỹ thuật chi tiết (`Screen`, `Chip`, `Ram`, `SSD`, `Pin`, `Bao_Hanh`, `FP`, `Led`...).
-   * **Bảng Giá & Đề Xuất (23 Cột)**: Thu gọn các cột chi tiết để tập trung hiển thị `COST_KTB`, `GIÁ NHẬP CỦ`, `% GIÁ LỆCH`, `GIÁ NHẬP MỚI`, `GIÁ BÁN KTB TIỀN MẶT`, `GIÁ BÁN KTB CÔNG NỢ` và `GIÁ ĐỀ XUẤT`.
-2. **Hiệu năng xử lý 30.000+ dòng**: Phân trang linh hoạt (25, 50, 100, 500 dòng/trang) đảm bảo không đơ lag trình duyệt.
-3. **Bộ lọc tìm kiếm thông minh**: Lọc tức thì theo từ khóa bất kỳ, thương hiệu (Brand), SKU/KTB hoặc nhà cung cấp.
