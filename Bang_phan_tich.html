@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Sản Phẩm - Chuyển Đổi Cấu Hình Bảng</title>
+    <title>Hệ Thống Phân Tích Sản Phẩm & Giá Bán</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -77,16 +77,16 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
             <div>
                 <h4 class="text-dark fw-bold m-0"><i class="fa-solid fa-laptop text-warning me-2"></i>Hệ Thống Phân Tích Sản Phẩm & Giá Bán</h4>
-                <small class="text-muted" id="modeDescription">Đang hiển thị: Bảng Chi Tiết Cấu Hình (31 Cột)</small>
+                <small class="text-muted" id="modeDescription">Đang hiển thị: Danh Sách Máy Tính Để Bàn (PC - 31 Cột)</small>
             </div>
             
-            <!-- NÚT CHUYỂN CHẾ ĐỘ XEM BẢNG -->
+            <!-- NÚT CHUYỂN CHẾ ĐỘ XEM BẢNG & PHÂN LOẠI -->
             <div class="btn-group view-mode-btn-group" role="group">
                 <button type="button" id="btnModeFull" class="btn btn-warning active" onclick="switchTableMode('FULL')">
-                    <i class="fa-solid fa-list-check me-1"></i> Phân Tích Laptop (31 Cột)
+                    <i class="fa-solid fa-desktop me-1"></i> Phân Tích PC (31 Cột)
                 </button>
                 <button type="button" id="btnModePrice" class="btn btn-outline-dark" onclick="switchTableMode('PRICE')">
-                    <i class="fa-solid fa-tags me-1"></i> Phân Tích PC (23 Cột)
+                    <i class="fa-solid fa-laptop me-1"></i> Phân Tích Laptop (23 Cột)
                 </button>
             </div>
 
@@ -172,7 +172,7 @@
     // URL Google Apps Script của bạn
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSiSFM2Q6vIkcVQgjfhRMWWWtFPR-aFiHvGXwrFYEqW4x4-EsuRYnL3Mq365Qiic-f/exec";
 
-    // Khai báo Schema cho toàn bộ 31 Cột chuẩn Google Sheet
+    // Khai báo Schema cho toàn bộ 32 Cột chuẩn Google Sheet (Bổ sung Cột 32: Loại Sản Phẩm)
     const ALL_COLUMNS = [
         { key: 'ncc', label: 'NCC' },                                         // 0
         { key: 'sku', label: 'Mã Sản Phẩm (SKU) NPP, Hãng' },                 // 1
@@ -204,7 +204,8 @@
         { key: 'gia_ban_ktb_tm', label: 'GIÁ BÁN KTB TIỀN MẶT', numeric: true },// 27
         { key: 'gia_ban_ktb_cn', label: 'GIÁ BÁN KTB CÔNG NỢ', numeric: true },// 28
         { key: 'ngay_nhap_truoc', label: 'NGÀY NHẬP TRƯỚC', date: true },    // 29
-        { key: 'ngay_nhap_gan_nhat', label: 'NGÀY NHẬP GẦN NHẤT', date: true } // 30
+        { key: 'ngay_nhap_gan_nhat', label: 'NGÀY NHẬP GẦN NHẤT', date: true },// 30
+        { key: 'loai_sp', label: 'Loại Sản Phẩm' }                             // 31 (CỘT MỚI BỔ SUNG)
     ];
 
     var currentMode = 'FULL'; 
@@ -236,27 +237,47 @@
         if (mode === 'FULL') {
             btnFull.className = 'btn btn-warning active';
             btnPrice.className = 'btn btn-outline-dark';
-            desc.innerText = 'Đang hiển thị: Bảng Chi Tiết Cấu Hình (31 Cột)';
+            desc.innerText = 'Đang hiển thị: Danh Sách Máy Tính Để Bàn (PC - 31 Cột)';
         } else {
             btnFull.className = 'btn btn-outline-warning';
             btnPrice.className = 'btn btn-dark active';
-            desc.innerText = 'Đang hiển thị: Bảng Giá Bán & Đề Xuất (23 Cột)';
+            desc.innerText = 'Đang hiển thị: Danh Sách Máy Tính Xách Tay (Laptop - 23 Cột)';
         }
 
         renderTableHeader();
         applyFilters();
     }
 
+    // Lấy danh sách cột tương ứng với chế độ xem
     function getActiveColumns() {
         if (currentMode === 'FULL') {
-            return ALL_COLUMNS.slice(0, 31);
+            return ALL_COLUMNS.slice(0, 31); // 31 Cột Chi Tiết PC
         } else {
+            // 23 Cột Báo Giá Laptop chuẩn xác (Bao gồm Cột 3: Tên Sản Phẩm / Mô tả)
             var cols = [
-                ALL_COLUMNS[0], ALL_COLUMNS[1], ALL_COLUMNS[2], ALL_COLUMNS[4], ALL_COLUMNS[6], 
-                ALL_COLUMNS[7], ALL_COLUMNS[8], ALL_COLUMNS[9], ALL_COLUMNS[11], ALL_COLUMNS[10],
-                ALL_COLUMNS[17], ALL_COLUMNS[18], ALL_COLUMNS[19], ALL_COLUMNS[21], ALL_COLUMNS[22],
-                ALL_COLUMNS[23], ALL_COLUMNS[24], ALL_COLUMNS[25], ALL_COLUMNS[26], ALL_COLUMNS[20],
-                ALL_COLUMNS[27], ALL_COLUMNS[28], ALL_COLUMNS[30]
+                ALL_COLUMNS[0],  // NCC
+                ALL_COLUMNS[1],  // Mã Sản Phẩm (SKU) NPP, Hãng
+                ALL_COLUMNS[2],  // Mã KTB
+                ALL_COLUMNS[3],  // Tên Sản Phẩm / Mô tả
+                ALL_COLUMNS[4],  // Brand
+                ALL_COLUMNS[6],  // chip
+                ALL_COLUMNS[7],  // ram
+                ALL_COLUMNS[8],  // ssd
+                ALL_COLUMNS[9],  // win
+                ALL_COLUMNS[10], // office
+                ALL_COLUMNS[11], // Bao_Hanh_Nam
+                ALL_COLUMNS[17], // So_Luong NHAP TONG
+                ALL_COLUMNS[18], // So_Luong TON
+                ALL_COLUMNS[19], // số lượng bán ra từ ngày
+                ALL_COLUMNS[22], // Hàng gửi NPP
+                ALL_COLUMNS[23], // COST_KTB
+                ALL_COLUMNS[24], // GIÁ NHẬP CỦ
+                ALL_COLUMNS[25], // % GIÁ NHẬP LỆCH TRƯỚC
+                ALL_COLUMNS[26], // GIÁ NHẬP MỚI (VNĐ)
+                ALL_COLUMNS[20], // % Loi Nhuan Tiền Mặt
+                ALL_COLUMNS[21], // % Loi Nhuan Công Nợ
+                ALL_COLUMNS[27], // GIÁ BÁN KTB TIỀN MẶT
+                ALL_COLUMNS[28]  // GIÁ BÁN KTB CÔNG NỢ
             ];
             return cols.filter(c => c !== undefined).slice(0, 23);
         }
@@ -321,6 +342,7 @@
         });
     }
 
+    // Lọc dữ liệu thông minh theo Từ Khóa & Phân Loại Sản Phẩm (PC / Laptop)
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
         var brandKeyword = document.getElementById('brandFilterInput').value.toLowerCase().trim();
@@ -339,7 +361,18 @@
         globalRawData.forEach((row, originalIndex) => {
             var isVisible = true;
 
-            if (globalKeyword) {
+            // 1. TỰ ĐỘNG PHÂN LOẠI PC / LAPTOP (Dựa vào Cột 32: Loại Sản Phẩm)
+            var loaiSP = row[31] ? String(row[31]).toUpperCase().trim() : '';
+            if (currentMode === 'FULL') {
+                // Nếu ở nút Phân Tích PC: Lọc bỏ dòng mang nhãn LAPTOP
+                if (loaiSP && loaiSP === 'LAPTOP') isVisible = false;
+            } else if (currentMode === 'PRICE') {
+                // Nếu ở nút Phân Tích Laptop: Chỉ lấy dòng mang nhãn LAPTOP
+                if (loaiSP && loaiSP !== 'LAPTOP') isVisible = false;
+            }
+
+            // 2. TÌM KIẾM THEO TỪ KHÓA
+            if (globalKeyword && isVisible) {
                 var rowText = row.join(' ').toLowerCase();
                 if (!rowText.includes(globalKeyword)) isVisible = false;
             }
@@ -568,70 +601,73 @@
         if (lastRow) editRow(lastRow.querySelector('.btn-edit'));
     }
 
-    // NÂNG CẤP XỬ LÝ UPLOAD EXCEL CỰC KỲ ỔN ĐỊNH: CHUẨN HÓA 31 CỘT & CHIA ĐỢT 500 DÒNG
-// Hàm Nhập Excel tự động khớp cột theo Tên Tiêu Đề (Header Mapping)
-function handleExcelUpload(event) {
-    var file = event.target.files[0];
-    if (!file) return;
+    // XỬ LÝ UPLOAD EXCEL CỰC KỲ ỔN ĐỊNH: CHUẨN HÓA 32 CỘT & CHIA ĐỢT 500 DÒNG
+    function handleExcelUpload(event) {
+        var file = event.target.files[0];
+        if (!file) return;
 
-    var reader = new FileReader();
-    reader.onload = async function(e) {
-        var data = new Uint8Array(e.target.result);
-        var workbook = XLSX.read(data, { type: 'array' });
-        var worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        
-        // Đọc dữ liệu Excel dạng Object (dựa theo tên tiêu đề hàng 1)
-        var excelJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-        if (excelJson.length === 0) {
-            alert("File Excel không có dữ liệu hợp lệ!");
-            return;
-        }
-
-        // Tự động map dữ liệu từ tên tiêu đề Excel sang 31 cột chuẩn Google Sheet
-        var formattedRows = excelJson.map(row => {
-            return ALL_COLUMNS.map(colConfig => {
-                // Tìm giá trị trong ô Excel dựa trên tên label cột
-                var val = row[colConfig.label] !== undefined ? row[colConfig.label] : '';
-                return String(val).trim();
-            });
-        });
-
-        var BATCH_SIZE = 500;
-        var totalRows = formattedRows.length;
-        var successCount = 0;
-
-        showLoading(true, `Đang chuẩn bị tải lên ${totalRows} dòng...`);
-
-        for (var i = 0; i < totalRows; i += BATCH_SIZE) {
-            var chunk = formattedRows.slice(i, i + BATCH_SIZE);
-            var currentEnd = Math.min(i + BATCH_SIZE, totalRows);
+        var reader = new FileReader();
+        reader.onload = async function(e) {
+            var data = new Uint8Array(e.target.result);
+            var workbook = XLSX.read(data, { type: 'array' });
+            var worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             
-            showLoading(true, `Đang tải lên Google Sheets: ${currentEnd} / ${totalRows} dòng...`);
+            // Lọc các dòng hợp lệ (bỏ tiêu đề dòng 1)
+            var rawRows = excelData.slice(1).filter(r => r.length > 0 && r.some(cell => cell !== null && cell !== ''));
 
-            try {
-                var response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action: "appendRows", rows: chunk }),
-                    redirect: "follow"
-                });
-                var resData = await response.json();
-                if (resData.result === "success") {
-                    successCount += chunk.length;
-                }
-            } catch (err) {
-                console.error("Lỗi kết nối đợt:", err);
+            if (rawRows.length === 0) {
+                alert("File Excel không có dữ liệu hợp lệ!");
+                return;
             }
-        }
 
-        showLoading(false);
-        alert(`Đã hoàn tất tải lên ${successCount} / ${totalRows} dòng vào Google Sheets!`);
-        loadDataFromSheet();
-        event.target.value = '';
-    };
-    reader.readAsArrayBuffer(file);
-}
+            // ĐẢM BẢO TẤT CẢ DÒNG ĐỀU CÓ ĐÚNG 32 CỘT CHUẨN ĐỂ KHÔNG BỊ LỖI LỆCH MẢNG APPS SCRIPT
+            var formattedRows = rawRows.map(row => {
+                var newRow = [];
+                for (var i = 0; i < ALL_COLUMNS.length; i++) {
+                    var cellVal = row[i] !== undefined && row[i] !== null ? row[i] : '';
+                    newRow.push(String(cellVal));
+                }
+                return newRow;
+            });
+
+            var BATCH_SIZE = 500; // Chia nhỏ mỗi đợt 500 dòng tránh Timeout 30s
+            var totalRows = formattedRows.length;
+            var successCount = 0;
+
+            showLoading(true, `Đang chuẩn bị tải lên ${totalRows} dòng...`);
+
+            for (var i = 0; i < totalRows; i += BATCH_SIZE) {
+                var chunk = formattedRows.slice(i, i + BATCH_SIZE);
+                var currentEnd = Math.min(i + BATCH_SIZE, totalRows);
+                
+                showLoading(true, `Đang tải lên Google Sheets: ${currentEnd} / ${totalRows} dòng...`);
+
+                try {
+                    var response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({ action: "appendRows", rows: chunk }),
+                        redirect: "follow"
+                    });
+                    var resData = await response.json();
+                    if (resData.result === "success") {
+                        successCount += chunk.length;
+                    } else {
+                        console.error("Lỗi đợt tải:", resData.error);
+                    }
+                } catch (err) {
+                    console.error("Lỗi kết nối đợt:", err);
+                }
+            }
+
+            showLoading(false);
+            alert(`Đã hoàn tất tải lên ${successCount} / ${totalRows} dòng vào Google Sheets thành công!`);
+            loadDataFromSheet();
+            event.target.value = '';
+        };
+        reader.readAsArrayBuffer(file);
+    }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
