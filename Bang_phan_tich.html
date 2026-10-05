@@ -66,7 +66,7 @@
 <div id="loadingSpinner">
     <div class="text-center">
         <div class="spinner-border text-warning" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
-        <div class="mt-2 fw-bold text-dark">Đang đồng bộ dữ liệu với Google Sheets...</div>
+        <div class="mt-2 fw-bold text-dark" id="spinnerText">Đang đồng bộ dữ liệu với Google Sheets...</div>
     </div>
 </div>
 
@@ -77,16 +77,17 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
             <div>
                 <h4 class="text-dark fw-bold m-0"><i class="fa-solid fa-laptop text-warning me-2"></i>Hệ Thống Phân Tích Sản Phẩm & Giá Bán</h4>
-                <small class="text-muted" id="modeDescription">Đang hiển thị: Bảng Chi Tiết Cấu Hình</small>
+                <small class="text-muted" id="modeDescription">Đang hiển thị: Bảng Chi Tiết Cấu Hình (31 Cột)</small>
             </div>
             
             <!-- NÚT CHUYỂN CHẾ ĐỘ XEM BẢNG -->
             <div class="btn-group view-mode-btn-group" role="group">
                 <button type="button" id="btnModeFull" class="btn btn-warning active" onclick="switchTableMode('FULL')">
-                    <i class="fa-solid fa-list-check me-1"></i> Phân Tích PC
+                    <i class="fa-solid fa-list-check me-1"></i> Phân Tích PC (31 Cột)
                 </button>
                 <button type="button" id="btnModePrice" class="btn btn-outline-dark" onclick="switchTableMode('PRICE')">
-                    <i class="fa-solid fa-tags me-1"></i> Phân Tích Laptop
+                    <i class="fa-solid fa-tags me-1"></i> Phân Tích Laptop (23 Cột)
+                </button>
             </div>
 
             <span class="badge bg-dark fs-6" id="rowCountBadge">Hiển thị: 0 / 0 dòng</span>
@@ -206,8 +207,8 @@
         { key: 'ngay_nhap_gan_nhat', label: 'NGÀY NHẬP GẦN NHẤT', date: true } // 30
     ];
 
-    var currentMode = 'FULL'; // 'FULL' (31 cột) hoặc 'PRICE' (23 cột)
-    var globalRawData = [];  // Chỉ lưu dữ liệu thực từ Google Sheet
+    var currentMode = 'FULL'; 
+    var globalRawData = [];  
     var filteredData = []; 
     var currentPage = 1;
     var pageSize = 50;
@@ -217,11 +218,13 @@
         loadDataFromSheet();
     });
 
-    function showLoading(show) {
-        document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
+    function showLoading(show, text) {
+        var spinner = document.getElementById('loadingSpinner');
+        var spinnerText = document.getElementById('spinnerText');
+        if (text) spinnerText.innerText = text;
+        spinner.style.display = show ? 'flex' : 'none';
     }
 
-    // Đổi Chế Độ Xem Bảng (31 Cột vs 23 Cột)
     function switchTableMode(mode) {
         if (currentMode === mode) return;
         currentMode = mode;
@@ -244,12 +247,10 @@
         applyFilters();
     }
 
-    // Lấy mảng cột tương ứng chế độ xem
     function getActiveColumns() {
         if (currentMode === 'FULL') {
             return ALL_COLUMNS.slice(0, 31);
         } else {
-            // Lọc 23 cột quan trọng cho Bảng Giá
             var cols = [
                 ALL_COLUMNS[0], ALL_COLUMNS[1], ALL_COLUMNS[2], ALL_COLUMNS[4], ALL_COLUMNS[6], 
                 ALL_COLUMNS[7], ALL_COLUMNS[8], ALL_COLUMNS[9], ALL_COLUMNS[11], ALL_COLUMNS[10],
@@ -261,7 +262,6 @@
         }
     }
 
-    // Vẽ Header Bảng
     function renderTableHeader() {
         var activeCols = getActiveColumns();
         var thead = document.getElementById('tableHeader');
@@ -281,7 +281,6 @@
         thead.innerHTML = headerHtml + filterRowHtml;
     }
 
-    // Format Ngày
     function formatDateVN(val) {
         if (!val) return '';
         var str = String(val).trim();
@@ -293,7 +292,6 @@
         return str;
     }
 
-    // Format Số
     function formatNumberVN(val) {
         if (val === '' || val === null || val === undefined) return '';
         var num = Number(val);
@@ -301,9 +299,8 @@
         return num.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
     }
 
-    // Load dữ liệu TỪ GOOGLE SHEETS THẬT
     function loadDataFromSheet() {
-        showLoading(true);
+        showLoading(true, "Đang đồng bộ dữ liệu với Google Sheets...");
         fetch(GOOGLE_SCRIPT_URL, { method: "GET", redirect: "follow" })
         .then(res => res.json())
         .then(data => {
@@ -318,13 +315,12 @@
         .catch(err => {
             showLoading(false);
             console.error("Lỗi API kết nối:", err);
-            alert("Không thể kết nối đến Google Apps Script! Kiểm tra lại URL GOOGLE_SCRIPT_URL.");
+            alert("Không thể kết nối đến Google Apps Script!");
             globalRawData = [];
             applyFilters();
         });
     }
 
-    // Lọc dữ liệu
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
         var brandKeyword = document.getElementById('brandFilterInput').value.toLowerCase().trim();
@@ -390,7 +386,6 @@
         applyFilters();
     }
 
-    // Render Bảng theo trang
     function renderTablePage() {
         var tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
@@ -424,7 +419,6 @@
         renderPaginationControls(totalPages);
     }
 
-    // Render 1 dòng dữ liệu
     function appendRowToTable(rowData, originalIndex, activeCols) {
         var tbody = document.getElementById('tableBody');
         var tr = document.createElement('tr');
@@ -458,7 +452,6 @@
         tbody.appendChild(tr);
     }
 
-    // Phân trang
     function renderPaginationControls(totalPages) {
         var container = document.getElementById('paginationControls');
         container.innerHTML = '';
@@ -500,7 +493,6 @@
         renderTablePage();
     }
 
-    // Sửa dòng
     function editRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
@@ -521,7 +513,6 @@
         tr.querySelector('.btn-save').style.display = 'inline-block';
     }
 
-    // Lưu dòng về Google Sheets
     function saveRow(btn) {
         var tr = btn.closest('tr');
         var cells = tr.querySelectorAll('td');
@@ -536,7 +527,7 @@
             fullRowData[colIdx] = val;
         }
 
-        showLoading(true);
+        showLoading(true, "Đang lưu thay đổi...");
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -565,7 +556,6 @@
         });
     }
 
-    // Thêm dòng mới
     function addRow() {
         var emptyRow = new Array(ALL_COLUMNS.length).fill('');
         globalRawData.push(emptyRow);
@@ -578,41 +568,70 @@
         if (lastRow) editRow(lastRow.querySelector('.btn-edit'));
     }
 
-    // Đọc Excel Nhập Hàng
+    // NÂNG CẤP XỬ LÝ UPLOAD EXCEL CỰC KỲ ỔN ĐỊNH: CHUẨN HÓA 31 CỘT & CHIA ĐỢT 500 DÒNG
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
 
         var reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = async function(e) {
             var data = new Uint8Array(e.target.result);
             var workbook = XLSX.read(data, { type: 'array' });
             var worksheet = workbook.Sheets[workbook.SheetNames[0]];
             var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            var rowsToAppend = excelData.slice(1).filter(r => r.length > 0);
+            
+            // Lọc các dòng hợp lệ (bỏ tiêu đề dòng 1)
+            var rawRows = excelData.slice(1).filter(r => r.length > 0 && r.some(cell => cell !== null && cell !== ''));
 
-            if (rowsToAppend.length === 0) {
-                alert("File Excel trống!");
+            if (rawRows.length === 0) {
+                alert("File Excel không có dữ liệu hợp lệ!");
                 return;
             }
 
-            showLoading(true);
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "appendRows", rows: rowsToAppend }),
-                redirect: "follow"
-            })
-            .then(res => res.json())
-            .then(data => {
-                showLoading(false);
-                alert(`Đã tải lên ${rowsToAppend.length} dòng thành công!`);
-                loadDataFromSheet();
-            })
-            .catch(err => {
-                showLoading(false);
-                setTimeout(loadDataFromSheet, 2000);
+            // ĐẢM BẢO TẤT CẢ DÒNG ĐỀU CÓ ĐÚNG 31 CỘT CHUẨN ĐỂ KHÔNG BỊ LỖI LỆCH MẢNG APPS SCRIPT
+            var formattedRows = rawRows.map(row => {
+                var newRow = [];
+                for (var i = 0; i < ALL_COLUMNS.length; i++) {
+                    var cellVal = row[i] !== undefined && row[i] !== null ? row[i] : '';
+                    newRow.push(String(cellVal));
+                }
+                return newRow;
             });
+
+            var BATCH_SIZE = 500; // Chia nhỏ mỗi đợt 500 dòng tránh Timeout 30s
+            var totalRows = formattedRows.length;
+            var successCount = 0;
+
+            showLoading(true, `Đang chuẩn bị tải lên ${totalRows} dòng...`);
+
+            for (var i = 0; i < totalRows; i += BATCH_SIZE) {
+                var chunk = formattedRows.slice(i, i + BATCH_SIZE);
+                var currentEnd = Math.min(i + BATCH_SIZE, totalRows);
+                
+                showLoading(true, `Đang tải lên Google Sheets: ${currentEnd} / ${totalRows} dòng...`);
+
+                try {
+                    var response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({ action: "appendRows", rows: chunk }),
+                        redirect: "follow"
+                    });
+                    var resData = await response.json();
+                    if (resData.result === "success") {
+                        successCount += chunk.length;
+                    } else {
+                        console.error("Lỗi đợt tải:", resData.error);
+                    }
+                } catch (err) {
+                    console.error("Lỗi kết nối đợt:", err);
+                }
+            }
+
+            showLoading(false);
+            alert(`Đã hoàn tất tải lên ${successCount} / ${totalRows} dòng vào Google Sheets thành công!`);
+            loadDataFromSheet(); // Tải lại dữ liệu sau khi đẩy hoàn tất
+            event.target.value = ''; // Reset input file
         };
         reader.readAsArrayBuffer(file);
     }
