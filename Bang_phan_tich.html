@@ -288,23 +288,40 @@
         var headerHtml = `<tr><th class="text-center" style="width: 70px;">Thao Tác</th>`;
         var filterRowHtml = `<tr class="bg-light"><td class="text-center"><i class="fa-solid fa-filter text-muted"></i></td>`;
 
-activeCols.forEach(col => {
-            var colIdx = ALL_COLUMNS.findIndex(c => c.key === col.key);
-            var val = (rowData && rowData[colIdx] !== undefined) ? rowData[colIdx] : '';
-            var displayVal = val;
-            var alignClass = col.numeric ? "text-right" : "";
-
-            if (col.key === 'screen') {
-                displayVal = formatScreenInch(val); // Áp dụng ép về Số Màn Hình Inch
-                alignClass = "text-center";
-            } else if (col.date) {
-                displayVal = formatDateVN(val);
-            } else if (col.numeric) {
-                displayVal = formatNumberVN(val);
-            }
-
-            cellsHtml += `<td class="${alignClass}" data-col-idx="${colIdx}" data-raw-val="${val}">${displayVal}</td>`;
+        activeCols.forEach(col => {
+            var colIndex = ALL_COLUMNS.findIndex(c => c.key === col.key);
+            headerHtml += `<th class="${col.numeric ? 'text-right' : ''}">${col.label}</th>`;
+            filterRowHtml += `<td><input type="text" class="filter-input col-filter" data-col-index="${colIndex}" onkeyup="applyFilters()" placeholder="Lọc..."></td>`;
         });
+
+        headerHtml += `</tr>`;
+        filterRowHtml += `</tr>`;
+
+        thead.innerHTML = headerHtml + filterRowHtml;
+    }
+
+    // Hàm ép dữ liệu Màn Hình Inch về dạng Số
+    function formatScreenInch(val) {
+        if (!val) return '';
+        var str = String(val).trim();
+        
+        // Nếu bị Excel tự động chuyển thành chuỗi Ngày Tháng (ISO Date chứa 'T' hoặc '-')
+        if (str.includes('T') || (str.includes('-') && str.length > 8)) {
+            var matchDay = str.match(/-(\d{2})T/);
+            if (matchDay && matchDay[1]) {
+                return parseFloat(matchDay[1]);
+            }
+            var parts = str.split('T')[0].split('-');
+            if (parts.length === 3) {
+                return parseFloat(parts[2]);
+            }
+        }
+        
+        // Lọc lấy các ký tự số và dấu chấm thập phân
+        var cleanNum = str.replace(/[^0-9.]/g, '');
+        var num = parseFloat(cleanNum);
+        return isNaN(num) ? str : num;
+    }
 
     function formatDateVN(val) {
         if (!val) return '';
@@ -473,7 +490,10 @@ activeCols.forEach(col => {
             var displayVal = val;
             var alignClass = col.numeric ? "text-right" : "";
 
-            if (col.date) {
+            if (col.key === 'screen') {
+                displayVal = formatScreenInch(val); // Định dạng số cho Màn Hình Inch
+                alignClass = "text-center";
+            } else if (col.date) {
                 displayVal = formatDateVN(val);
             } else if (col.numeric) {
                 displayVal = formatNumberVN(val);
@@ -667,29 +687,6 @@ activeCols.forEach(col => {
         };
         reader.readAsArrayBuffer(file);
     }
-    // Hàm xử lý ép dữ liệu Màn hình Inch về dạng Số thuần
-function formatScreenInch(val) {
-    if (!val) return '';
-    var str = String(val).trim();
-    
-    // Nếu bị Excel tự động chuyển thành chuỗi Ngày Tháng (ISO Date chứa 'T' hoặc '-')
-    if (str.includes('T') || (str.includes('-') && str.length > 8)) {
-        // Trích xuất ngày từ chuỗi (VD: 2026-06-14 -> lấy số 14)
-        var matchDay = str.match(/-(\d{2})T/);
-        if (matchDay && matchDay[1]) {
-            return parseFloat(matchDay[1]); // Trả về số 14
-        }
-        var parts = str.split('T')[0].split('-');
-        if (parts.length === 3) {
-            return parseFloat(parts[2]); // Lấy ngày làm số inch
-        }
-    }
-    
-    // Lọc lấy các ký tự số và dấu chấm thập phân (VD: "15.6 inch" -> "15.6")
-    var cleanNum = str.replace(/[^0-9.]/g, '');
-    var num = parseFloat(cleanNum);
-    return isNaN(num) ? str : num;
-}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
