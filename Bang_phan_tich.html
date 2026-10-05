@@ -77,16 +77,16 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
             <div>
                 <h4 class="text-dark fw-bold m-0"><i class="fa-solid fa-laptop text-warning me-2"></i>Hệ Thống Phân Tích Sản Phẩm & Giá Bán</h4>
-                <small class="text-muted" id="modeDescription">Đang hiển thị: Danh Sách Máy Tính Để Bàn (PC - 31 Cột)</small>
+                <small class="text-muted" id="modeDescription">Đang hiển thị: Danh Sách Máy Tính Để Bàn (PC - 30 Cột)</small>
             </div>
             
             <!-- NÚT CHUYỂN CHẾ ĐỘ XEM BẢNG & PHÂN LOẠI -->
             <div class="btn-group view-mode-btn-group" role="group">
                 <button type="button" id="btnModeFull" class="btn btn-warning active" onclick="switchTableMode('FULL')">
-                    <i class="fa-solid fa-desktop me-1"></i> Phân Tích PC (31 Cột)
+                    <i class="fa-solid fa-desktop me-1"></i> Phân Tích PC (30 Cột)
                 </button>
                 <button type="button" id="btnModePrice" class="btn btn-outline-dark" onclick="switchTableMode('PRICE')">
-                    <i class="fa-solid fa-laptop me-1"></i> Phân Tích Laptop (23 Cột)
+                    <i class="fa-solid fa-laptop me-1"></i> Phân Tích Laptop (22 Cột)
                 </button>
             </div>
 
@@ -98,7 +98,7 @@
             <div class="row g-2 align-items-center">
                 <div class="col-md-3">
                     <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
-                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập SKU, Mã KTB, Tên, Cấu hình..." onkeyup="applyFilters()">
+                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập SKU, Mã KTB, Cấu hình..." onkeyup="applyFilters()">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-copyright me-1"></i>Thương hiệu (Brand):</label>
@@ -172,40 +172,39 @@
     // URL Google Apps Script của bạn
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSiSFM2Q6vIkcVQgjfhRMWWWtFPR-aFiHvGXwrFYEqW4x4-EsuRYnL3Mq365Qiic-f/exec";
 
-    // Khai báo Schema cho toàn bộ 32 Cột chuẩn Google Sheet (Bổ sung Cột 32: Loại Sản Phẩm)
+    // Khai báo Schema cho 31 Cột chuẩn Google Sheet (Đã ĐƯỢC LOẠI BỎ CỘT 'Tên Sản Phẩm / Mô tả')
     const ALL_COLUMNS = [
         { key: 'ncc', label: 'NCC' },                                         // 0
         { key: 'sku', label: 'Mã Sản Phẩm (SKU) NPP, Hãng' },                 // 1
         { key: 'ma_ktb', label: 'Mã KTB' },                                  // 2
-        { key: 'ten_sp', label: 'Tên Sản Phẩm / Mô tả' },                    // 3
-        { key: 'brand', label: 'Brand' },                                    // 4
-        { key: 'screen', label: 'Màn hình INCH' },                           // 5
-        { key: 'chip', label: 'chip' },                                      // 6
-        { key: 'ram', label: 'ram' },                                        // 7
-        { key: 'ssd', label: 'ssd' },                                        // 8
-        { key: 'win', label: 'win' },                                        // 9
-        { key: 'office', label: 'office' },                                  // 10
-        { key: 'bao_hanh', label: 'Bao_Hanh_Nam' },                           // 11
-        { key: 'fp', label: 'FP' },                                          // 12
-        { key: 'pin', label: 'PIN adapter' },                                // 13
-        { key: 'led_kb', label: 'led_KB_BK' },                               // 14
-        { key: 'alu', label: 'Alu' },                                        // 15
-        { key: 'mx_rtx', label: 'MX RTX' },                                  // 16
-        { key: 'sl_nhap_tong', label: 'So_Luong NHAP TONG', numeric: true },  // 17
-        { key: 'sl_ton', label: 'So_Luong TON', numeric: true },              // 18
-        { key: 'sl_ban_ngay', label: 'số lượng bán ra từ ngày', numeric: true },// 19
-        { key: 'pct_ln_tm', label: '% Loi Nhuan Tiền Mặt', numeric: true },   // 20
-        { key: 'pct_ln_cn', label: '% Loi Nhuan Công Nợ', numeric: true },    // 21
-        { key: 'hang_gui_npp', label: 'Hàng gửi NPP' },                      // 22
-        { key: 'cost_ktb', label: 'COST_KTB', numeric: true },               // 23
-        { key: 'gia_nhap_cu', label: 'GIÁ NHẬP CỦ', numeric: true },          // 24
-        { key: 'pct_gia_nhap_lech', label: '% GIÁ NHẬP LỆCH TRƯỚC', numeric: true }, // 25
-        { key: 'gia_nhap_moi', label: 'GIÁ NHẬP MỚI (VNĐ)', numeric: true },  // 26
-        { key: 'gia_ban_ktb_tm', label: 'GIÁ BÁN KTB TIỀN MẶT', numeric: true },// 27
-        { key: 'gia_ban_ktb_cn', label: 'GIÁ BÁN KTB CÔNG NỢ', numeric: true },// 28
-        { key: 'ngay_nhap_truoc', label: 'NGÀY NHẬP TRƯỚC', date: true },    // 29
-        { key: 'ngay_nhap_gan_nhat', label: 'NGÀY NHẬP GẦN NHẤT', date: true },// 30
-        { key: 'loai_sp', label: 'Loại Sản Phẩm' }                             // 31 (CỘT MỚI BỔ SUNG)
+        { key: 'brand', label: 'Brand' },                                    // 3
+        { key: 'screen', label: 'Màn hình INCH' },                           // 4
+        { key: 'chip', label: 'chip' },                                      // 5
+        { key: 'ram', label: 'ram' },                                        // 6
+        { key: 'ssd', label: 'ssd' },                                        // 7
+        { key: 'win', label: 'win' },                                        // 8
+        { key: 'office', label: 'office' },                                  // 9
+        { key: 'bao_hanh', label: 'Bao_Hanh_Nam' },                           // 10
+        { key: 'fp', label: 'FP' },                                          // 11
+        { key: 'pin', label: 'PIN adapter' },                                // 12
+        { key: 'led_kb', label: 'led_KB_BK' },                               // 13
+        { key: 'alu', label: 'Alu' },                                        // 14
+        { key: 'mx_rtx', label: 'MX RTX' },                                  // 15
+        { key: 'sl_nhap_tong', label: 'So_Luong NHAP TONG', numeric: true },  // 16
+        { key: 'sl_ton', label: 'So_Luong TON', numeric: true },              // 17
+        { key: 'sl_ban_ngay', label: 'số lượng bán ra từ ngày', numeric: true },// 18
+        { key: 'pct_ln_tm', label: '% Loi Nhuan Tiền Mặt', numeric: true },   // 19
+        { key: 'pct_ln_cn', label: '% Loi Nhuan Công Nợ', numeric: true },    // 20
+        { key: 'hang_gui_npp', label: 'Hàng gửi NPP' },                      // 21
+        { key: 'cost_ktb', label: 'COST_KTB', numeric: true },               // 22
+        { key: 'gia_nhap_cu', label: 'GIÁ NHẬP CỦ', numeric: true },          // 23
+        { key: 'pct_gia_nhap_lech', label: '% GIÁ NHẬP LỆCH TRƯỚC', numeric: true }, // 24
+        { key: 'gia_nhap_moi', label: 'GIÁ NHẬP MỚI (VNĐ)', numeric: true },  // 25
+        { key: 'gia_ban_ktb_tm', label: 'GIÁ BÁN KTB TIỀN MẶT', numeric: true },// 26
+        { key: 'gia_ban_ktb_cn', label: 'GIÁ BÁN KTB CÔNG NỢ', numeric: true },// 27
+        { key: 'ngay_nhap_truoc', label: 'NGÀY NHẬP TRƯỚC', date: true },    // 28
+        { key: 'ngay_nhap_gan_nhat', label: 'NGÀY NHẬP GẦN NHẤT', date: true },// 29
+        { key: 'loai_sp', label: 'Loại Sản Phẩm' }                             // 30
     ];
 
     var currentMode = 'FULL'; 
@@ -237,49 +236,48 @@
         if (mode === 'FULL') {
             btnFull.className = 'btn btn-warning active';
             btnPrice.className = 'btn btn-outline-dark';
-            desc.innerText = 'Đang hiển thị: Danh Sách Máy Tính Để Bàn (PC - 31 Cột)';
+            desc.innerText = 'Đang hiển thị: Danh Sách Máy Tính Để Bàn (PC - 30 Cột)';
         } else {
             btnFull.className = 'btn btn-outline-warning';
             btnPrice.className = 'btn btn-dark active';
-            desc.innerText = 'Đang hiển thị: Danh Sách Máy Tính Xách Tay (Laptop - 23 Cột)';
+            desc.innerText = 'Đang hiển thị: Danh Sách Máy Tính Xách Tay (Laptop - 22 Cột)';
         }
 
         renderTableHeader();
         applyFilters();
     }
 
-    // Lấy danh sách cột tương ứng với chế độ xem
+    // Lấy danh sách cột tương ứng chế độ xem
     function getActiveColumns() {
         if (currentMode === 'FULL') {
-            return ALL_COLUMNS.slice(0, 31); // 31 Cột Chi Tiết PC
+            return ALL_COLUMNS.slice(0, 30); // 30 Cột Chi Tiết PC
         } else {
-            // 23 Cột Báo Giá Laptop chuẩn xác (Bao gồm Cột 3: Tên Sản Phẩm / Mô tả)
+            // 22 Cột Báo Giá Laptop
             var cols = [
                 ALL_COLUMNS[0],  // NCC
                 ALL_COLUMNS[1],  // Mã Sản Phẩm (SKU) NPP, Hãng
                 ALL_COLUMNS[2],  // Mã KTB
-                ALL_COLUMNS[3],  // Tên Sản Phẩm / Mô tả
-                ALL_COLUMNS[4],  // Brand
-                ALL_COLUMNS[6],  // chip
-                ALL_COLUMNS[7],  // ram
-                ALL_COLUMNS[8],  // ssd
-                ALL_COLUMNS[9],  // win
-                ALL_COLUMNS[10], // office
-                ALL_COLUMNS[11], // Bao_Hanh_Nam
-                ALL_COLUMNS[17], // So_Luong NHAP TONG
-                ALL_COLUMNS[18], // So_Luong TON
-                ALL_COLUMNS[19], // số lượng bán ra từ ngày
-                ALL_COLUMNS[22], // Hàng gửi NPP
-                ALL_COLUMNS[23], // COST_KTB
-                ALL_COLUMNS[24], // GIÁ NHẬP CỦ
-                ALL_COLUMNS[25], // % GIÁ NHẬP LỆCH TRƯỚC
-                ALL_COLUMNS[26], // GIÁ NHẬP MỚI (VNĐ)
-                ALL_COLUMNS[20], // % Loi Nhuan Tiền Mặt
-                ALL_COLUMNS[21], // % Loi Nhuan Công Nợ
-                ALL_COLUMNS[27], // GIÁ BÁN KTB TIỀN MẶT
-                ALL_COLUMNS[28]  // GIÁ BÁN KTB CÔNG NỢ
+                ALL_COLUMNS[3],  // Brand
+                ALL_COLUMNS[5],  // chip
+                ALL_COLUMNS[6],  // ram
+                ALL_COLUMNS[7],  // ssd
+                ALL_COLUMNS[8],  // win
+                ALL_COLUMNS[9],  // office
+                ALL_COLUMNS[10], // Bao_Hanh_Nam
+                ALL_COLUMNS[16], // So_Luong NHAP TONG
+                ALL_COLUMNS[17], // So_Luong TON
+                ALL_COLUMNS[18], // số lượng bán ra từ ngày
+                ALL_COLUMNS[21], // Hàng gửi NPP
+                ALL_COLUMNS[22], // COST_KTB
+                ALL_COLUMNS[23], // GIÁ NHẬP CỦ
+                ALL_COLUMNS[24], // % GIÁ NHẬP LỆCH TRƯỚC
+                ALL_COLUMNS[25], // GIÁ NHẬP MỚI (VNĐ)
+                ALL_COLUMNS[19], // % Loi Nhuan Tiền Mặt
+                ALL_COLUMNS[20], // % Loi Nhuan Công Nợ
+                ALL_COLUMNS[26], // GIÁ BÁN KTB TIỀN MẶT
+                ALL_COLUMNS[27]  // GIÁ BÁN KTB CÔNG NỢ
             ];
-            return cols.filter(c => c !== undefined).slice(0, 23);
+            return cols.filter(c => c !== undefined).slice(0, 22);
         }
     }
 
@@ -342,7 +340,7 @@
         });
     }
 
-    // Lọc dữ liệu thông minh theo Từ Khóa & Phân Loại Sản Phẩm (PC / Laptop)
+    // Lọc dữ liệu theo Từ Khóa & Loại Sản Phẩm
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
         var brandKeyword = document.getElementById('brandFilterInput').value.toLowerCase().trim();
@@ -361,24 +359,21 @@
         globalRawData.forEach((row, originalIndex) => {
             var isVisible = true;
 
-            // 1. TỰ ĐỘNG PHÂN LOẠI PC / LAPTOP (Dựa vào Cột 32: Loại Sản Phẩm)
-            var loaiSP = row[31] ? String(row[31]).toUpperCase().trim() : '';
+            // Lọc theo Cột 31 (Loại Sản Phẩm - Index 30)
+            var loaiSP = row[30] ? String(row[30]).toUpperCase().trim() : '';
             if (currentMode === 'FULL') {
-                // Nếu ở nút Phân Tích PC: Lọc bỏ dòng mang nhãn LAPTOP
                 if (loaiSP && loaiSP === 'LAPTOP') isVisible = false;
             } else if (currentMode === 'PRICE') {
-                // Nếu ở nút Phân Tích Laptop: Chỉ lấy dòng mang nhãn LAPTOP
                 if (loaiSP && loaiSP !== 'LAPTOP') isVisible = false;
             }
 
-            // 2. TÌM KIẾM THEO TỪ KHÓA
             if (globalKeyword && isVisible) {
                 var rowText = row.join(' ').toLowerCase();
                 if (!rowText.includes(globalKeyword)) isVisible = false;
             }
 
-            if (isVisible && brandKeyword && row[4]) {
-                if (!String(row[4]).toLowerCase().includes(brandKeyword)) isVisible = false;
+            if (isVisible && brandKeyword && row[3]) {
+                if (!String(row[3]).toLowerCase().includes(brandKeyword)) isVisible = false;
             }
 
             if (isVisible && nccKeyword && row[0]) {
@@ -601,7 +596,7 @@
         if (lastRow) editRow(lastRow.querySelector('.btn-edit'));
     }
 
-    // XỬ LÝ UPLOAD EXCEL CỰC KỲ ỔN ĐỊNH: CHUẨN HÓA 32 CỘT & CHIA ĐỢT 500 DÒNG
+    // Xử lý Upload Excel chuẩn hóa 31 Cột
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
@@ -613,7 +608,6 @@
             var worksheet = workbook.Sheets[workbook.SheetNames[0]];
             var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             
-            // Lọc các dòng hợp lệ (bỏ tiêu đề dòng 1)
             var rawRows = excelData.slice(1).filter(r => r.length > 0 && r.some(cell => cell !== null && cell !== ''));
 
             if (rawRows.length === 0) {
@@ -621,7 +615,6 @@
                 return;
             }
 
-            // ĐẢM BẢO TẤT CẢ DÒNG ĐỀU CÓ ĐÚNG 32 CỘT CHUẨN ĐỂ KHÔNG BỊ LỖI LỆCH MẢNG APPS SCRIPT
             var formattedRows = rawRows.map(row => {
                 var newRow = [];
                 for (var i = 0; i < ALL_COLUMNS.length; i++) {
@@ -631,7 +624,7 @@
                 return newRow;
             });
 
-            var BATCH_SIZE = 500; // Chia nhỏ mỗi đợt 500 dòng tránh Timeout 30s
+            var BATCH_SIZE = 500;
             var totalRows = formattedRows.length;
             var successCount = 0;
 
