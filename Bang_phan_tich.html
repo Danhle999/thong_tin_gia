@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Kho & Phân Tích Dữ Liệu</title>
+    <title>Hệ Thống Quản Lý Dữ Liệu Bán Hàng & Nhập Kho</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -16,16 +16,17 @@
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .table-responsive { max-height: 62vh; overflow-y: auto; position: relative; border: 1px solid #dee2e6; border-radius: 6px; }
         
-        /* Header Cố Định */
+        /* Cố định Header */
         th { background-color: #0d6efd !important; color: white !important; position: sticky; top: 0; z-index: 10; white-space: nowrap; font-size: 0.85rem; }
         td { vertical-align: middle; white-space: nowrap; font-size: 0.85rem; }
         
         .editable-input { width: 100%; min-width: 80px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; font-size: 0.85rem; }
         .filter-input { width: 100%; min-width: 70px; padding: 2px 5px; font-size: 0.8rem; border-radius: 4px; border: 1px solid #ced4da; }
         
+        .col-customer { max-width: 250px !important; min-width: 150px !important; white-space: normal !important; word-break: break-word !important; }
         .col-ncc { max-width: 250px !important; min-width: 100px !important; white-space: normal !important; word-break: break-word !important; }
-        .col-code { max-width: 400px !important; min-width: 250px !important; white-space: normal !important; word-break: break-all !important; font-family: monospace, sans-serif; font-weight: 600; }
-        .col-desc { max-width: 250px !important; min-width: 180px !important; white-space: normal !important; word-break: break-word !important; }
+        .col-code { max-width: 450px !important; min-width: 250px !important; white-space: normal !important; word-break: break-all !important; font-family: monospace, sans-serif; font-weight: 600; }
+        .col-desc { max-width: 400px !important; min-width: 200px !important; white-space: normal !important; word-break: break-word !important; }
 
         .text-right { text-align: right; }
         .text-center { text-align: center; }
@@ -73,15 +74,18 @@
 <div class="container-fluid my-3">
     <div class="table-container">
         
-        <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 4 SHEET -->
+        <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 5 SHEET -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
             <div>
-                <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Quản Lý Dữ Liệu Dùng Chung</h4>
-                <small class="text-muted" id="modeDescription">Đang hiển thị Trang tính: NHAP_KHO (17 Cột)</small>
+                <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu</h4>
+                <small class="text-muted" id="modeDescription">Đang hiển thị Trang tính: BAN_HANG (17 Cột)</small>
             </div>
             
             <div class="btn-group view-mode-btn-group" role="group">
-                <button type="button" id="btnModeNhapKho" class="btn btn-primary active" onclick="switchTableMode('NHAP_KHO')">
+                <button type="button" id="btnModeBanHang" class="btn btn-success active" onclick="switchTableMode('BAN_HANG')">
+                    <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG (17 Cột)
+                </button>
+                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">
                     <i class="fa-solid fa-file-import me-1"></i> NHẬP KHO (17 Cột)
                 </button>
                 <button type="button" id="btnModeLaptop" class="btn btn-outline-warning" onclick="switchTableMode('LAPTOP')">
@@ -114,8 +118,8 @@
                     <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyFilters()">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-truck-field me-1"></i>Mã / Tên NCC / Mã Hàng:</label>
-                    <input type="text" id="nccFilterInput" class="form-control form-control-sm" placeholder="Tìm theo NCC hoặc Mã..." onkeyup="applyFilters()">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
+                    <input type="text" id="customerFilterInput" class="form-control form-control-sm" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyFilters()">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button class="btn btn-sm btn-secondary w-100 mt-3" onclick="resetFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc</button>
@@ -169,10 +173,18 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyqE3DjuQkympRqxZLnRUhgs3LWDf3PgbAH000SUO3vYkB3QBaaJ5WCMmqJDQvdWELO/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw7nYKdrm1gtnph5CYUfbrbxMC5hEz7dQ9ig9V47YOR6j6X7BBZQD558zhwtm23OUXBBg/exec";
 
-    // Bảng cấu hình các cột tương ứng từng Trang tính
+    // Bảng cấu hình chi tiết cho cả 5 Sheet
     const SHEET_CONFIGS = {
+        'BAN_HANG': [
+            { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
+            { label: 'Số đề nghị trả lại' }, { label: 'Ngày đề nghị trả lại', date: true }, { label: 'Mã hàng hóa', code: true },
+            { label: 'Diễn giải', desc: true }, { label: 'Số lượng bán', numeric: true }, { label: 'Thành tiền bán', numeric: true },
+            { label: 'Tổng tiền bán', numeric: true }, { label: 'Số lượng trả lại', numeric: true }, { label: 'Thành tiền trả lại', numeric: true },
+            { label: 'Tổng tiền trả lại', numeric: true }, { label: 'Người thực hiện' }, { label: 'Đơn vị' },
+            { label: 'Là combo hàng hóa' }, { label: 'ĐƠN GIÁ', numeric: true }
+        ],
         'NHAP_KHO': [
             { label: 'Ngày HT', date: true }, { label: 'Ngày CT', date: true }, { label: 'Số CT' }, { label: 'Ngày Hạn TT', date: true },
             { label: 'Mã NCC', ncc: true }, { label: 'Tên NCC', ncc: true }, { label: 'Diễn Giải', desc: true }, { label: 'Mã Hàng', code: true },
@@ -210,7 +222,7 @@
         ]
     };
 
-    var currentMode = 'NHAP_KHO'; 
+    var currentMode = 'BAN_HANG'; 
     var globalRawData = [];  
     var filteredData = []; 
     var currentPage = 1;
@@ -232,18 +244,23 @@
         if (currentMode === mode) return;
         currentMode = mode;
 
+        var btnBanHang = document.getElementById('btnModeBanHang');
         var btnNhapKho = document.getElementById('btnModeNhapKho');
         var btnLaptop = document.getElementById('btnModeLaptop');
         var btnPc = document.getElementById('btnModePc');
         var btnTonKho = document.getElementById('btnModeTonKho');
         var desc = document.getElementById('modeDescription');
 
+        btnBanHang.className = 'btn btn-outline-success';
         btnNhapKho.className = 'btn btn-outline-primary';
         btnLaptop.className = 'btn btn-outline-warning';
         btnPc.className = 'btn btn-outline-dark';
         btnTonKho.className = 'btn btn-outline-info';
 
-        if (mode === 'NHAP_KHO') {
+        if (mode === 'BAN_HANG') {
+            btnBanHang.className = 'btn btn-success active';
+            desc.innerText = 'Đang hiển thị Trang tính: BÁN HÀNG (17 Cột)';
+        } else if (mode === 'NHAP_KHO') {
             btnNhapKho.className = 'btn btn-primary active';
             desc.innerText = 'Đang hiển thị Trang tính: NHẬP KHO (17 Cột)';
         } else if (mode === 'LAPTOP') {
@@ -262,7 +279,7 @@
     }
 
     function getActiveColumns() {
-        return SHEET_CONFIGS[currentMode] || SHEET_CONFIGS['NHAP_KHO'];
+        return SHEET_CONFIGS[currentMode] || SHEET_CONFIGS['BAN_HANG'];
     }
 
     function renderTableHeader() {
@@ -274,6 +291,7 @@
 
         activeCols.forEach((col, colIndex) => {
             var customClass = col.numeric ? 'text-right' : '';
+            if (col.customer) customClass += ' col-customer';
             if (col.ncc) customClass += ' col-ncc';
             if (col.code) customClass += ' col-code';
             if (col.desc) customClass += ' col-desc';
@@ -318,7 +336,7 @@
         
         script.onerror = function() {
             showLoading(false);
-            alert(`Lỗi kết nối Google Sheets! Vui lòng đảm bảo bạn đã cấp quyền 'Anyone' trong Apps Script.`);
+            alert(`Lỗi kết nối Google Sheets! Vui lòng kiểm tra lại quyền 'Anyone' trong Apps Script.`);
         };
 
         document.body.appendChild(script);
@@ -338,7 +356,7 @@
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
         var fromDate = document.getElementById('fromDateInput').value;
         var toDate = document.getElementById('toDateInput').value;
-        var nccKeyword = document.getElementById('nccFilterInput').value.toLowerCase().trim();
+        var customerKeyword = document.getElementById('customerFilterInput').value.toLowerCase().trim();
 
         var activeCols = getActiveColumns();
         var colFilters = {};
@@ -358,16 +376,17 @@
                 if (!rowText.includes(globalKeyword)) isVisible = false;
             }
 
-            // Lọc theo khoảng ngày nếu trang tính có cột Ngày (cột đầu tiên)
-            if (isVisible && (fromDate || toDate) && activeCols[0] && activeCols[0].date) {
-                var rowDate = row[0] ? String(row[0]).split('T')[0] : '';
+            // Lọc ngày (Xác định cột Ngày tùy theo từng loại trang tính)
+            var dateColIdx = currentMode === 'BAN_HANG' ? 2 : 0; 
+            if (isVisible && (fromDate || toDate) && activeCols[dateColIdx] && activeCols[dateColIdx].date) {
+                var rowDate = row[dateColIdx] ? String(row[dateColIdx]).split('T')[0] : '';
                 if (fromDate && rowDate < fromDate) isVisible = false;
                 if (toDate && rowDate > toDate) isVisible = false;
             }
 
-            if (isVisible && nccKeyword) {
+            if (isVisible && customerKeyword) {
                 var rowText = row.join(' ').toLowerCase();
-                if (!rowText.includes(nccKeyword)) isVisible = false;
+                if (!rowText.includes(customerKeyword)) isVisible = false;
             }
 
             if (isVisible) {
@@ -393,7 +412,7 @@
         document.getElementById('globalSearchInput').value = '';
         document.getElementById('fromDateInput').value = '';
         document.getElementById('toDateInput').value = '';
-        document.getElementById('nccFilterInput').value = '';
+        document.getElementById('customerFilterInput').value = '';
         document.querySelectorAll('.col-filter').forEach(i => i.value = '');
         applyFilters();
     }
@@ -451,6 +470,7 @@
             var val = (rowData && rowData[colIdx] !== undefined) ? rowData[colIdx] : '';
             var displayVal = val;
             var customClass = col.numeric ? "text-right" : "";
+            if (col.customer) customClass += " col-customer";
             if (col.ncc) customClass += " col-ncc";
             if (col.code) customClass += " col-code";
             if (col.desc) customClass += " col-desc";
@@ -611,6 +631,12 @@
     function addRow() {
         var activeCols = getActiveColumns();
         var emptyRow = new Array(activeCols.length).fill('');
+        if (currentMode === 'BAN_HANG') {
+            var now = new Date().toISOString().split('T')[0];
+            emptyRow[2] = now; // Mặc định điền Ngày ghi sổ là ngày hôm nay
+            emptyRow[14] = 'Cái';
+            emptyRow[15] = 'Không';
+        }
 
         showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
 
