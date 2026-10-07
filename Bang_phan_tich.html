@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Phân Tích Sản Phẩm & Giá Bán</title>
+    <title>Hệ Thống Phân Tích Sản Phẩm, Giá Bán & Quản Lý Kho Tồn</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
@@ -76,17 +76,20 @@
         <!-- HEADER TRANG & NÚT CHUYỂN ĐỔI BẢNG -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
             <div>
-                <h4 class="text-dark fw-bold m-0"><i class="fa-solid fa-laptop text-warning me-2"></i>Hệ Thống Phân Tích Sản Phẩm & Giá Bán</h4>
+                <h4 class="text-dark fw-bold m-0"><i class="fa-solid fa-boxes-stacked text-warning me-2"></i>Hệ Thống Phân Tích & Quản Lý Kho Tồn</h4>
                 <small class="text-muted" id="modeDescription">Đang hiển thị: Danh Sách Máy Tính Xách Tay (Laptop - 31 Cột)</small>
             </div>
             
-            <!-- NÚT CHUYỂN CHẾ ĐỘ XEM BẢNG & PHÂN LOẠI -->
+            <!-- NÚT CHUYỂN CHẾ ĐỘ XEM BẢNG (LAPTOP / PC / KHO TỒN MỖI NGÀY) -->
             <div class="btn-group view-mode-btn-group" role="group">
                 <button type="button" id="btnModeFull" class="btn btn-warning active" onclick="switchTableMode('FULL')">
                     <i class="fa-solid fa-laptop me-1"></i> Phân Tích Laptop (31 Cột)
                 </button>
                 <button type="button" id="btnModePrice" class="btn btn-outline-dark" onclick="switchTableMode('PRICE')">
                     <i class="fa-solid fa-desktop me-1"></i> Phân Tích PC (23 Cột)
+                </button>
+                <button type="button" id="btnModeInventory" class="btn btn-outline-info" onclick="switchTableMode('INVENTORY')">
+                    <i class="fa-solid fa-warehouse me-1"></i> Kho Tồn Mỗi Ngày (10 Cột)
                 </button>
             </div>
 
@@ -98,19 +101,19 @@
             <div class="row g-2 align-items-center">
                 <div class="col-md-3">
                     <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
-                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập SKU, Mã KTB, Cấu hình..." onkeyup="applyFilters()">
+                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập Tên hàng, SKU, Mã KTB..." onkeyup="applyFilters()">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-copyright me-1"></i>Thương hiệu (Brand):</label>
-                    <input type="text" id="brandFilterInput" class="form-control form-control-sm" placeholder="Dell, Asus, HP..." onkeyup="applyFilters()">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-layer-group me-1"></i>Loại hàng / Brand:</label>
+                    <input type="text" id="brandFilterInput" class="form-control form-control-sm" placeholder="Adapter, DDRAM, Dell..." onkeyup="applyFilters()">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-truck-field me-1"></i>Nhà cung cấp (NCC):</label>
                     <input type="text" id="nccFilterInput" class="form-control form-control-sm" placeholder="Nhập tên NCC..." onkeyup="applyFilters()">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-microchip me-1"></i>Mã KTB / SKU:</label>
-                    <input type="text" id="codeFilterInput" class="form-control form-control-sm" placeholder="Nhập mã SKU hoặc KTB..." onkeyup="applyFilters()">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-barcode me-1"></i>Mã Hàng / Mã KTB / SKU:</label>
+                    <input type="text" id="codeFilterInput" class="form-control form-control-sm" placeholder="Nhập mã hàng hoá..." onkeyup="applyFilters()">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button class="btn btn-sm btn-secondary w-100 mt-3" onclick="resetFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc</button>
@@ -171,25 +174,25 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSiSFM2Q6vIkcVQgjfhRMWWWtFPR-aFiHvGXwrFYEqW4x4-EsuRYnL3Mq365Qiic-f/exec";
 
-    // CẤU TRÚC 31 CỘT - CỘT 1 (INDEX 0) LÀ NGÀNH HÀNG (LAPTOP / PC)
+    // CẤU TRÚC 31 CỘT GỐC & CÁC CỘT KHO TỒN
     const ALL_COLUMNS = [
         { key: 'nganh_hang', label: 'Ngành Hàng' },                           // Cột 1 (A) - Index 0
         { key: 'ncc', label: 'NCC' },                                         // Cột 2 (B) - Index 1
         { key: 'sku', label: 'Mã Sản Phẩm (SKU) NPP, Hãng' },                 // Cột 3 (C) - Index 2
-        { key: 'ma_ktb', label: 'Mã KTB' },                                  // Cột 4 (D) - Index 3
-        { key: 'brand', label: 'Brand' },                                    // Cột 5 (E) - Index 4
-        { key: 'screen', label: 'Màn hình INCH' },                           // Cột 6 (F) - Index 5
-        { key: 'chip', label: 'chip' },                                      // Cột 7 (G) - Index 6
-        { key: 'ram', label: 'ram' },                                        // Cột 8 (H) - Index 7
-        { key: 'ssd', label: 'ssd' },                                        // Cột 9 (I) - Index 8
-        { key: 'win', label: 'win' },                                        // Cột 10 (J) - Index 9
-        { key: 'office', label: 'office' },                                  // Cột 11 (K) - Index 10
+        { key: 'ma_ktb', label: 'Mã KTB' },                                   // Cột 4 (D) - Index 3
+        { key: 'brand', label: 'Brand' },                                     // Cột 5 (E) - Index 4
+        { key: 'screen', label: 'Màn hình INCH' },                            // Cột 6 (F) - Index 5
+        { key: 'chip', label: 'chip' },                                       // Cột 7 (G) - Index 6
+        { key: 'ram', label: 'ram' },                                         // Cột 8 (H) - Index 7
+        { key: 'ssd', label: 'ssd' },                                         // Cột 9 (I) - Index 8
+        { key: 'win', label: 'win' },                                         // Cột 10 (J) - Index 9
+        { key: 'office', label: 'office' },                                   // Cột 11 (K) - Index 10
         { key: 'bao_hanh', label: 'Bao_Hanh_Nam' },                           // Cột 12 (L) - Index 11
-        { key: 'fp', label: 'FP' },                                          // Cột 13 (M) - Index 12
-        { key: 'pin', label: 'PIN adapter' },                                // Cột 14 (N) - Index 13
-        { key: 'led_kb', label: 'led_KB_BK' },                               // Cột 15 (O) - Index 14
-        { key: 'alu', label: 'Alu' },                                        // Cột 16 (P) - Index 15
-        { key: 'mx_rtx', label: 'MX RTX' },                                  // Cột 17 (Q) - Index 16
+        { key: 'fp', label: 'FP' },                                           // Cột 13 (M) - Index 12
+        { key: 'pin', label: 'PIN adapter' },                                 // Cột 14 (N) - Index 13
+        { key: 'led_kb', label: 'led_KB_BK' },                                // Cột 15 (O) - Index 14
+        { key: 'alu', label: 'Alu' },                                         // Cột 16 (P) - Index 15
+        { key: 'mx_rtx', label: 'MX RTX' },                                   // Cột 17 (Q) - Index 16
         { key: 'sl_nhap_tong', label: 'So_Luong NHAP TONG', numeric: true },  // Cột 18 (R) - Index 17
         { key: 'sl_ton', label: 'So_Luong TON', numeric: true },              // Cột 19 (S) - Index 18
         { key: 'sl_ban_ngay', label: 'số lượng bán ra từ ngày', numeric: true },// Cột 20 (T) - Index 19
@@ -204,6 +207,21 @@
         { key: 'gia_ban_ktb_cn', label: 'GIÁ BÁN KTB CÔNG NỢ', numeric: true },// Cột 29 (AC) - Index 28
         { key: 'ngay_nhap_truoc', label: 'NGÀY NHẬP TRƯỚC', date: true },    // Cột 30 (AD) - Index 29
         { key: 'ngay_nhap_gan_nhat', label: 'NGÀY NHẬP GẦN NHẤT', date: true } // Cột 31 (AE) - Index 30
+    ];
+
+    // CẤU TRÚC CHO KHO TỒN MỖI NGÀY (THEO ẢNH MẪU - 10 CỘT TỔNG HỢP)
+    const INVENTORY_COLUMNS = [
+        { key: 'loai_hang', label: 'Loại hàng hóa', index: 0 },
+        { key: 'ma_hang', label: 'Mã hàng hóa', index: 2 },
+        { key: 'ten_hang', label: 'Tên hàng hóa', index: 3 },
+        { key: 'sl_co_the_dat', label: 'SL có thể đặt', numeric: true, index: 17 },
+        { key: 'sl_da_dat_chua_giao', label: 'SL đã đặt chưa giao', numeric: true, index: 19 },
+        { key: 'sl_ton_toi_thieu', label: 'Số lượng tồn tối thiểu', numeric: true, index: 11 },
+        { key: 'sl_ton', label: 'Số lượng tồn', numeric: true, index: 18 },
+        { key: 'don_gia_ban_1', label: 'Đơn giá bán 1', numeric: true, index: 27 },
+        { key: 'don_gia_ban_san', label: 'Đơn giá bán sàn', numeric: true, index: 28 },
+        { key: 'gia_tri_ton_kho', label: 'Giá trị tồn kho', numeric: true, index: 23 },
+        { key: 'dvt', label: 'Đơn vị tính', index: 22 }
     ];
 
     var currentMode = 'FULL'; 
@@ -230,16 +248,23 @@
 
         var btnFull = document.getElementById('btnModeFull');
         var btnPrice = document.getElementById('btnModePrice');
+        var btnInv = document.getElementById('btnModeInventory');
         var desc = document.getElementById('modeDescription');
+
+        // Reset class nút bấm
+        btnFull.className = 'btn btn-outline-warning';
+        btnPrice.className = 'btn btn-outline-dark';
+        btnInv.className = 'btn btn-outline-info';
 
         if (mode === 'FULL') {
             btnFull.className = 'btn btn-warning active';
-            btnPrice.className = 'btn btn-outline-dark';
             desc.innerText = 'Đang hiển thị: Danh Sách Máy Tính Xách Tay (Laptop - 31 Cột)';
-        } else {
-            btnFull.className = 'btn btn-outline-warning';
+        } else if (mode === 'PRICE') {
             btnPrice.className = 'btn btn-dark active';
             desc.innerText = 'Đang hiển thị: Danh Sách Máy Tính Để Bàn (PC - 23 Cột)';
+        } else if (mode === 'INVENTORY') {
+            btnInv.className = 'btn btn-info active text-white';
+            desc.innerText = 'Đang hiển thị: Quản Lý Kho Tồn Mỗi Ngày (Báo Cáo Tồn Kho 10 Cột)';
         }
 
         renderTableHeader();
@@ -248,9 +273,8 @@
 
     function getActiveColumns() {
         if (currentMode === 'FULL') {
-            return ALL_COLUMNS; // Hiển thị đầy đủ 31 cột
-        } else {
-            // Danh sách các cột xem gọn cho PC (23 cột)
+            return ALL_COLUMNS; 
+        } else if (currentMode === 'PRICE') {
             var cols = [
                 ALL_COLUMNS[0],  // Ngành hàng
                 ALL_COLUMNS[1],  // NCC
@@ -277,6 +301,8 @@
                 ALL_COLUMNS[28]  // GIÁ BÁN CÔNG NỢ
             ];
             return cols.filter(c => c !== undefined);
+        } else if (currentMode === 'INVENTORY') {
+            return INVENTORY_COLUMNS;
         }
     }
 
@@ -287,8 +313,8 @@
         var headerHtml = `<tr><th class="text-center" style="width: 70px;">Thao Tác</th>`;
         var filterRowHtml = `<tr class="bg-light"><td class="text-center"><i class="fa-solid fa-filter text-muted"></i></td>`;
 
-        activeCols.forEach(col => {
-            var colIndex = ALL_COLUMNS.findIndex(c => c.key === col.key);
+        activeCols.forEach((col, idx) => {
+            var colIndex = col.index !== undefined ? col.index : ALL_COLUMNS.findIndex(c => c.key === col.key);
             headerHtml += `<th class="${col.numeric ? 'text-right' : ''}">${col.label}</th>`;
             filterRowHtml += `<td><input type="text" class="filter-input col-filter" data-col-index="${colIndex}" onkeyup="applyFilters()" placeholder="Lọc..."></td>`;
         });
@@ -325,7 +351,7 @@
     }
 
     function formatNumberVN(val) {
-        if (val === '' || val === null || val === undefined) return '';
+        if (val === '' || val === null || val === undefined) return '0';
         var num = Number(val);
         if (isNaN(num)) return val;
         return num.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
@@ -353,7 +379,7 @@
         });
     }
 
-    // TỰ ĐỘNG LỌC THEO CỘT 1 (INDEX 0) - NGÀNH HÀNG
+    // TỰ ĐỘNG LỌC THEO CỘT 1 (INDEX 0) HOẶC CHẾ ĐỘ KHO TỒN
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
         var brandKeyword = document.getElementById('brandFilterInput').value.toLowerCase().trim();
@@ -372,14 +398,14 @@
         globalRawData.forEach((row, originalIndex) => {
             var isVisible = true;
 
-            // KIỂM TRA CỘT 1 (INDEX 0) - NGÀNH HÀNG
             var loaiSP = row[0] ? String(row[0]).toUpperCase().trim() : '';
             if (currentMode === 'FULL') {
-                // Tab LAPTOP: Lọc lấy các dòng ghi LAPTOP (hoặc dòng rỗng chưa chọn)
                 if (loaiSP && loaiSP === 'PC') isVisible = false;
             } else if (currentMode === 'PRICE') {
-                // Tab PC: Chỉ lọc lấy dòng ghi PC
                 if (loaiSP && loaiSP !== 'PC') isVisible = false;
+            } else if (currentMode === 'INVENTORY') {
+                // Ở chế độ Kho Tồn: Hiển thị tất cả hàng hoá trong kho
+                isVisible = true;
             }
 
             if (globalKeyword && isVisible) {
@@ -387,15 +413,17 @@
                 if (!rowText.includes(globalKeyword)) isVisible = false;
             }
 
-            if (isVisible && brandKeyword && row[4]) { // Brand cột 5 (Index 4)
-                if (!String(row[4]).toLowerCase().includes(brandKeyword)) isVisible = false;
+            if (isVisible && brandKeyword) {
+                var brandVal = row[4] ? String(row[4]).toLowerCase() : '';
+                var loaiVal = row[0] ? String(row[0]).toLowerCase() : '';
+                if (!brandVal.includes(brandKeyword) && !loaiVal.includes(brandKeyword)) isVisible = false;
             }
 
-            if (isVisible && nccKeyword && row[1]) { // NCC cột 2 (Index 1)
+            if (isVisible && nccKeyword && row[1]) {
                 if (!String(row[1]).toLowerCase().includes(nccKeyword)) isVisible = false;
             }
 
-            if (isVisible && codeKeyword) { // SKU cột 3 (Index 2), Mã KTB cột 4 (Index 3)
+            if (isVisible && codeKeyword) {
                 var sku = row[2] ? String(row[2]).toLowerCase() : '';
                 var ktb = row[3] ? String(row[3]).toLowerCase() : '';
                 if (!sku.includes(codeKeyword) && !ktb.includes(codeKeyword)) isVisible = false;
@@ -437,7 +465,7 @@
         var activeCols = getActiveColumns();
 
         if (totalItems === 0) {
-            tbody.innerHTML = `<tr><td colspan="${activeCols.length + 1}" class="text-center text-muted py-4">Chưa có dữ liệu. Vui lòng nhấn <strong>'Thêm Sản Phẩm'</strong> hoặc <strong>'Nhập File Excel'</strong> để tải dữ liệu lên Google Sheets.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${activeCols.length + 1}" class="text-center text-muted py-4">Chưa có dữ liệu. Vui lòng nhấn <strong>'Thêm Sản Phẩm'</strong> hoặc <strong>'Nhập File Excel'</strong> để tải dữ liệu lên.</td></tr>`;
             document.getElementById('rowCountBadge').innerText = `Hiển thị: 0 / 0 dòng`;
             document.getElementById('pageInfoSpan').innerText = `Trang 0 / 0`;
             renderPaginationControls(0);
@@ -477,7 +505,7 @@
         var cellsHtml = actionTd;
 
         activeCols.forEach(col => {
-            var colIdx = ALL_COLUMNS.findIndex(c => c.key === col.key);
+            var colIdx = col.index !== undefined ? col.index : ALL_COLUMNS.findIndex(c => c.key === col.key);
             var val = (rowData && rowData[colIdx] !== undefined) ? rowData[colIdx] : '';
             var displayVal = val;
             var alignClass = col.numeric ? "text-right" : "";
@@ -489,6 +517,8 @@
                 displayVal = formatDateVN(val);
             } else if (col.numeric) {
                 displayVal = formatNumberVN(val);
+            } else if (col.key === 'dvt' && !val) {
+                displayVal = 'Cái'; // Mặc định đơn vị tính
             }
 
             cellsHtml += `<td class="${alignClass}" data-col-idx="${colIdx}" data-raw-val="${val}">${displayVal}</td>`;
@@ -602,10 +632,9 @@
         });
     }
 
-    // THÊM SẢN PHẨM: TỰ ĐỘNG GÁN GIÁ TRỊ VÀO CỘT 1 (INDEX 0)
     function addRow() {
         var emptyRow = new Array(ALL_COLUMNS.length).fill('');
-        emptyRow[0] = currentMode === 'FULL' ? 'LAPTOP' : 'PC'; // Gán tự động ở Cột 1
+        emptyRow[0] = currentMode === 'FULL' ? 'LAPTOP' : (currentMode === 'PRICE' ? 'PC' : 'Linh Kiện');
         
         globalRawData.push(emptyRow);
         applyFilters();
