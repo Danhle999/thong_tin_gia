@@ -309,32 +309,35 @@
         return str;
     }
 
-    function loadDataFromSheet() {
-        var targetSheet = SHEET_MAPPING[currentMode] || 'LAPTOP';
-        showLoading(true, `Đang kết nối dữ liệu từ Sheet '${targetSheet}'...`);
+function loadDataFromSheet() {
+    var targetSheet = SHEET_MAPPING[currentMode] || 'LAPTOP';
+    showLoading(true, `Đang kết nối dữ liệu từ Sheet '${targetSheet}'...`);
 
-        fetch(`${GOOGLE_SCRIPT_URL}?sheetName=${encodeURIComponent(targetSheet)}`, { 
-            method: "GET", 
-            redirect: "follow" 
-        })
-        .then(res => res.json())
-        .then(data => {
-            showLoading(false);
-            if (data.result === "success") {
-                globalRawData = data.data || [];
-                applyFilters();
-            } else {
-                alert("Lỗi tải dữ liệu từ Google Sheets: " + data.error);
-            }
-        })
-        .catch(err => {
-            showLoading(false);
-            console.error("Lỗi API kết nối:", err);
-            alert("Không thể kết nối đến Google Apps Script!");
-            globalRawData = [];
+    // Thêm &_t=Date.now() để bắt buộc trình duyệt tải dữ liệu mới nhất, không dùng cache
+    var fetchUrl = `${GOOGLE_SCRIPT_URL}?sheetName=${encodeURIComponent(targetSheet)}&_t=${Date.now()}`;
+
+    fetch(fetchUrl, { 
+        method: "GET", 
+        redirect: "follow" 
+    })
+    .then(res => res.json())
+    .then(data => {
+        showLoading(false);
+        if (data.result === "success") {
+            globalRawData = data.data || [];
             applyFilters();
-        });
-    }
+        } else {
+            alert("Lỗi tải dữ liệu từ Google Sheets: " + data.error);
+        }
+    })
+    .catch(err => {
+        showLoading(false);
+        console.error("Lỗi API kết nối:", err);
+        alert("Không thể kết nối đến Google Apps Script!");
+        globalRawData = [];
+        applyFilters();
+    });
+}
 
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
