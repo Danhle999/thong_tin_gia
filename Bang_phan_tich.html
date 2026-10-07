@@ -16,7 +16,6 @@
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .table-responsive { max-height: 62vh; overflow-y: auto; }
         
-        /* Header bảng tông màu vàng xám nổi bật */
         th { 
             background-color: #ffc107 !important; 
             color: #212529 !important; 
@@ -40,7 +39,6 @@
         #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.75); z-index: 9999; justify-content: center; align-items: center; }
         .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
         
-        /* CSS Phân trang */
         .pagination-container {
             display: flex;
             justify-content: space-between;
@@ -52,17 +50,12 @@
             border-top: 1px solid #dee2e6;
         }
 
-        .view-mode-btn-group .btn {
-            font-weight: 600;
-        }
-        .view-mode-btn-group .btn.active {
-            box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
-        }
+        .view-mode-btn-group .btn { font-weight: 600; }
+        .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-<!-- Màn hình chờ kết nối API -->
 <div id="loadingSpinner">
     <div class="text-center">
         <div class="spinner-border text-warning" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
@@ -73,14 +66,13 @@
 <div class="container-fluid my-3">
     <div class="table-container">
         
-        <!-- HEADER TRANG & NÚT CHUYỂN ĐỔI BẢNG METADATA -->
+        <!-- HEADER TRANG & NÚT CHUYỂN ĐỔI TAB -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
             <div>
                 <h4 class="text-dark fw-bold m-0"><i class="fa-solid fa-boxes-stacked text-warning me-2"></i>Hệ Thống Phân Tích & Quản Lý Kho Tồn</h4>
-                <small class="text-muted" id="modeDescription">Đang kết nối Trang tính: LAPTOP (31 Cột)</small>
+                <small class="text-muted" id="modeDescription">Đang hiển thị Trang tính: LAPTOP (31 Cột)</small>
             </div>
             
-            <!-- NÚT CHUYỂN CHẾ ĐỘ XEM BẢNG TƯƠNG ỨNG CÁC SHEET -->
             <div class="btn-group view-mode-btn-group" role="group">
                 <button type="button" id="btnModeFull" class="btn btn-warning active" onclick="switchTableMode('FULL')">
                     <i class="fa-solid fa-laptop me-1"></i> Sheet LAPTOP (31 Cột)
@@ -96,7 +88,7 @@
             <span class="badge bg-dark fs-6" id="rowCountBadge">Hiển thị: 0 / 0 dòng</span>
         </div>
 
-        <!-- BỘ LỌC TÌM KIẾM NÂNG CAO -->
+        <!-- BỘ LỌC TÌM KIẾM -->
         <div class="filter-card">
             <div class="row g-2 align-items-center">
                 <div class="col-md-3">
@@ -105,7 +97,7 @@
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-layer-group me-1"></i>Loại hàng / Brand:</label>
-                    <input type="text" id="brandFilterInput" class="form-control form-control-sm" placeholder="Dell, Adapter, DDRAM..." onkeyup="applyFilters()">
+                    <input type="text" id="brandFilterInput" class="form-control form-control-sm" placeholder="Dell, HP, Lenovo..." onkeyup="applyFilters()">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-truck-field me-1"></i>Nhà cung cấp (NCC):</label>
@@ -138,16 +130,12 @@
         <!-- BẢNG DỮ LIỆU -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle" id="dataTable">
-                <thead id="tableHeader">
-                    <!-- Dynamic Header render ở đây -->
-                </thead>
-                <tbody id="tableBody">
-                    <!-- Dynamic Rows render ở đây -->
-                </tbody>
+                <thead id="tableHeader"></thead>
+                <tbody id="tableBody"></tbody>
             </table>
         </div>
 
-        <!-- THANH PHÂN TRANG (PAGINATION) -->
+        <!-- THANH PHÂN TRANG -->
         <div class="pagination-container">
             <div class="d-flex align-items-center gap-2">
                 <span class="text-muted small">Hiển thị:</span>
@@ -162,9 +150,7 @@
             </div>
 
             <nav>
-                <ul class="pagination pagination-sm m-0" id="paginationControls">
-                    <!-- Control Phân Trang Render Tại Đây -->
-                </ul>
+                <ul class="pagination pagination-sm m-0" id="paginationControls"></ul>
             </nav>
         </div>
 
@@ -174,14 +160,12 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSiSFM2Q6vIkcVQgjfhRMWWWtFPR-aFiHvGXwrFYEqW4x4-EsuRYnL3Mq365Qiic-f/exec";
 
-    // BẢN ĐỒ ÁNH XẠ CHẾ ĐỘ XEM SANG TÊN SHEET TRÊN GOOGLE SHEETS
     const SHEET_MAPPING = {
-        'FULL': 'LAPTOP',       // Sheet 1: LAPTOP (31 Cột)
-        'PRICE': 'PC',          // Sheet 2: PC (23 Cột)
-        'INVENTORY': 'KHO_TON'  // Sheet 3: KHO_TON (10 Cột)
+        'FULL': 'LAPTOP',
+        'PRICE': 'PC',
+        'INVENTORY': 'KHO_TON'
     };
 
-    // CẤU TRÚC SHEET LAPTOP (31 CỘT)
     const LAPTOP_COLUMNS = [
         { label: 'Ngành Hàng' }, { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' },
         { label: 'Brand' }, { label: 'Màn hình INCH' }, { label: 'Chip' }, { label: 'RAM' },
@@ -195,7 +179,6 @@
         { label: 'Ngày Nhập Trước', date: true }, { label: 'Ngày Nhập Gần Nhất', date: true }
     ];
 
-    // CẤU TRÚC SHEET PC (23 CỘT)
     const PC_COLUMNS = [
         { label: 'Ngành Hàng' }, { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' },
         { label: 'Brand' }, { label: 'Chip' }, { label: 'RAM' }, { label: 'SSD' },
@@ -206,19 +189,12 @@
         { label: 'Giá Bán Tiền Mặt', numeric: true }, { label: 'Giá Bán Công Nợ', numeric: true }
     ];
 
-    // CẤU TRÚC SHEET KHO_TON (10 CỘT THEO MẪU ẢNH KHO TỒN MỖI NGÀY)
     const KHO_TON_COLUMNS = [
-        { label: 'Loại hàng hóa' },
-        { label: 'Mã hàng hóa' },
-        { label: 'Tên hàng hóa' },
-        { label: 'SL có thể đặt', numeric: true },
-        { label: 'SL đã đặt chưa giao', numeric: true },
-        { label: 'Số lượng tồn tối thiểu', numeric: true },
-        { label: 'Số lượng tồn', numeric: true },
-        { label: 'Đơn giá bán 1', numeric: true },
-        { label: 'Đơn giá bán sàn', numeric: true },
-        { label: 'Giá trị tồn kho', numeric: true },
-        { label: 'Đơn vị tính' }
+        { label: 'Loại hàng hóa' }, { label: 'Mã hàng hóa' }, { label: 'Tên hàng hóa' },
+        { label: 'SL có thể đặt', numeric: true }, { label: 'SL đã đặt chưa giao', numeric: true },
+        { label: 'Số lượng tồn tối thiểu', numeric: true }, { label: 'Số lượng tồn', numeric: true },
+        { label: 'Đơn giá bán 1', numeric: true }, { label: 'Đơn giá bán sàn', numeric: true },
+        { label: 'Giá trị tồn kho', numeric: true }, { label: 'Đơn vị tính' }
     ];
 
     var currentMode = 'FULL'; 
@@ -264,7 +240,7 @@
         }
 
         renderTableHeader();
-        loadDataFromSheet(); // Tải lại đúng dữ liệu từ Sheet tương ứng
+        loadDataFromSheet();
     }
 
     function getActiveColumns() {
@@ -309,35 +285,43 @@
         return str;
     }
 
-function loadDataFromSheet() {
-    var targetSheet = SHEET_MAPPING[currentMode] || 'LAPTOP';
-    showLoading(true, `Đang kết nối dữ liệu từ Sheet '${targetSheet}'...`);
+    function loadDataFromSheet() {
+        var targetSheet = SHEET_MAPPING[currentMode] || 'LAPTOP';
+        showLoading(true, `Đang tải dữ liệu từ Sheet '${targetSheet}'...`);
 
-    // Thêm &_t=Date.now() để bắt buộc trình duyệt tải dữ liệu mới nhất, không dùng cache
-    var fetchUrl = `${GOOGLE_SCRIPT_URL}?sheetName=${encodeURIComponent(targetSheet)}&_t=${Date.now()}`;
-
-    fetch(fetchUrl, { 
-        method: "GET", 
-        redirect: "follow" 
-    })
-    .then(res => res.json())
-    .then(data => {
-        showLoading(false);
-        if (data.result === "success") {
-            globalRawData = data.data || [];
-            applyFilters();
-        } else {
-            alert("Lỗi tải dữ liệu từ Google Sheets: " + data.error);
-        }
-    })
-    .catch(err => {
-        showLoading(false);
-        console.error("Lỗi API kết nối:", err);
-        alert("Không thể kết nối đến Google Apps Script!");
-        globalRawData = [];
-        applyFilters();
-    });
-}
+        // Sử dụng POST fetch để truyền sheetName an toàn không bị Google Apps Script drop URL Parameter
+        fetch(GOOGLE_SCRIPT_URL, { 
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "getData", sheetName: targetSheet }),
+            redirect: "follow" 
+        })
+        .then(res => res.json())
+        .then(data => {
+            showLoading(false);
+            if (data.result === "success") {
+                globalRawData = data.data || [];
+                applyFilters();
+            } else {
+                alert("Lỗi tải dữ liệu: " + data.error);
+            }
+        })
+        .catch(err => {
+            // Trường hợp dự phòng nếu POST GET fail
+            fetch(`${GOOGLE_SCRIPT_URL}?sheetName=${encodeURIComponent(targetSheet)}&_t=${Date.now()}`)
+            .then(res => res.json())
+            .then(data => {
+                showLoading(false);
+                globalRawData = data.data || [];
+                applyFilters();
+            })
+            .catch(e => {
+                showLoading(false);
+                globalRawData = [];
+                applyFilters();
+            });
+        });
+    }
 
     function applyFilters() {
         var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
@@ -357,7 +341,17 @@ function loadDataFromSheet() {
         globalRawData.forEach((row, originalIndex) => {
             var isVisible = true;
 
-            if (globalKeyword) {
+            // BỘ LỌC AN TOÀN TRÁNH TRƯỜNG HỢP SHEET DỮ LIỆU BỊ TRỘN LẪN LAPTOP / PC
+            var nganhHangVal = row[0] ? String(row[0]).toUpperCase().trim() : '';
+            if (currentMode === 'FULL') {
+                // Tab LAPTOP: Không hiển thị nếu là PC
+                if (nganhHangVal === 'PC') isVisible = false;
+            } else if (currentMode === 'PRICE') {
+                // Tab PC: Chỉ hiển thị các dòng ghi là PC
+                if (nganhHangVal !== 'PC') isVisible = false;
+            }
+
+            if (globalKeyword && isVisible) {
                 var rowText = row.join(' ').toLowerCase();
                 if (!rowText.includes(globalKeyword)) isVisible = false;
             }
@@ -372,7 +366,7 @@ function loadDataFromSheet() {
             }
 
             if (isVisible && codeKeyword) {
-                var codeVal = (row[2] ? String(row[2]) : '') + ' ' + (row[1] ? String(row[1]) : '');
+                var codeVal = (row[2] ? String(row[2]) : '') + ' ' + (row[3] ? String(row[3]) : '');
                 if (!codeVal.toLowerCase().includes(codeKeyword)) isVisible = false;
             }
 
@@ -412,7 +406,7 @@ function loadDataFromSheet() {
         var activeCols = getActiveColumns();
 
         if (totalItems === 0) {
-            tbody.innerHTML = `<tr><td colspan="${activeCols.length + 1}" class="text-center text-muted py-4">Sheet <strong>${SHEET_MAPPING[currentMode]}</strong> chưa có dữ liệu. Hãy nhấn <strong>'Thêm Dòng Mới'</strong> hoặc <strong>'Nhập File Excel'</strong>.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${activeCols.length + 1}" class="text-center text-muted py-4">Sheet <strong>${SHEET_MAPPING[currentMode]}</strong> chưa có dữ liệu hợp lệ. Nhấn <strong>'Thêm Dòng Mới'</strong> hoặc <strong>'Nhập File Excel'</strong> để tải lên.</td></tr>`;
             document.getElementById('rowCountBadge').innerText = `Hiển thị: 0 / 0 dòng`;
             document.getElementById('pageInfoSpan').innerText = `Trang 0 / 0`;
             renderPaginationControls(0);
@@ -544,7 +538,7 @@ function loadDataFromSheet() {
             fullRowData.push(val);
         }
 
-        showLoading(true, `Đang lưu vào Trang tính '${targetSheet}'...`);
+        showLoading(true, `Đang lưu vào Sheet '${targetSheet}'...`);
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
@@ -577,6 +571,8 @@ function loadDataFromSheet() {
     function addRow() {
         var activeCols = getActiveColumns();
         var emptyRow = new Array(activeCols.length).fill('');
+        if (currentMode === 'PRICE') emptyRow[0] = 'PC';
+        else if (currentMode === 'FULL') emptyRow[0] = 'LAPTOP';
         
         globalRawData.push(emptyRow);
         applyFilters();
