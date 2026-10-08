@@ -3,713 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Dữ Liệu Bán Hàng & Nhập Kho</title>
+    <title>Quản Lý Dữ Liệu Google Sheet</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!-- SheetJS đọc file Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+    <!-- Thư viện SheetJS đọc file Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        /* Tạo vùng bắt sự kiện kéo ở mép phải của mỗi cột */
-th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    white-space: nowrap;
-    font-size: 0.85rem;
-    position: relative; /* Thêm thuộc tính này */
-}
-
-.resizer {
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-    width: 5px;
-    background: transparent;
-    cursor: col-resize;
-    user-select: none;
-}
-
-.resizer:hover, .resizer.resizing {
-    background-color: #ffc107; /* Hiện vạch màu vàng khi rê chuột vào để kéo */
-}
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .table-responsive { max-height: 62vh; overflow-y: auto; position: relative; border: 1px solid #dee2e6; border-radius: 6px; }
-        
-        /* Cố định Header */
-        th { background-color: #0d6efd !important; color: white !important; position: sticky; top: 0; z-index: 10; white-space: nowrap; font-size: 0.85rem; }
-        td { vertical-align: middle; white-space: nowrap; font-size: 0.85rem; }
-        
-        .editable-input { width: 100%; min-width: 80px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; font-size: 0.85rem; }
-        .filter-input { width: 100%; min-width: 70px; padding: 2px 5px; font-size: 0.8rem; border-radius: 4px; border: 1px solid #ced4da; }
-        
-        .col-customer { width: 250px !important; min-width: 150px !important; white-space: normal !important; word-break: break-word !important; }
-        .col-ncc { width: 250px !important; min-width: 100px !important; white-space: normal !important; word-break: break-word !important; }
-        .col-code { width: 450px !important; min-width: 250px !important; white-space: normal !important; word-break: break-all !important; font-family: monospace, sans-serif; font-weight: 600; }
-        .col-desc { width: 400px !important; min-width: 200px !important; white-space: normal !important; word-break: break-word !important; }
-
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-
-        /* Sticky Footer Tính Tổng */
-        tfoot th, tfoot td {
-            position: sticky;
-            bottom: 0;
-            background-color: #e9ecef !important;
-            color: #0d6efd;
-            font-weight: bold;
-            z-index: 9;
-            border-top: 2px solid #0d6efd !important;
-            border-bottom: 1px solid #dee2e6;
+        body { padding: 20px; background-color: #f8f9fa; }
+        .table-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .editable-input { width: 100%; border: 1px solid #ced4da; border-radius: 4px; padding: 4px 8px; }
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); display: none; justify-content: center;
+            align-items: center; z-index: 9999; color: #fff; flex-direction: column;
         }
-
-        #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 9999; justify-content: center; align-items: center; }
-        .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
-
-        .pagination-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-            padding-top: 10px;
-            border-top: 1px solid #dee2e6;
-        }
-
-        .view-mode-btn-group .btn { font-weight: 600; }
-        .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-<!-- Loading Spinner -->
-<div id="loadingSpinner">
-    <div class="text-center">
-        <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
-        <div class="mt-2 fw-bold text-dark" id="spinnerText">Đang nạp dữ liệu từ Google Sheets...</div>
+<div class="container-fluid table-container">
+    <h3 class="mb-4">Quản Lý Dữ Liệu</h3>
+
+    <!-- Thanh công cụ -->
+    <div class="row mb-3 g-2 align-items-center">
+        <div class="col-auto">
+            <select id="modeSelect" class="form-select" onchange="changeMode(this.value)">
+                <option value="BAN_HANG">Bán Hàng</option>
+                <option value="NHAP_HANG">Nhập Hàng</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" onclick="addRow()">+ Thêm dòng mới</button>
+        </div>
+        <div class="col-auto">
+            <label class="btn btn-success mb-0">
+                Tải Excel lên <input type="file" id="excelFileInput" accept=".xlsx, .xls" hidden onchange="handleExcelUpload(event)">
+            </label>
+        </div>
+        <div class="col-auto ms-auto d-flex align-items-center gap-2">
+            <label>Hiển thị:</label>
+            <select id="pageSizeSelect" class="form-select w-auto" onchange="changePageSize()">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Bảng dữ liệu -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" id="dataTable">
+            <thead class="table-light" id="tableHeader">
+                <!-- Header sinh tự động qua JS -->
+            </thead>
+            <tbody id="tableBody">
+                <!-- Dữ liệu sinh tự động qua JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Phân trang -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <span id="pageInfo">Trang 1 / 1</span>
+        <nav>
+            <ul class="pagination pagination-sm mb-0" id="pagination">
+                <!-- Các nút phân trang -->
+            </ul>
+        </nav>
     </div>
 </div>
 
-<div class="container-fluid my-3">
-    <div class="table-container">
-        
-        <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 5 SHEET -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <div>
-                <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu</h4>
-                <small class="text-muted" id="modeDescription">Đang hiển thị Trang tính: BAN_HANG (17 Cột)</small>
-            </div>
-            
-            <div class="btn-group view-mode-btn-group" role="group">
-                <button type="button" id="btnModeBanHang" class="btn btn-success active" onclick="switchTableMode('BAN_HANG')">
-                    <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG (17 Cột)
-                </button>
-                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">
-                    <i class="fa-solid fa-file-import me-1"></i> NHẬP KHO (17 Cột)
-                </button>
-                <button type="button" id="btnModeLaptop" class="btn btn-outline-warning" onclick="switchTableMode('LAPTOP')">
-                    <i class="fa-solid fa-laptop me-1"></i> LAPTOP (30 Cột)
-                </button>
-                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">
-                    <i class="fa-solid fa-desktop me-1"></i> PC (27 Cột)
-                </button>
-                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">
-                    <i class="fa-solid fa-tv me-1"></i> LCD (24 Cột)
-                </button>
-                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
-                    <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO (11 Cột)
-                </button>
-            </div>
-
-            <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 / 0 dòng</span>
-        </div>
-
-        <!-- BỘ LỌC TÌM KIẾM NÂNG CAO -->
-        <div class="filter-card">
-            <div class="row g-2 align-items-center">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
-                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyFilters()">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Từ ngày:</label>
-                    <input type="date" id="fromDateInput" class="form-control form-control-sm" onchange="applyFilters()">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Đến ngày:</label>
-                    <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyFilters()">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
-                    <input type="text" id="customerFilterInput" class="form-control form-control-sm" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyFilters()">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-sm btn-secondary w-100 mt-3" onclick="resetFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- NÚT THAO TÁC -->
-        <div class="row mb-3">
-            <div class="col-md-6 d-flex gap-2">
-                <button class="btn btn-sm btn-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
-                <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet()"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
-            </div>
-            <div class="col-md-6 d-flex justify-content-end gap-2">
-                <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
-                <button class="btn btn-sm btn-outline-success" onclick="document.getElementById('excelFileInput').click()">
-                    <i class="fa-solid fa-file-excel me-1"></i>Nhập Từ Excel Vào Sheet Này
-                </button>
-            </div>
-        </div>
-
-        <!-- BẢNG DỮ LIỆU -->
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle" id="dataTable">
-                <thead id="tableHeader"></thead>
-                <tbody id="tableBody"></tbody>
-                <tfoot id="tableFooter"></tfoot>
-            </table>
-        </div>
-
-        <!-- PHÂN TRANG -->
-        <div class="pagination-container">
-            <div class="d-flex align-items-center gap-2">
-                <span class="text-muted small">Hiển thị:</span>
-                <select id="pageSizeSelect" class="form-select form-select-sm" style="width: auto;" onchange="changePageSize()">
-                    <option value="25">25 dòng/trang</option>
-                    <option value="50" selected>50 dòng/trang</option>
-                    <option value="100">100 dòng/trang</option>
-                    <option value="200">200 dòng/trang</option>
-                    <option value="500">500 dòng/trang</option>
-                </select>
-                <span id="pageInfoSpan" class="text-muted small ms-2">Trang 0 / 0</span>
-            </div>
-
-            <nav>
-                <ul class="pagination pagination-sm m-0" id="paginationControls"></ul>
-            </nav>
-        </div>
-
-    </div>
+<!-- Màn hình Loading -->
+<div id="loadingOverlay">
+    <div class="spinner-border text-light mb-2" role="status"></div>
+    <div id="loadingText">Đang xử lý...</div>
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyq_lmHzKRfuT-8rCLdJE_PKj4uCuZr9fiHt1AtmT3L8VJqSy9UKGAVgBAv6Wz2eVYA/exec";
-    // Hàm render ô dữ liệu
-    const renderCellValue = (value, column) => {
-      if (value == null || value === '') return '';
-      
-      // Nếu là cột phần trăm
-      if (column.percent) {
-        // Trường hợp dữ liệu gốc dạng thập phân (vd: 0.12 -> 12%)
-        const num = Number(value);
-        return isNaN(num) ? value : `${(num > 1 ? num : num * 100).toFixed(2)}%`;
-      }
-      
-      // Nếu là cột tiền / số lượng
-      if (column.numeric) {
-        return Number(value).toLocaleString('vi-VN');
-      }
-      
-      return value;
-    };
-    // Bảng cấu hình chi tiết cho cả 5 Sheet
-    const SHEET_CONFIGS = {
+    // ==========================================
+    // 1. BIẾN TOÀN CỤC & CẤU HÌNH
+    // ==========================================
+    let currentPage = 1;
+    let pageSize = 10;
+    let currentMode = 'BAN_HANG';
+    
+    // Thay URL Web App Google Apps Script của bạn vào đây
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+
+    // Cấu hình cột theo từng Sheet/Mode
+    const COLUMN_CONFIGS = {
         'BAN_HANG': [
-            { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
-            { label: 'Số đề nghị trả lại' }, { label: 'Ngày đề nghị trả lại', date: true }, { label: 'Mã hàng hóa', code: true },
-            { label: 'Diễn giải', desc: true }, { label: 'Số lượng bán', numeric: true }, { label: 'Thành tiền bán', numeric: true },
-            { label: 'Tổng tiền bán', numeric: true }, { label: 'Số lượng trả lại', numeric: true }, { label: 'Thành tiền trả lại', numeric: true },
-            { label: 'Tổng tiền trả lại', numeric: true }, { label: 'Người thực hiện' }, { label: 'Đơn vị' },
-            { label: 'Là combo hàng hóa' }, { label: 'ĐƠN GIÁ', numeric: true }
+            { name: 'STT', date: false },
+            { name: 'Mã Đơn', date: false },
+            { name: 'Ngày Ghi Sổ', date: true },
+            { name: 'Tên Khách Hàng', date: false },
+            { name: 'SĐT', date: false },
+            { name: 'Địa Chỉ', date: false },
+            { name: 'Mã Sản Phẩm', date: false },
+            { name: 'Tên Sản Phẩm', date: false },
+            { name: 'Loại Hàng', date: false },
+            { name: 'Thương Hiệu', date: false },
+            { name: 'Cấu Hình', date: false },
+            { name: 'Số Lượng', date: false },
+            { name: 'Đơn Giá', date: false },
+            { name: 'Thành Tiền', date: false },
+            { name: 'Đơn Vị Tính', date: false },
+            { name: 'Thuế VAT', date: false },
+            { name: 'Ghi Chú', date: false }
         ],
-        'NHAP_KHO': [
-            { label: 'Ngày HT', date: true }, { label: 'Ngày CT', date: true }, { label: 'Số CT' }, { label: 'Ngày Hạn TT', date: true },
-            { label: 'Mã NCC', ncc: true }, { label: 'Tên NCC', ncc: true }, { label: 'Diễn Giải', desc: true }, { label: 'Mã Hàng', code: true },
-            { label: 'ĐVT' }, { label: 'Số Lượng', numeric: true }, { label: 'Đơn Giá', numeric: true }, { label: 'Thành Tiền', numeric: true },
-            { label: 'Giá cost', numeric: true }, { label: 'Chiết khấu', numeric: true }, { label: 'Sell out', numeric: true },
-            { label: 'Sell in', numeric: true }, { label: 'Tên nhóm VTHH', desc: true }
-        ],
-        'LAPTOP': [
-            { label: 'NGÀNH HÀNG' }, { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' },
-            { label: 'Brand' }, { label: 'Màn hình INCH' }, { label: 'Chip' }, { label: 'RAM' },
-            { label: 'SSD' }, { label: 'Win' }, { label: 'Office' }, { label: 'Bảo Hành (Năm)' },
-            { label: 'FP' }, { label: 'PIN Adapter' }, { label: 'LED KB BK' }, { label: 'Alu' },
-            { label: 'MX RTX' }, { label: 'Số Lượng Nhập Tổng', numeric: true }, { label: 'Số Lượng Tồn', numeric: true },
-            { label: 'Số Lượng Bán Ra', numeric: true }, 
-            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true }, 
-            { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true },
-            { label: 'Hàng gửi NPP' }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
-            { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true }, 
-            { label: 'GIÁ NHẬP MỚI (VNĐ)', numeric: true },
-            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true }, { label: 'NGÀY NHẬP CŨ', date: true },
-            { label: 'NGÀY NHẬP MỚI', date: true }
-        ],
-        'PC': [
-            { label: 'NGÀNH HÀNG' }, { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' },
-            { label: 'Brand' }, { label: 'Chip' }, { label: 'RAM' }, { label: 'SSD' },
-            { label: 'Win' }, { label: 'Bảo Hành' }, { label: 'Office' }, { label: 'Số Lượng Nhập Tổng', numeric: true },
-            { label: 'Số Lượng Tồn', numeric: true }, { label: 'SL Bán Từ Ngày', numeric: true },
-            { label: 'Hàng gửi NPP' }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP TRƯỚC', numeric: true },
-            { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true }, 
-            { label: 'GIÁ NHẬP (VNĐ)', numeric: true }, 
-            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true }, 
-            { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true }, 
-            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true },
-            { label: 'NGÀY NHẬP CŨ', date: true }, { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'GIÁ ĐỀ XUẤT', numeric: true }
-        ],
-        'TON_KHO': [
-            { label: 'Loại hàng hóa' }, { label: 'Mã hàng hóa' }, { label: 'Tên hàng hóa' },
-            { label: 'SL có thể đặt', numeric: true }, { label: 'SL đã đặt chưa giao', numeric: true },
-            { label: 'Số lượng tồn tối thiểu', numeric: true }, { label: 'Số lượng tồn', numeric: true },
-            { label: 'Đơn giá bán 1', numeric: true }, { label: 'Đơn giá bán sàn', numeric: true },
-            { label: 'Giá trị tồn kho', numeric: true }, { label: 'Đơn vị tính' }
-        ],
-        'LCD': [
-            { label: 'NCC' },
-            { label: 'Mã NPP' },
-            { label: 'Mã Sản Phẩm KTB', code: true },
-            { label: 'Brand' },
-            { label: 'Kich_Thuoc (inch)' },
-            { label: 'Do_Tre' },
-            { label: 'Tam_Nen' },
-            { label: 'Tan_So_Quet' },
-            { label: 'Do_Phan_Giai' },
-            { label: 'Cong_Xuat_Hinh_1' },
-            { label: 'Cong_Xuat_Hinh_2' },
-            { label: 'Cong_Xuat_Hinh_3' },
-            { label: 'Cong_Khac' },
-            { label: 'LOA' },
-            { label: 'GIÁ COST', numeric: true },
-            { label: 'GIÁ NHẬP (VNĐ)', numeric: true },
-            { label: 'GIÁ BÁN KTB', numeric: true },
-            { label: 'GIÁ ĐỀ XUẤT', numeric: true },
-            { label: 'NGÀY NHẬP GẦN NHẤT', date: true },
-            { label: 'So_Luong NHAP TONG', numeric: true },
-            { label: 'KHO KTB', numeric: true },
-            { label: 'số lượng bán ra từ ngày', numeric: true },
-            { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true },
-            { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true }
+        'NHAP_HANG': [
+            { name: 'STT', date: false },
+            { name: 'Mã Nhập', date: false },
+            { name: 'Ngày Nhập', date: true },
+            { name: 'Nhà Cung Cấp', date: false },
+            { name: 'Tên Sản Phẩm', date: false },
+            { name: 'Số Lượng', date: false },
+            { name: 'Đơn Giá Nhập', date: false },
+            { name: 'Tổng Tiền', date: false },
+            { name: 'Ghi Chú', date: false }
         ]
     };
 
-    var currentMode = 'BAN_HANG'; 
-    var globalRawData = [];  
-    var filteredData = []; 
-    var currentPage = 1;
-    var pageSize = 50;
+    // Mảng lưu dữ liệu hiện tại tải từ Sheet
+    let rawSheetData = [];
 
-    document.addEventListener("DOMContentLoaded", function() {
+    // ==========================================
+    // 2. HÀM BỔ TRỢ & KHỞI TẠO
+    // ==========================================
+    window.onload = function() {
         renderTableHeader();
         loadDataFromSheet();
-    });
-
-    function showLoading(show, text) {
-        var spinner = document.getElementById('loadingSpinner');
-        var spinnerText = document.getElementById('spinnerText');
-        if (text) spinnerText.innerText = text;
-        spinner.style.display = show ? 'flex' : 'none';
-    }
-
-function switchTableMode(mode) {
-        if (currentMode === mode) return;
-        currentMode = mode;
-
-        var btnBanHang = document.getElementById('btnModeBanHang');
-        var btnNhapKho = document.getElementById('btnModeNhapKho');
-        var btnLaptop = document.getElementById('btnModeLaptop');
-        var btnPc = document.getElementById('btnModePc');
-        var btnLcd = document.getElementById('btnModeLcd');
-        var btnTonKho = document.getElementById('btnModeTonKho');
-        var desc = document.getElementById('modeDescription');
-
-        btnBanHang.className = 'btn btn-outline-success';
-        btnNhapKho.className = 'btn btn-outline-primary';
-        btnLaptop.className = 'btn btn-outline-warning';
-        btnPc.className = 'btn btn-outline-dark';
-        if (btnLcd) btnLcd.className = 'btn btn-outline-danger';
-        btnTonKho.className = 'btn btn-outline-info';
-
-        if (mode === 'BAN_HANG') {
-            btnBanHang.className = 'btn btn-success active';
-            desc.innerText = 'Đang hiển thị Trang tính: BÁN HÀNG (17 Cột)';
-        } else if (mode === 'NHAP_KHO') {
-            btnNhapKho.className = 'btn btn-primary active';
-            desc.innerText = 'Đang hiển thị Trang tính: NHẬP KHO (17 Cột)';
-        } else if (mode === 'LAPTOP') {
-            btnLaptop.className = 'btn btn-warning active';
-            desc.innerText = 'Đang hiển thị Trang tính: LAPTOP (30 Cột)';
-        } else if (mode === 'PC') {
-            btnPc.className = 'btn btn-dark active';
-            desc.innerText = 'Đang hiển thị Trang tính: PC (27 Cột)';
-        } else if (mode === 'LCD') {
-            if (btnLcd) btnLcd.className = 'btn btn-danger active';
-            desc.innerText = 'Đang hiển thị Trang tính: LCD (24 Cột)';
-        } else if (mode === 'TON_KHO') {
-            btnTonKho.className = 'btn btn-info active text-white';
-            desc.innerText = 'Đang hiển thị Trang tính: TỒN KHO (11 Cột)';
-        }
-
-        renderTableHeader();
-        loadDataFromSheet();
-    }
-
-    function getActiveColumns() {
-        return SHEET_CONFIGS[currentMode] || SHEET_CONFIGS['BAN_HANG'];
-    }
-
-function renderTableHeader() {
-    var activeCols = getActiveColumns();
-    var thead = document.getElementById('tableHeader');
-    
-    var headerHtml = `<tr><th class="text-center" style="width: 70px;">Thao Tác<div class="resizer"></div></th>`;
-    var filterRowHtml = `<tr class="bg-light"><td class="text-center"><i class="fa-solid fa-filter text-muted"></i></td>`;
-
-    activeCols.forEach((col, colIndex) => {
-        var customClass = col.numeric ? 'text-right' : '';
-        if (col.customer) customClass += ' col-customer';
-        if (col.ncc) customClass += ' col-ncc';
-        if (col.code) customClass += ' col-code';
-        if (col.desc) customClass += ' col-desc';
-
-        // Bổ sung thẻ .resizer vào cuối mỗi tiêu đề th
-        headerHtml += `<th class="${customClass.trim()}">${col.label}<div class="resizer"></div></th>`;
-        filterRowHtml += `<td class="${customClass.trim()}"><input type="text" class="filter-input col-filter" data-col-index="${colIndex}" onkeyup="applyFilters()" placeholder="Lọc..."></td>`;
-    });
-
-    headerHtml += `</tr>`;
-    filterRowHtml += `</tr>`;
-
-    thead.innerHTML = headerHtml + filterRowHtml;
-
-    // Kích hoạt tính năng kéo thả ngay sau khi render xong Header
-    enableColumnResizing();
-}
-function enableColumnResizing() {
-    const table = document.getElementById('dataTable');
-    const cols = table.querySelectorAll('th');
-
-    cols.forEach((col) => {
-        const resizer = col.querySelector('.resizer');
-        if (!resizer) return;
-
-        let x = 0;
-        let w = 0;
-
-        const onMouseDown = function (e) {
-            x = e.clientX;
-            const styles = window.getComputedStyle(col);
-            w = parseInt(styles.width, 10);
-
-            resizer.classList.add('resizing');
-
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-        };
-
-        const onMouseMove = function (e) {
-            const dx = e.clientX - x;
-            col.style.width = `${w + dx}px`;
-            col.style.minWidth = `${w + dx}px`; // Đảm bảo cột không bị co lại
-        };
-
-        const onMouseUp = function () {
-            resizer.classList.remove('resizing');
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-        };
-
-        resizer.addEventListener('mousedown', onMouseDown);
-    });
-}
-    function formatNumberVN(val) {
-        if (val === '' || val === null || val === undefined) return '';
-        var num = Number(val);
-        if (isNaN(num)) return val;
-        return num.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
-    }
-
-function formatDateVN(val) {
-    if (!val && val !== 0) return '';
-    var str = String(val).trim();
-
-    // 1. Nếu là văn bản chữ (không chứa số hoặc chứa từ "CHƯA NHẬP", "xem lại",...) thì giữ nguyên
-    if (/[a-zA-ZÀ-ỹ]/.test(str) && !str.includes('T')) {
-        return str;
-    }
-
-    // 2. Nếu đã đúng định dạng DD/MM/YYYY từ Google Sheets thì trả về ngay
-    if (str.includes('/') && !str.includes('T')) {
-        return str;
-    }
-
-    // 3. Nếu là chuỗi ISO có chữ 'T' (ví dụ: 2026-08-28T17:00:00.000Z)
-    if (str.includes('T')) {
-        var d = new Date(val);
-        if (!isNaN(d.getTime())) {
-            var day = String(d.getDate()).padStart(2, '0');
-            var month = String(d.getMonth() + 1).padStart(2, '0');
-            var year = d.getFullYear();
-            return `${day}/${month}/${year}`;
-        }
-    }
-
-    // 4. Nếu là dạng YYYY-MM-DD
-    if (str.includes('-')) {
-        var parts = str.split('-');
-        if (parts.length === 3 && parts[0].length === 4) {
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-    }
-
-    return str;
-}
-
-    function loadDataFromSheet() {
-        showLoading(true, `Đang tải dữ liệu từ Trang tính '${currentMode}'...`);
-
-        var oldScript = document.getElementById('jsonp_script');
-        if (oldScript) oldScript.remove();
-
-        var script = document.createElement('script');
-        script.id = 'jsonp_script';
-        script.src = `${GOOGLE_SCRIPT_URL}?sheetName=${encodeURIComponent(currentMode)}&callback=handleSheetResponse&_t=${new Date().getTime()}`;
-        
-        script.onerror = function() {
-            showLoading(false);
-            alert(`Lỗi kết nối Google Sheets! Vui lòng kiểm tra lại quyền 'Anyone' trong Apps Script.`);
-        };
-
-        document.body.appendChild(script);
-    }
-
-    window.handleSheetResponse = function(data) {
-        showLoading(false);
-        if (data && data.result === "success") {
-            globalRawData = data.data || [];
-            applyFilters();
-        } else {
-            alert("Lỗi nạp dữ liệu: " + (data ? data.error : "Không xác định"));
-        }
     };
 
-    function applyFilters() {
-        var globalKeyword = document.getElementById('globalSearchInput').value.toLowerCase().trim();
-        var fromDate = document.getElementById('fromDateInput').value;
-        var toDate = document.getElementById('toDateInput').value;
-        var customerKeyword = document.getElementById('customerFilterInput').value.toLowerCase().trim();
-
-        var activeCols = getActiveColumns();
-        var colFilters = {};
-        document.querySelectorAll('.col-filter').forEach(input => {
-            var colIdx = input.getAttribute('data-col-index');
-            var val = input.value.toLowerCase().trim();
-            if (val) colFilters[colIdx] = val;
-        });
-
-        filteredData = [];
-
-        globalRawData.forEach((row, originalIndex) => {
-            var isVisible = true;
-
-            if (globalKeyword && isVisible) {
-                var rowText = row.join(' ').toLowerCase();
-                if (!rowText.includes(globalKeyword)) isVisible = false;
-            }
-
-            // Lọc ngày (Xác định cột Ngày tùy theo từng loại trang tính)
-            var dateColIdx = currentMode === 'BAN_HANG' ? 2 : 0; 
-            if (isVisible && (fromDate || toDate) && activeCols[dateColIdx] && activeCols[dateColIdx].date) {
-                var rowDate = row[dateColIdx] ? String(row[dateColIdx]).split('T')[0] : '';
-                if (fromDate && rowDate < fromDate) isVisible = false;
-                if (toDate && rowDate > toDate) isVisible = false;
-            }
-
-            if (isVisible && customerKeyword) {
-                var rowText = row.join(' ').toLowerCase();
-                if (!rowText.includes(customerKeyword)) isVisible = false;
-            }
-
-            if (isVisible) {
-                for (var idx in colFilters) {
-                    var cellVal = row[idx] !== undefined ? String(row[idx]).toLowerCase() : '';
-                    if (!cellVal.includes(colFilters[idx])) {
-                        isVisible = false;
-                        break;
-                    }
-                }
-            }
-
-            if (isVisible) {
-                filteredData.push({ rowData: row, originalIndex: originalIndex });
-            }
-        });
-
-        currentPage = 1;
-        renderTablePage();
+    function getActiveColumns() {
+        return COLUMN_CONFIGS[currentMode] || [];
     }
 
-    function resetFilters() {
-        document.getElementById('globalSearchInput').value = '';
-        document.getElementById('fromDateInput').value = '';
-        document.getElementById('toDateInput').value = '';
-        document.getElementById('customerFilterInput').value = '';
-        document.querySelectorAll('.col-filter').forEach(i => i.value = '');
-        applyFilters();
+    function changeMode(mode) {
+        currentMode = mode;
+        currentPage = 1;
+        renderTableHeader();
+        loadDataFromSheet();
+    }
+
+    function showLoading(show, message = 'Đang xử lý...') {
+        const overlay = document.getElementById('loadingOverlay');
+        document.getElementById('loadingText').innerText = message;
+        overlay.style.display = show ? 'flex' : 'none';
+    }
+
+    function renderTableHeader() {
+        const activeCols = getActiveColumns();
+        const headerEl = document.getElementById('tableHeader');
+        let html = '<tr><th style="width: 100px;">Thao tác</th>';
+        activeCols.forEach(col => {
+            html += `<th>${col.name}</th>`;
+        });
+        html += '</tr>';
+        headerEl.innerHTML = html;
+    }
+
+    function loadDataFromSheet() {
+        showLoading(true, `Đang tải dữ liệu Sheet '${currentMode}'...`);
+        
+        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${currentMode}`)
+            .then(res => res.json())
+            .then(data => {
+                showLoading(false);
+                if (data.status === 'success') {
+                    rawSheetData = data.rows || [];
+                    renderTablePage();
+                } else {
+                    alert("Lỗi tải dữ liệu: " + data.message);
+                }
+            })
+            .catch(err => {
+                showLoading(false);
+                console.warn("Không thể kết nối API Google Script. Đang hiển thị bảng trống.");
+                rawSheetData = [];
+                renderTablePage();
+            });
     }
 
     function renderTablePage() {
-        var tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
+        const bodyEl = document.getElementById('tableBody');
+        const activeCols = getActiveColumns();
+        bodyEl.innerHTML = '';
 
-        var totalItems = filteredData.length;
-        var activeCols = getActiveColumns();
+        const startIdx = (currentPage - 1) * pageSize;
+        const endIdx = Math.min(startIdx + pageSize, rawSheetData.length);
+        const pageData = rawSheetData.slice(startIdx, endIdx);
 
-        if (totalItems === 0) {
-            tbody.innerHTML = `<tr><td colspan="${activeCols.length + 1}" class="text-center text-muted py-4">Sheet <strong>${currentMode}</strong> chưa có dữ liệu phù hợp. Nhấn <strong>'Thêm Dòng Mới'</strong> hoặc <strong>'Nhập Từ Excel'</strong>.</td></tr>`;
-            document.getElementById('rowCountBadge').innerText = `Hiển thị: 0 / 0 dòng`;
-            document.getElementById('pageInfoSpan').innerText = `Trang 0 / 0`;
-            renderPaginationControls(0);
-            renderTableFooter([]);
-            return;
-        }
+        pageData.forEach((row, index) => {
+            const actualRowIdx = startIdx + index + 2; // +2 vì bỏ qua header Sheet (dòng 1)
+            let tr = document.createElement('tr');
+            tr.setAttribute('data-sheet-row', actualRowIdx);
 
-        var totalPages = Math.ceil(totalItems / pageSize) || 1;
-        if (currentPage > totalPages) currentPage = totalPages;
-        if (currentPage < 1) currentPage = 1;
+            let actionTd = `
+                <td>
+                    <button class="btn btn-sm btn-warning btn-edit" onclick="editRow(this)">Sửa</button>
+                    <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)">Lưu</button>
+                </td>`;
+            
+            let cellsTd = '';
+            for (let i = 0; i < activeCols.length; i++) {
+                let cellVal = row[i] !== undefined ? row[i] : '';
+                cellsTd += `<td data-raw-val="${cellVal}">${cellVal}</td>`;
+            }
 
-        var startIndex = (currentPage - 1) * pageSize;
-        var endIndex = Math.min(startIndex + pageSize, totalItems);
+            tr.innerHTML = actionTd + cellsTd;
+            bodyEl.appendChild(tr);
+        });
 
-        for (var i = startIndex; i < endIndex; i++) {
-            var item = filteredData[i];
-            appendRowToTable(item.rowData, item.originalIndex, activeCols);
-        }
-
-        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${totalItems} / ${globalRawData.length} dòng`;
-        document.getElementById('pageInfoSpan').innerText = `Trang ${currentPage} / ${totalPages} (Từ dòng ${startIndex + 1} - ${endIndex})`;
-
-        renderPaginationControls(totalPages);
-        renderTableFooter(filteredData.map(item => item.rowData));
+        renderPagination();
     }
 
-    function appendRowToTable(rowData, originalIndex, activeCols) {
-        var tbody = document.getElementById('tableBody');
-        var tr = document.createElement('tr');
-        
-        var sheetRowIndex = originalIndex + 2;
-        tr.setAttribute('data-sheet-row', sheetRowIndex);
+    function renderPagination() {
+        const totalPages = Math.max(1, Math.ceil(rawSheetData.length / pageSize));
+        document.getElementById('pageInfo').innerText = `Trang ${currentPage} / ${totalPages} (Tổng ${rawSheetData.length} dòng)`;
 
-        var actionTd = `<td class="text-center">
-            <button class="btn btn-sm btn-outline-warning btn-edit py-0 px-2" onclick="editRow(this)" title="Chỉnh sửa"><i class="fa-solid fa-pen-to-square"></i></button>
-            <button class="btn btn-sm btn-success btn-save py-0 px-2" onclick="saveRow(this)" style="display:none;" title="Lưu"><i class="fa-solid fa-floppy-disk"></i></button>
-        </td>`;
+        const pagEl = document.getElementById('pagination');
+        let html = '';
 
-        var cellsHtml = actionTd;
+        html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="goToPage(${currentPage - 1}); return false;">Trước</a>
+                 </li>`;
 
-activeCols.forEach((col, colIdx) => {
-    var val = (rowData && rowData[colIdx] !== undefined) ? rowData[colIdx] : '';
-    var displayVal = val;
-    var customClass = col.numeric ? "text-right" : "";
-    if (col.customer) customClass += " col-customer";
-    if (col.ncc) customClass += " col-ncc";
-    if (col.code) customClass += " col-code";
-    if (col.desc) customClass += " col-desc";
-
-    // Xử lý định dạng hiển thị theo thứ tự: Ngày -> Phần trăm -> Số tiền/Số lượng
-    if (col.date) {
-        displayVal = formatDateVN(val);
-    } else if (col.percent) {
-        if (val !== '' && val != null && !isNaN(val)) {
-            var num = Number(val);
-            // Nếu giá trị nhỏ hơn hoặc bằng 1 (dạng thập phân 0.12), nhân 100 thành 12%
-            displayVal = (Math.abs(num) <= 1 ? (num * 100) : num).toFixed(2) + '%';
-        }
-    } else if (col.numeric) {
-        displayVal = formatNumberVN(val);
-    }
-
-    cellsHtml += `<td class="${customClass.trim()}" data-col-idx="${colIdx}" data-raw-val="${val}">${displayVal}</td>`;
-});
-
-        tr.innerHTML = cellsHtml;
-        tbody.appendChild(tr);
-    }
-
-    function renderTableFooter(visibleRows) {
-        var activeCols = getActiveColumns();
-        var tfoot = document.getElementById('tableFooter');
-        
-        if (!visibleRows || visibleRows.length === 0) {
-            tfoot.innerHTML = '';
-            return;
-        }
-
-        var firstNumericIndex = activeCols.findIndex(c => c.numeric);
-        if (firstNumericIndex === -1) {
-            tfoot.innerHTML = '';
-            return;
-        }
-
-        var labelColspan = firstNumericIndex + 1; // +1 tính cột Thao Tác
-
-        var footerHtml = `<tr><td class="text-center fw-bold" colspan="${labelColspan}">TỔNG CỘNG (ĐANG HIỂN THỊ):</td>`;
-
-        for (var i = firstNumericIndex; i < activeCols.length; i++) {
-            var col = activeCols[i];
-            if (col.numeric) {
-                var sum = 0;
-                visibleRows.forEach(row => {
-                    var val = parseFloat(row[i]);
-                    if (!isNaN(val)) sum += val;
-                });
-                footerHtml += `<td class="text-right fw-bold">${formatNumberVN(sum)}</td>`;
-            } else {
-                footerHtml += `<td></td>`;
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a>
+                         </li>`;
             }
         }
 
-        footerHtml += `</tr>`;
-        tfoot.innerHTML = footerHtml;
+        html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="goToPage(${currentPage + 1}); return false;">Sau</a>
+                 </li>`;
+
+        pagEl.innerHTML = html;
     }
 
-    function renderPaginationControls(totalPages) {
-        var container = document.getElementById('paginationControls');
-        container.innerHTML = '';
-        if (totalPages <= 1) return;
-
-        container.innerHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="goToPage(1); return false;"><i class="fa-solid fa-angles-left"></i></a>
-        </li>`;
-        container.innerHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="goToPage(${currentPage - 1}); return false;"><i class="fa-solid fa-angle-left"></i></a>
-        </li>`;
-
-        var startPage = Math.max(1, currentPage - 2);
-        var endPage = Math.min(totalPages, startPage + 4);
-        if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
-
-        for (var p = startPage; p <= endPage; p++) {
-            container.innerHTML += `<li class="page-item ${p === currentPage ? 'active' : ''}">
-                <a class="page-link" href="#" onclick="goToPage(${p}); return false;">${p}</a>
-            </li>`;
-        }
-
-        container.innerHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="goToPage(${currentPage + 1}); return false;"><i class="fa-solid fa-angle-right"></i></a>
-        </li>`;
-        container.innerHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="goToPage(${totalPages}); return false;"><i class="fa-solid fa-angles-right"></i></a>
-        </li>`;
-    }
-
+    // ==========================================
+    // 3. ĐOẠN CODE THAO TÁC CỦA BẠN
+    // ==========================================
     function goToPage(page) {
+        const totalPages = Math.ceil(rawSheetData.length / pageSize) || 1;
+        if (page < 1 || page > totalPages) return;
         currentPage = page;
         renderTablePage();
     }
