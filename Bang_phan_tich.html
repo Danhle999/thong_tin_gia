@@ -14,70 +14,71 @@
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-/* 1. Khung bao ngoài bảng - đảm bảo thanh cuộn ngang luôn nằm dính dưới đáy màn hình */
-.table-responsive {
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    max-height: calc(100vh - 220px) !important; /* Tự điều chỉnh chiều cao khớp tầm mắt */
-    width: 100% !important;
-    border: 1px solid #dee2e6;
-}
-
-/* 2. Cấu hình bảng tự do co dãn theo kích thước px khi kéo */
-#dataTable {
-    table-layout: fixed !important; /* Ép trình duyệt tuân thủ width/min-width khi kéo */
-    width: max-content !important;  /* Tự dãn rộng hơn khung nhìn để xuất hiện thanh cuộn ngang */
-}
-
-/* 3. Tiêu đề cột và ô dữ liệu - Cắt chữ dài bằng dấu ... */
-#dataTable th, 
-#dataTable td {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    box-sizing: border-box !important;
-    padding: 8px 10px !important;
-}
-
-/* 4. Định vị tiêu đề cột phục vụ thanh Resizer */
-#dataTable th {
-    position: relative !important;
-    user-select: none -webkit-user-select: none; /* Tránh bôi đen văn bản khi kéo chuột */
-}
-
-/* 5. Vạch kéo Resizer ở cạnh phải mỗi cột */
-.resizer {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 8px;                 /* Vùng rê chuột rộng 8px giúp dễ bắt điểm */
-    height: 100%;
-    cursor: col-resize !important; /* Ép hiển thị con trỏ mũi tên 2 đầu ↔ */
-    user-select: none;
-    z-index: 10;
-}
-
-/* Viền hiển thị khi rê chuột hoặc đang kéo */
-.resizer:hover,
-.resizer.resizing {
-    border-right: 3px solid #0d6efd !important;
-    background-color: rgba(13, 110, 253, 0.1);
-}
-
-/* 6. Ô nhập liệu khi ở chế độ Edit dòng không làm phình rộng cột */
-#dataTable td input.editable-input {
-    width: 100% !important;
-    box-sizing: border-box !important;
-    border: 1px solid #0d6efd;
-    padding: 2px 4px;
-}
-        td { vertical-align: middle; white-space: nowrap; font-size: 0.85rem; }
-        .editable-input { width: 100%; min-width: 80px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; font-size: 0.85rem; }
         
-        .col-customer { min-width: 200px; max-width: 350px; white-space: normal !important; word-break: break-word; }
-        .col-ncc { min-width: 150px; max-width: 300px; white-space: normal !important; word-break: break-word; }
-        .col-code { min-width: 250px; max-width: 450px; white-space: normal !important; word-break: break-all; font-family: monospace, sans-serif; font-weight: 600; }
-        .col-desc { min-width: 220px; max-width: 400px; white-space: normal !important; word-break: break-word; }
+        /* 1. Khung bao ngoài bảng */
+        .table-responsive {
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            max-height: calc(100vh - 220px) !important;
+            width: 100% !important;
+            border: 1px solid #dee2e6;
+        }
+
+        /* 2. Cấu hình bảng co dãn linh hoạt */
+        #dataTable {
+            table-layout: fixed !important;
+            width: max-content !important;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        /* 3. Tiêu đề cột và ô dữ liệu - Cắt chữ dài bằng dấu ... */
+        #dataTable th, 
+        #dataTable td {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            box-sizing: border-box !important;
+            padding: 8px 10px !important;
+            vertical-align: middle;
+            font-size: 0.85rem;
+        }
+
+        /* 4. Định vị tiêu đề cột phục vụ thanh Resizer */
+        #dataTable th {
+            position: relative !important;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #f1f5f9;
+        }
+
+        /* 5. Vạch kéo Resizer ở cạnh phải mỗi cột */
+        .resizer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
+            cursor: col-resize !important;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .resizer:hover,
+        .resizer.resizing {
+            border-right: 3px solid #0d6efd !important;
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+        /* 6. Ô nhập liệu khi Edit */
+        #dataTable td input.editable-input {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            border: 1px solid #0d6efd;
+            padding: 2px 4px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+        }
 
         .text-right { text-align: right; }
         .text-center { text-align: center; }
@@ -259,58 +260,29 @@
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true }, { label: 'NGÀY NHẬP CŨ', date: true },
             { label: 'NGÀY NHẬP MỚI', date: true }
         ],
-'PC': [
-    { label: 'NCC' },
-    { label: 'Mã SKU NPP, Hãng' },
-    { label: 'Mã KTB' },
-    { label: 'Brand' },
-    { label: 'Chip' },
-    { label: 'RAM' },
-    { label: 'SSD' },
-    { label: 'Win' },
-    { label: 'Bảo Hành (Năm)' },
-    { label: 'Office' },
-    { label: 'Số Lượng Nhập Tổng', numeric: true },
-    { label: 'Số Lượng Tồn', numeric: true },
-    { label: 'Số Lượng Bán Từ Ngày', numeric: true },
-    { label: 'Hàng gửi NPP' },
-    { label: 'COST_KTB', numeric: true },
-    { label: 'GIÁ NHẬP TRƯỚC', numeric: true },
-    { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true },
-    { label: 'GIÁ NHẬP (VNĐ)', numeric: true },
-    { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true },
-    { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true },
-    { label: 'GIÁ BÁN KTB TIỀN MẶT', numeric: true },
-    { label: 'GIÁ BÁN KTB CÔNG NỢ', numeric: true },
-    { label: 'NGÀY NHẬP TRƯỚC', date: true },
-    { label: 'NGÀY NHẬP GẦN NHẤT', date: true }
-],
-'LCD': [
-    { label: 'NCC' },
-    { label: 'Mã NPP' },
-    { label: 'Mã Sản Phẩm KTB' },
-    { label: 'Brand' },
-    { label: 'Kích Thước (inch)' },
-    { label: 'Độ Trễ' },
-    { label: 'Tấm Nền' },
-    { label: 'Tần Số Quét' },
-    { label: 'Độ Phân Giải' },
-    { label: 'Cổng Xuất Hình 1' },
-    { label: 'Cổng Xuất Hình 2' },
-    { label: 'Cổng Xuất Hình 3' },
-    { label: 'Cổng Khác' },
-    { label: 'LOA' },
-    { label: 'GIÁ COST', numeric: true },
-    { label: 'GIÁ NHẬP (VNĐ)', numeric: true },
-    { label: 'GIÁ BÁN KTB', numeric: true },
-    { label: 'GIÁ ĐỀ XUẤT', numeric: true },
-    { label: 'NGÀY NHẬP GẦN NHẤT', date: true },
-    { label: 'So_Luong NHAP TONG', numeric: true },
-    { label: 'KHO KTB', numeric: true },
-    { label: 'số lượng bán ra từ ngày', numeric: true },
-    { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true },
-    { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true }
-],
+        'PC': [
+            { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' },
+            { label: 'Chip' }, { label: 'RAM' }, { label: 'SSD' }, { label: 'Win' },
+            { label: 'Bảo Hành (Năm)' }, { label: 'Office' },
+            { label: 'Số Lượng Nhập Tổng', numeric: true }, { label: 'Số Lượng Tồn', numeric: true },
+            { label: 'Số Lượng Bán Từ Ngày', numeric: true }, { label: 'Hàng gửi NPP' },
+            { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP TRƯỚC', numeric: true },
+            { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true }, { label: 'GIÁ NHẬP (VNĐ)', numeric: true },
+            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true }, { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true },
+            { label: 'GIÁ BÁN KTB TIỀN MẶT', numeric: true }, { label: 'GIÁ BÁN KTB CÔNG NỢ', numeric: true },
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }
+        ],
+        'LCD': [
+            { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand' },
+            { label: 'Kích Thước (inch)' }, { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
+            { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1' }, { label: 'Cổng Xuất Hình 2' },
+            { label: 'Cổng Xuất Hình 3' }, { label: 'Cổng Khác' }, { label: 'LOA' },
+            { label: 'GIÁ COST', numeric: true }, { label: 'GIÁ NHẬP (VNĐ)', numeric: true },
+            { label: 'GIÁ BÁN KTB', numeric: true }, { label: 'GIÁ ĐỀ XUẤT', numeric: true },
+            { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'So_Luong NHAP TONG', numeric: true },
+            { label: 'KHO KTB', numeric: true }, { label: 'số lượng bán ra từ ngày', numeric: true },
+            { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true }, { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true }
+        ],
         'TON_KHO': [
             { label: 'Mã Hàng', code: true }, { label: 'Tên Hàng Hóa', desc: true }, { label: 'ĐVT' },
             { label: 'Tồn Đầu Kỳ', numeric: true }, { label: 'Nhập Trong Kỳ', numeric: true },
@@ -327,9 +299,7 @@
     let pageSize = 50;
 
     // LẤY CẤU HÌNH CỘT CHO SHEET HIỆN TẠI
-    function getActiveColumns() {
-        return SHEET_CONFIGS[currentMode] || [];
-    }
+    function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
 
     // CHUYỂN ĐỔI TAB SHEET
     function switchTableMode(mode) {
@@ -375,30 +345,41 @@
             });
     }
 
-    // VẼ TIÊU ĐỀ BẢNG (HEADER) VÀ THANH KÉO GIÃN
-function renderTableHeader() {
-    let cols = getActiveColumns();
-    let thead = document.getElementById('tableHeader');
-    let html = '<tr><th style="width: 80px;" class="text-center">Thao tác</th>';
-    
-    cols.forEach((col) => {
-        let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
-        let cls = col.customer ? 'col-customer' : col.ncc ? 'col-ncc' : col.code ? 'col-code' : col.desc ? 'col-desc' : '';
+    // VẼ TIÊU ĐỀ BẢNG (HEADER) VÀ ĐÍNH KÈM RESIZER
+    function renderTableHeader() {
+        let cols = getActiveColumns();
+        let thead = document.getElementById('tableHeader');
+        let html = '<tr><th style="width: 80px;" class="text-center">Thao tác</th>';
         
-        // BẮT BUỘC có <div class="resizer"></div> ở cuối thẻ th
-        html += `<th class="${cls}" style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
-    });
-    html += '</tr>';
-    thead.innerHTML = html;
-    
-    // Gọi kích hoạt resizer ngay sau khi render header xong
-    initResizer();
-}
+        cols.forEach((col) => {
+            let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
+            html += `<th style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
+        });
+        html += '</tr>';
+        thead.innerHTML = html;
+        initResizer();
+    }
 
     // ĐỊNH DẠNG SỐ TIỀN VNĐ
     function formatNumberVN(val) {
-        if (!val || isNaN(val)) return val;
+        if (val === null || val === undefined || val === '' || isNaN(val)) return val;
         return Number(val).toLocaleString('vi-VN');
+    }
+
+    // ĐỊNH DẠNG PHẦN TRĂM (%)
+    function formatPercent(val) {
+        if (val === null || val === undefined || val === '') return '';
+        let cleanVal = String(val).replace('%', '').trim();
+        let num = parseFloat(cleanVal);
+        if (isNaN(num)) return val;
+        if (Math.abs(num) > 1) {
+            num = num / 100;
+        }
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'percent',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(num);
     }
 
     // XỬ LÝ BỘ LỌC (TÌM KIẾM THEO TỪ KHÓA, KHÁCH HÀNG, NGÀY THÁNG)
@@ -410,7 +391,6 @@ function renderTableHeader() {
         
         let fromDate = fromDateStr ? new Date(fromDateStr) : null;
         let toDate = toDateStr ? new Date(toDateStr) : null;
-        
         let activeCols = getActiveColumns();
 
         filteredData = rawData.filter(row => {
@@ -439,7 +419,6 @@ function renderTableHeader() {
                             else rowDate = new Date(parts[2], parts[1]-1, parts[0]);
                         }
                     }
-                    
                     if (rowDate && !isNaN(rowDate)) {
                         if (fromDate && rowDate < fromDate) return false;
                         if (toDate && rowDate > toDate) return false;
@@ -479,44 +458,44 @@ function renderTableHeader() {
     }
 
     // TẠO 1 DÒNG DỮ LIỆU
-function appendRowToTable(row, sheetRowIndex) {
-    let activeCols = getActiveColumns();
-    let tr = document.createElement('tr');
-    tr.setAttribute('data-sheet-row', sheetRowIndex);
-    
-    let actionTd = document.createElement('td');
-    actionTd.className = 'text-center';
-    actionTd.innerHTML = `
-        <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
-    `;
-    tr.appendChild(actionTd);
-
-    activeCols.forEach((col, i) => {
-        let td = document.createElement('td');
-        let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
-        td.setAttribute('data-raw-val', val);
-        td.setAttribute('title', val); // Hiện tooltip nội dung đầy đủ khi rê chuột vào
+    function appendRowToTable(row, sheetRowIndex) {
+        let activeCols = getActiveColumns();
+        let tr = document.createElement('tr');
+        tr.setAttribute('data-sheet-row', sheetRowIndex);
         
-        if (col.numeric) {
-            td.className = 'text-right fw-semibold';
-            td.innerText = col.percent ? formatPercent(val) : formatNumberVN(val);
-        } else if (col.date) {
-            td.className = 'text-center';
-            if (val && typeof val === 'string' && val.includes('T')) {
-                td.innerText = new Date(val).toLocaleDateString('vi-VN');
+        let actionTd = document.createElement('td');
+        actionTd.className = 'text-center';
+        actionTd.innerHTML = `
+            <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
+        `;
+        tr.appendChild(actionTd);
+
+        activeCols.forEach((col, i) => {
+            let td = document.createElement('td');
+            let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
+            td.setAttribute('data-raw-val', val);
+            td.setAttribute('title', val);
+            
+            if (col.numeric) {
+                td.className = 'text-right fw-semibold';
+                td.innerText = col.percent ? formatPercent(val) : formatNumberVN(val);
+            } else if (col.date) {
+                td.className = 'text-center';
+                if (val && typeof val === 'string' && val.includes('T')) {
+                    td.innerText = new Date(val).toLocaleDateString('vi-VN');
+                } else {
+                    td.innerText = val;
+                }
             } else {
                 td.innerText = val;
             }
-        } else {
-            td.innerText = val;
-        }
+            
+            tr.appendChild(td);
+        });
         
-        tr.appendChild(td);
-    });
-    
-    document.getElementById('tableBody').appendChild(tr);
-}
+        document.getElementById('tableBody').appendChild(tr);
+    }
 
     // VẼ DÒNG TÍNH TỔNG DƯỚI CÙNG (FOOTER)
     function renderTableFooter() {
@@ -581,61 +560,40 @@ function appendRowToTable(row, sheetRowIndex) {
     }
 
     // HÀM CHO PHÉP KÉO GIÃN ĐỘ RỘNG CÁC CỘT (RESIZER)
-// 1. Gán style mặc định ban đầu cho các ô tiêu đề
-function renderTableHeader() {
-    let cols = getActiveColumns();
-    let thead = document.getElementById('tableHeader');
-    let html = '<tr><th style="width: 80px; min-width: 80px; max-width: 80px;" class="text-center">Thao tác</th>';
-    
-    cols.forEach((col) => {
-        let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
-        let cls = col.customer ? 'col-customer' : col.ncc ? 'col-ncc' : col.code ? 'col-code' : col.desc ? 'col-desc' : '';
+    function initResizer() {
+        const thElms = document.querySelectorAll('#dataTable th');
         
-        html += `<th class="${cls}" style="width: ${defaultWidth}; min-width: ${defaultWidth}; max-width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
-    });
-    html += '</tr>';
-    thead.innerHTML = html;
-    initResizer();
-}
+        thElms.forEach(function(th) {
+            let resizer = th.querySelector('.resizer');
+            if (!resizer) return;
 
-// XỬ LÝ KÉO CO DÃN CỘT (MƯỢT 100%, KHÔNG BỊ KẸT BỞI CHỮ DÀI)
-function initResizer() {
-    const thElm = document.querySelectorAll('#dataTable th');
-    
-    thElm.forEach(function(th) {
-        let resizer = th.querySelector('.resizer');
-        if (!resizer) return;
+            resizer.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-        resizer.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+                let startX = e.pageX;
+                let startWidth = th.offsetWidth;
 
-            let startX = e.pageX;
-            let startWidth = th.offsetWidth;
+                resizer.classList.add('resizing');
 
-            resizer.classList.add('resizing');
+                function mouseMoveHandler(e) {
+                    let newWidth = Math.max(30, startWidth + (e.pageX - startX));
+                    th.style.setProperty('width', `${newWidth}px`, 'important');
+                    th.style.setProperty('min-width', `${newWidth}px`, 'important');
+                    th.style.setProperty('max-width', `${newWidth}px`, 'important');
+                }
 
-            function mouseMoveHandler(e) {
-                // Cho phép co nhỏ xuống tối thiểu 30px bất chấp độ dài văn bản
-                let newWidth = Math.max(30, startWidth + (e.pageX - startX));
-                
-                // Ép cứng cả 3 thuộc tính width
-                th.style.setProperty('width', `${newWidth}px`, 'important');
-                th.style.setProperty('min-width', `${newWidth}px`, 'important');
-                th.style.setProperty('max-width', `${newWidth}px`, 'important');
-            }
+                function mouseUpHandler() {
+                    document.removeEventListener('mousemove', mouseMoveHandler);
+                    document.removeEventListener('mouseup', mouseUpHandler);
+                    resizer.classList.remove('resizing');
+                }
 
-            function mouseUpHandler() {
-                document.removeEventListener('mousemove', mouseMoveHandler);
-                document.removeEventListener('mouseup', mouseUpHandler);
-                resizer.classList.remove('resizing');
-            }
-
-            document.addEventListener('mousemove', mouseMoveHandler);
-            document.addEventListener('mouseup', mouseUpHandler);
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+            });
         });
-    });
-}
+    }
 
     // CHUYỂN ĐẾN TRANG CỤ THỂ
     function goToPage(page) {
@@ -747,28 +705,7 @@ function initResizer() {
             }, 1200);
         });
     }
-const formatPercent = (val) => {
-    if (val === null || val === undefined || val === '') return '';
-    
-    // Nếu dữ liệu đã có sẵn ký tự % thì xóa % đi để lấy số
-    let cleanVal = String(val).replace('%', '').trim();
-    let num = parseFloat(cleanVal);
-    
-    if (isNaN(num)) return val;
-    
-    // Trường hợp dữ liệu trong Sheet ghi lộn là số nguyên (VD: 9 hoặc 23.77 thay vì 0.09 hay 0.2377)
-    if (Math.abs(num) > 1) {
-        num = num / 100;
-    }
 
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'percent',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(num);
-};
-
-// Ví dụ: formatPercent(0.01112185) -> "1,11%"
     // XỬ LÝ TẢI FILE EXCEL LÊN SHEET
     function handleExcelUpload(event) {
         var file = event.target.files[0];
