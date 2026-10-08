@@ -702,13 +702,25 @@
             }, 1200);
         });
     }
-// Cách 1: Sử dụng Intl.NumberFormat (Tự động nhân 100 và thêm ký hiệu %)
 const formatPercent = (val) => {
-  if (val === null || val === undefined || isNaN(val)) return '';
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'percent',
-    maximumFractionDigits: 2 // Số chữ số thập phân muốn giữ lại (ví dụ: 1.11%)
-  }).format(val);
+    if (val === null || val === undefined || val === '') return '';
+    
+    // Nếu dữ liệu đã có sẵn ký tự % thì xóa % đi để lấy số
+    let cleanVal = String(val).replace('%', '').trim();
+    let num = parseFloat(cleanVal);
+    
+    if (isNaN(num)) return val;
+    
+    // Trường hợp dữ liệu trong Sheet ghi lộn là số nguyên (VD: 9 hoặc 23.77 thay vì 0.09 hay 0.2377)
+    if (Math.abs(num) > 1) {
+        num = num / 100;
+    }
+
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'percent',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(num);
 };
 
 // Ví dụ: formatPercent(0.01112185) -> "1,11%"
