@@ -174,7 +174,24 @@
 
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyq_lmHzKRfuT-8rCLdJE_PKj4uCuZr9fiHt1AtmT3L8VJqSy9UKGAVgBAv6Wz2eVYA/exec";
-
+    // Hàm render ô dữ liệu
+    const renderCellValue = (value, column) => {
+      if (value == null || value === '') return '';
+      
+      // Nếu là cột phần trăm
+      if (column.percent) {
+        // Trường hợp dữ liệu gốc dạng thập phân (vd: 0.12 -> 12%)
+        const num = Number(value);
+        return isNaN(num) ? value : `${(num > 1 ? num : num * 100).toFixed(2)}%`;
+      }
+      
+      // Nếu là cột tiền / số lượng
+      if (column.numeric) {
+        return Number(value).toLocaleString('vi-VN');
+      }
+      
+      return value;
+    };
     // Bảng cấu hình chi tiết cho cả 5 Sheet
     const SHEET_CONFIGS = {
         'BAN_HANG': [
@@ -198,9 +215,12 @@
             { label: 'SSD' }, { label: 'Win' }, { label: 'Office' }, { label: 'Bảo Hành (Năm)' },
             { label: 'FP' }, { label: 'PIN Adapter' }, { label: 'LED KB BK' }, { label: 'Alu' },
             { label: 'MX RTX' }, { label: 'Số Lượng Nhập Tổng', numeric: true }, { label: 'Số Lượng Tồn', numeric: true },
-            { label: 'Số Lượng Bán Ra', numeric: true }, { label: '% Lợi Nhuận Tiền Mặt', numeric: true }, { label: '% Lợi Nhuận Công Nợ', numeric: true },
+            { label: 'Số Lượng Bán Ra', numeric: true }, 
+            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true }, 
+            { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true },
             { label: 'Hàng gửi NPP' }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
-            { label: '% GIÁ NHẬP LỆCH', numeric: true }, { label: 'GIÁ NHẬP MỚI (VNĐ)', numeric: true },
+            { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true }, 
+            { label: 'GIÁ NHẬP MỚI (VNĐ)', numeric: true },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true }, { label: 'NGÀY NHẬP TRƯỚC', date: true }
         ],
         'PC': [
@@ -209,7 +229,11 @@
             { label: 'Win' }, { label: 'Bảo Hành' }, { label: 'Office' }, { label: 'Số Lượng Nhập Tổng', numeric: true },
             { label: 'Số Lượng Tồn', numeric: true }, { label: 'SL Bán Từ Ngày', numeric: true },
             { label: 'Hàng gửi NPP' }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP TRƯỚC', numeric: true },
-            { label: '% GIÁ LỆCH TRƯỚC', numeric: true }, { label: 'GIÁ NHẬP (VNĐ)', numeric: true }, { label: 'Số Lượng Bán Ra', numeric: true }, { label: '% Lợi Nhuận Tiền Mặt', numeric: true }, { label: '% Lợi Nhuận Công Nợ', numeric: true }, { label: 'GIÁ BÁN TIỀN MẶT', numeric: true }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true },
+            { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true }, 
+            { label: 'GIÁ NHẬP (VNĐ)', numeric: true }, { label: 'Số Lượng Bán Ra', numeric: true }, 
+            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true }, 
+            { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true }, 
+            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true },
             { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'GIÁ ĐỀ XUẤT', numeric: true }
         ],
         'TON_KHO': [
