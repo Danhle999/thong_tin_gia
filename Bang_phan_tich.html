@@ -14,23 +14,27 @@
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .table-responsive { max-height: 62vh; overflow-y: auto; overflow-x: auto; position: relative; border: 1px solid #dee2e6; border-radius: 6px; }
-        
-        /* Đảm bảo tiêu đề cột cố định (Sticky) và hỗ trợ kéo thả Resizer */
-            /* Bắt buộc áp dụng layout cố định để kéo dãn/thu hẹp cột tùy ý */
-        #dataTable {
-            table-layout: fixed !important;
-            width: 100%;
-        }
-        
-        /* Cắt chữ và gán dấu ... cho toàn bộ các ô trong bảng khi thu hẹp */
-        #dataTable th, 
-        #dataTable td {
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            max-width: 0 !important;
-        }
+/* 1. Khung chứa bảng phải cho phép cuộn ngang */
+.table-responsive, 
+div:has(> #dataTable) {
+    overflow-x: auto !important; /* Bắt buộc hiện thanh cuộn ngang khi bảng rộng */
+    width: 100%;
+}
+
+/* 2. Sửa lại thuộc tính của bảng */
+#dataTable {
+    table-layout: fixed !important; /* Giúp co dãn cột theo độ rộng kéo */
+    width: max-content !important;  /* BẮT BUỘC: Giúp bảng dãn ra theo tổng độ rộng các cột, tự xuất hiện thanh cuộn ngang */
+    min-width: 100%;               /* Đảm bảo bảng luôn phủ hết chiều rộng nếu ít cột */
+}
+
+/* 3. Cắt chữ dấu ... khi thu hẹp ô */
+#dataTable th, 
+#dataTable td {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
         
         /* Đảm bảo thanh resizer vẫn hoạt động chính xác khi thu nhỏ */
         #dataTable th {
@@ -356,19 +360,22 @@
     }
 
     // VẼ TIÊU ĐỀ BẢNG (HEADER) VÀ THANH KÉO GIÃN
-    function renderTableHeader() {
-        let cols = getActiveColumns();
-        let thead = document.getElementById('tableHeader');
-        let html = '<tr><th style="width: 80px;" class="text-center">Thao tác</th>';
-        
-        cols.forEach((col) => {
-            let cls = col.customer ? 'col-customer' : col.ncc ? 'col-ncc' : col.code ? 'col-code' : col.desc ? 'col-desc' : '';
-            html += `<th class="${cls}">${col.label} <div class="resizer"></div></th>`;
-        });
-        html += '</tr>';
-        thead.innerHTML = html;
-        initResizer();
-    }
+        function renderTableHeader() {
+            let cols = getActiveColumns();
+            let thead = document.getElementById('tableHeader');
+            let html = '<tr><th style="width: 80px; min-width: 80px;" class="text-center">Thao tác</th>';
+            
+            cols.forEach((col) => {
+                // Gán độ rộng mặc định tùy theo loại cột để bảng tràn màn hình và hiện thanh cuộn
+                let defaultWidth = col.desc ? '300px' : (col.customer || col.ncc) ? '220px' : '150px';
+                let cls = col.customer ? 'col-customer' : col.ncc ? 'col-ncc' : col.code ? 'col-code' : col.desc ? 'col-desc' : '';
+                
+                html += `<th class="${cls}" style="width: ${defaultWidth}; min-width: 80px;">${col.label} <div class="resizer"></div></th>`;
+            });
+            html += '</tr>';
+            thead.innerHTML = html;
+            initResizer();
+        }
 
     // ĐỊNH DẠNG SỐ TIỀN VNĐ
     function formatNumberVN(val) {
