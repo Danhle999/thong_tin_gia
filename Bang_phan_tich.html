@@ -17,21 +17,21 @@
         .table-responsive { max-height: 62vh; overflow-y: auto; overflow-x: auto; position: relative; border: 1px solid #dee2e6; border-radius: 6px; }
         
         /* Đảm bảo tiêu đề cột cố định (Sticky) và hỗ trợ kéo thả Resizer */
-        #dataTable { table-layout: auto; width: 100%; border-collapse: separate; border-spacing: 0; }
-        #dataTable th {
-            background-color: #0d6efd !important;
-            border: 1px solid #d3d3d3;
-            border-collapse: collapse;
-            color: white !important;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            white-space: nowrap;
-            font-size: 0.85rem;
-            position: relative;
-            user-select: none;
-        }
+        #dataTable {
+                table-layout: fixed !important; /* BẮT BUỘC: Giúp bảng tuân thủ độ rộng px khi kéo */
+                width: 100%;
+            }
         
+        #dataTable th, 
+        #dataTable td {
+            white-space: nowrap;         /* Không cho tự xuống dòng làm vỡ hàng */
+            overflow: hidden;            /* Ẩn phần chữ tràn ra ngoài */
+            text-overflow: ellipsis;     /* Hiển thị dấu 3 chấm (...) khi chữ bị cắt */
+            max-width: 0;                /* Xóa bỏ giới hạn độ rộng tối thiểu của văn bản */
+        }
+        #dataTable td {
+            title: attr(data-raw-val);    /* Nếu có thuộc tính title */
+        }
         /* Thanh bắt sự kiện kéo giãn cột */
         .resizer {
             position: absolute;
@@ -467,7 +467,7 @@
             let td = document.createElement('td');
             let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
             td.setAttribute('data-raw-val', val);
-            
+            td.setAttribute('title', val);
             if (col.numeric) {
                 td.className = 'text-right fw-semibold';
                 td.innerText = col.percent ? formatPercent(val) : formatNumberVN(val);
