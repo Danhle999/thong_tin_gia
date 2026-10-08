@@ -682,7 +682,16 @@
             }, 1200);
         });
     }
+// Cách 1: Sử dụng Intl.NumberFormat (Tự động nhân 100 và thêm ký hiệu %)
+const formatPercent = (val) => {
+  if (val === null || val === undefined || isNaN(val)) return '';
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'percent',
+    maximumFractionDigits: 2 // Số chữ số thập phân muốn giữ lại (ví dụ: 1.11%)
+  }).format(val);
+};
 
+// Ví dụ: formatPercent(0.01112185) -> "1,11%"
     // XỬ LÝ TẢI FILE EXCEL LÊN SHEET
     function handleExcelUpload(event) {
         var file = event.target.files[0];
