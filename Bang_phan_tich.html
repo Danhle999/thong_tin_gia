@@ -436,25 +436,31 @@ function enableColumnResizing() {
     }
 
 function formatDateVN(val) {
-    if (!val) return '';
+    if (!val && val !== 0) return '';
     var str = String(val).trim();
 
-    // 1. Nếu chuỗi đã đúng định dạng DD/MM/YYYY từ Google Sheets gửi về thì giữ nguyên
+    // 1. Nếu là văn bản chữ (không chứa số hoặc chứa từ "CHƯA NHẬP", "xem lại",...) thì giữ nguyên
+    if (/[a-zA-ZÀ-ỹ]/.test(str) && !str.includes('T')) {
+        return str;
+    }
+
+    // 2. Nếu đã đúng định dạng DD/MM/YYYY từ Google Sheets thì trả về ngay
     if (str.includes('/') && !str.includes('T')) {
         return str;
     }
 
-    // 2. Nếu là chuỗi dạng ISO chứa chữ 'T' (ví dụ: 2026-08-28T17:00:00.000Z) hoặc định dạng Date chuẩn
-    var d = new Date(val);
-    if (!isNaN(d.getTime())) {
-        // Chuyển đổi chính xác sang ngày/tháng/năm theo múi giờ địa phương (Việt Nam)
-        var day = String(d.getDate()).padStart(2, '0');
-        var month = String(d.getMonth() + 1).padStart(2, '0');
-        var year = d.getFullYear();
-        return `${day}/${month}/${year}`;
+    // 3. Nếu là chuỗi ISO có chữ 'T' (ví dụ: 2026-08-28T17:00:00.000Z)
+    if (str.includes('T')) {
+        var d = new Date(val);
+        if (!isNaN(d.getTime())) {
+            var day = String(d.getDate()).padStart(2, '0');
+            var month = String(d.getMonth() + 1).padStart(2, '0');
+            var year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
     }
 
-    // 3. Nếu là dạng YYYY-MM-DD thuần túy không có T
+    // 4. Nếu là dạng YYYY-MM-DD
     if (str.includes('-')) {
         var parts = str.split('-');
         if (parts.length === 3 && parts[0].length === 4) {
