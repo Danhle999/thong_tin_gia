@@ -94,6 +94,9 @@
                 <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">
                     <i class="fa-solid fa-desktop me-1"></i> PC (27 Cột)
                 </button>
+                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">
+                    <i class="fa-solid fa-tv me-1"></i> LCD (24 Cột)
+                </button>
                 <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
                     <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO (11 Cột)
                 </button>
@@ -243,6 +246,32 @@
             { label: 'Số lượng tồn tối thiểu', numeric: true }, { label: 'Số lượng tồn', numeric: true },
             { label: 'Đơn giá bán 1', numeric: true }, { label: 'Đơn giá bán sàn', numeric: true },
             { label: 'Giá trị tồn kho', numeric: true }, { label: 'Đơn vị tính' }
+        ],
+        'LCD': [
+            { label: 'NCC' },
+            { label: 'Mã NPP' },
+            { label: 'Mã Sản Phẩm KTB', code: true },
+            { label: 'Brand' },
+            { label: 'Kich_Thuoc (inch)' },
+            { label: 'Do_Tre' },
+            { label: 'Tam_Nen' },
+            { label: 'Tan_So_Quet' },
+            { label: 'Do_Phan_Giai' },
+            { label: 'Cong_Xuat_Hinh_1' },
+            { label: 'Cong_Xuat_Hinh_2' },
+            { label: 'Cong_Xuat_Hinh_3' },
+            { label: 'Cong_Khac' },
+            { label: 'LOA' },
+            { label: 'GIÁ COST', numeric: true },
+            { label: 'GIÁ NHẬP (VNĐ)', numeric: true },
+            { label: 'GIÁ BÁN KTB', numeric: true },
+            { label: 'GIÁ ĐỀ XUẤT', numeric: true },
+            { label: 'NGÀY NHẬP GẦN NHẤT', date: true },
+            { label: 'So_Luong NHAP TONG', numeric: true },
+            { label: 'KHO KTB', numeric: true },
+            { label: 'số lượng bán ra từ ngày', numeric: true },
+            { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true },
+            { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true }
         ]
     };
 
@@ -264,7 +293,7 @@
         spinner.style.display = show ? 'flex' : 'none';
     }
 
-    function switchTableMode(mode) {
+function switchTableMode(mode) {
         if (currentMode === mode) return;
         currentMode = mode;
 
@@ -272,6 +301,7 @@
         var btnNhapKho = document.getElementById('btnModeNhapKho');
         var btnLaptop = document.getElementById('btnModeLaptop');
         var btnPc = document.getElementById('btnModePc');
+        var btnLcd = document.getElementById('btnModeLcd');
         var btnTonKho = document.getElementById('btnModeTonKho');
         var desc = document.getElementById('modeDescription');
 
@@ -279,6 +309,7 @@
         btnNhapKho.className = 'btn btn-outline-primary';
         btnLaptop.className = 'btn btn-outline-warning';
         btnPc.className = 'btn btn-outline-dark';
+        if (btnLcd) btnLcd.className = 'btn btn-outline-danger';
         btnTonKho.className = 'btn btn-outline-info';
 
         if (mode === 'BAN_HANG') {
@@ -293,6 +324,9 @@
         } else if (mode === 'PC') {
             btnPc.className = 'btn btn-dark active';
             desc.innerText = 'Đang hiển thị Trang tính: PC (27 Cột)';
+        } else if (mode === 'LCD') {
+            if (btnLcd) btnLcd.className = 'btn btn-danger active';
+            desc.innerText = 'Đang hiển thị Trang tính: LCD (24 Cột)';
         } else if (mode === 'TON_KHO') {
             btnTonKho.className = 'btn btn-info active text-white';
             desc.innerText = 'Đang hiển thị Trang tính: TỒN KHO (11 Cột)';
