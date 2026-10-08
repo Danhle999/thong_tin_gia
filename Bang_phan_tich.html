@@ -489,23 +489,30 @@
 
         var cellsHtml = actionTd;
 
-        activeCols.forEach((col, colIdx) => {
-            var val = (rowData && rowData[colIdx] !== undefined) ? rowData[colIdx] : '';
-            var displayVal = val;
-            var customClass = col.numeric ? "text-right" : "";
-            if (col.customer) customClass += " col-customer";
-            if (col.ncc) customClass += " col-ncc";
-            if (col.code) customClass += " col-code";
-            if (col.desc) customClass += " col-desc";
+activeCols.forEach((col, colIdx) => {
+    var val = (rowData && rowData[colIdx] !== undefined) ? rowData[colIdx] : '';
+    var displayVal = val;
+    var customClass = col.numeric ? "text-right" : "";
+    if (col.customer) customClass += " col-customer";
+    if (col.ncc) customClass += " col-ncc";
+    if (col.code) customClass += " col-code";
+    if (col.desc) customClass += " col-desc";
 
-            if (col.date) {
-                displayVal = formatDateVN(val);
-            } else if (col.numeric) {
-                displayVal = formatNumberVN(val);
-            }
+    // Xử lý định dạng hiển thị theo thứ tự: Ngày -> Phần trăm -> Số tiền/Số lượng
+    if (col.date) {
+        displayVal = formatDateVN(val);
+    } else if (col.percent) {
+        if (val !== '' && val != null && !isNaN(val)) {
+            var num = Number(val);
+            // Nếu giá trị nhỏ hơn hoặc bằng 1 (dạng thập phân 0.12), nhân 100 thành 12%
+            displayVal = (Math.abs(num) <= 1 ? (num * 100) : num).toFixed(2) + '%';
+        }
+    } else if (col.numeric) {
+        displayVal = formatNumberVN(val);
+    }
 
-            cellsHtml += `<td class="${customClass.trim()}" data-col-idx="${colIdx}" data-raw-val="${val}">${displayVal}</td>`;
-        });
+    cellsHtml += `<td class="${customClass.trim()}" data-col-idx="${colIdx}" data-raw-val="${val}">${displayVal}</td>`;
+});
 
         tr.innerHTML = cellsHtml;
         tbody.appendChild(tr);
