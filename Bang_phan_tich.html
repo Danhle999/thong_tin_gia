@@ -14,26 +14,35 @@
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-/* 1. Khung chứa bảng phải cho phép cuộn ngang */
-.table-responsive, 
+/* Khung bao ngoài bảng cho phép cuộn ngang và cuộn dọc độc lập */
+.table-responsive,
 div:has(> #dataTable) {
-    overflow-x: auto !important; /* Bắt buộc hiện thanh cuộn ngang khi bảng rộng */
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 280px); /* Tự động giới hạn chiều cao theo màn hình để thanh cuộn ngang LUÔN HIỆN NẰM DƯỚI ĐÁY */
     width: 100%;
 }
 
-/* 2. Sửa lại thuộc tính của bảng */
+/* Cấu hình bảng tự do co dãn */
 #dataTable {
-    table-layout: fixed !important; /* Giúp co dãn cột theo độ rộng kéo */
-    width: max-content !important;  /* BẮT BUỘC: Giúp bảng dãn ra theo tổng độ rộng các cột, tự xuất hiện thanh cuộn ngang */
-    min-width: 100%;               /* Đảm bảo bảng luôn phủ hết chiều rộng nếu ít cột */
+    table-layout: fixed !important;
+    width: max-content !important;
+    min-width: 100%;
 }
 
-/* 3. Cắt chữ dấu ... khi thu hẹp ô */
+/* Áp dụng cho tiêu đề và ô dữ liệu */
 #dataTable th, 
 #dataTable td {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    /* Xóa bỏ hoàn toàn giới hạn min-content của văn bản dài */
+    box-sizing: border-box !important;
+}
+
+/* Lớp resizer kéo dãn */
+#dataTable th {
+    position: relative;
 }
         
         /* Thanh bắt sự kiện kéo giãn cột */
@@ -356,22 +365,21 @@ div:has(> #dataTable) {
     }
 
     // VẼ TIÊU ĐỀ BẢNG (HEADER) VÀ THANH KÉO GIÃN
-        function renderTableHeader() {
-            let cols = getActiveColumns();
-            let thead = document.getElementById('tableHeader');
-            let html = '<tr><th style="width: 80px; min-width: 80px;" class="text-center">Thao tác</th>';
-            
-            cols.forEach((col) => {
-                // Gán độ rộng mặc định tùy theo loại cột để bảng tràn màn hình và hiện thanh cuộn
-                let defaultWidth = col.desc ? '300px' : (col.customer || col.ncc) ? '220px' : '150px';
-                let cls = col.customer ? 'col-customer' : col.ncc ? 'col-ncc' : col.code ? 'col-code' : col.desc ? 'col-desc' : '';
-                
-                html += `<th class="${cls}" style="width: ${defaultWidth}; min-width: 80px;">${col.label} <div class="resizer"></div></th>`;
-            });
-            html += '</tr>';
-            thead.innerHTML = html;
-            initResizer();
-        }
+function renderTableHeader() {
+    let cols = getActiveColumns();
+    let thead = document.getElementById('tableHeader');
+    let html = '<tr><th style="width: 80px;" class="text-center">Thao tác</th>';
+    
+    cols.forEach((col) => {
+        let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
+        let cls = col.customer ? 'col-customer' : col.ncc ? 'col-ncc' : col.code ? 'col-code' : col.desc ? 'col-desc' : '';
+        
+        html += `<th class="${cls}" style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
+    });
+    html += '</tr>';
+    thead.innerHTML = html;
+    initResizer();
+}
 
     // ĐỊNH DẠNG SỐ TIỀN VNĐ
     function formatNumberVN(val) {
@@ -559,44 +567,63 @@ function appendRowToTable(row, sheetRowIndex) {
     }
 
     // HÀM CHO PHÉP KÉO GIÃN ĐỘ RỘNG CÁC CỘT (RESIZER)
-    function initResizer() {
-        const thElm = document.querySelectorAll('#dataTable th');
-        let startX, startWidth, th;
+// 1. Gán style mặc định ban đầu cho các ô tiêu đề
+function renderTableHeader() {
+    let cols = getActiveColumns();
+    let thead = document.getElementById('tableHeader');
+    let html = '<tr><th style="width: 80px;" class="text-center">Thao tác</th>';
+    
+    cols.forEach((col) => {
+        let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
+        let cls = col.customer ? 'col-customer' : col.ncc ? 'col-ncc' : col.code ? 'col-code' : col.desc ? 'col-desc' : '';
         
-        thElm.forEach(function(el) {
-            let resizer = el.querySelector('.resizer');
-            if (resizer) {
-                resizer.addEventListener('mousedown', function(e) {
-                    th = el;
-                    startX = e.pageX;
-                    startWidth = th.offsetWidth;
-                    e.preventDefault();
-                    document.addEventListener('mousemove', mouseMoveHandler);
-                    document.addEventListener('mouseup', mouseUpHandler);
-                    resizer.classList.add('resizing');
-                });
-            }
-        });
+        html += `<th class="${cls}" style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
+    });
+    html += '</tr>';
+    thead.innerHTML = html;
+    initResizer();
+}
 
-        function mouseMoveHandler(e) {
-            if (th) {
-                let newWidth = startWidth + (e.pageX - startX);
-                th.style.minWidth = `${newWidth}px`;
-                th.style.width = `${newWidth}px`;
-                th.style.maxWidth = 'none';
-            }
+// 2. Hàm kéo dãn cột linh hoạt (Không bị kẹt bởi độ dài chữ)
+function initResizer() {
+    const thElm = document.querySelectorAll('#dataTable th');
+    let startX, startWidth, th;
+    
+    thElm.forEach(function(el) {
+        let resizer = el.querySelector('.resizer');
+        if (resizer) {
+            resizer.addEventListener('mousedown', function(e) {
+                th = el;
+                startX = e.pageX;
+                startWidth = th.offsetWidth;
+                e.preventDefault();
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+                resizer.classList.add('resizing');
+            });
         }
+    });
 
-        function mouseUpHandler() {
-            document.removeEventListener('mousemove', mouseMoveHandler);
-            document.removeEventListener('mouseup', mouseUpHandler);
-            if (th) {
-                let resizer = th.querySelector('.resizer');
-                if (resizer) resizer.classList.remove('resizing');
-                th = null;
-            }
+    function mouseMoveHandler(e) {
+        if (th) {
+            // Cho phép thu nhỏ tối thiểu xuống 30px (kể cả dòng chữ dài cỡ nào)
+            let newWidth = Math.max(30, startWidth + (e.pageX - startX));
+            th.style.width = `${newWidth}px`;
+            th.style.minWidth = `${newWidth}px`;
+            th.style.maxWidth = `${newWidth}px`;
         }
     }
+
+    function mouseUpHandler() {
+        document.removeEventListener('mousemove', mouseMoveHandler);
+        document.removeEventListener('mouseup', mouseUpHandler);
+        if (th) {
+            let resizer = th.querySelector('.resizer');
+            if (resizer) resizer.classList.remove('resizing');
+            th = null;
+        }
+    }
+}
 
     // CHUYỂN ĐẾN TRANG CỤ THỂ
     function goToPage(page) {
