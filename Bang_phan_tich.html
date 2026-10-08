@@ -12,6 +12,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
+        /* Tạo vùng bắt sự kiện kéo ở mép phải của mỗi cột */
+th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    position: relative; /* Thêm thuộc tính này */
+}
+
+.resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 5px;
+    background: transparent;
+    cursor: col-resize;
+    user-select: none;
+}
+
+.resizer:hover, .resizer.resizing {
+    background-color: #ffc107; /* Hiện vạch màu vàng khi rê chuột vào để kéo */
+}
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .table-responsive { max-height: 62vh; overflow-y: auto; position: relative; border: 1px solid #dee2e6; border-radius: 6px; }
@@ -340,30 +364,70 @@ function switchTableMode(mode) {
         return SHEET_CONFIGS[currentMode] || SHEET_CONFIGS['BAN_HANG'];
     }
 
-    function renderTableHeader() {
-        var activeCols = getActiveColumns();
-        var thead = document.getElementById('tableHeader');
-        
-        var headerHtml = `<tr><th class="text-center" style="width: 70px;">Thao Tác</th>`;
-        var filterRowHtml = `<tr class="bg-light"><td class="text-center"><i class="fa-solid fa-filter text-muted"></i></td>`;
+function renderTableHeader() {
+    var activeCols = getActiveColumns();
+    var thead = document.getElementById('tableHeader');
+    
+    var headerHtml = `<tr><th class="text-center" style="width: 70px;">Thao Tác<div class="resizer"></div></th>`;
+    var filterRowHtml = `<tr class="bg-light"><td class="text-center"><i class="fa-solid fa-filter text-muted"></i></td>`;
 
-        activeCols.forEach((col, colIndex) => {
-            var customClass = col.numeric ? 'text-right' : '';
-            if (col.customer) customClass += ' col-customer';
-            if (col.ncc) customClass += ' col-ncc';
-            if (col.code) customClass += ' col-code';
-            if (col.desc) customClass += ' col-desc';
+    activeCols.forEach((col, colIndex) => {
+        var customClass = col.numeric ? 'text-right' : '';
+        if (col.customer) customClass += ' col-customer';
+        if (col.ncc) customClass += ' col-ncc';
+        if (col.code) customClass += ' col-code';
+        if (col.desc) customClass += ' col-desc';
 
-            headerHtml += `<th class="${customClass.trim()}">${col.label}</th>`;
-            filterRowHtml += `<td class="${customClass.trim()}"><input type="text" class="filter-input col-filter" data-col-index="${colIndex}" onkeyup="applyFilters()" placeholder="Lọc..."></td>`;
-        });
+        // Bổ sung thẻ .resizer vào cuối mỗi tiêu đề th
+        headerHtml += `<th class="${customClass.trim()}">${col.label}<div class="resizer"></div></th>`;
+        filterRowHtml += `<td class="${customClass.trim()}"><input type="text" class="filter-input col-filter" data-col-index="${colIndex}" onkeyup="applyFilters()" placeholder="Lọc..."></td>`;
+    });
 
-        headerHtml += `</tr>`;
-        filterRowHtml += `</tr>`;
+    headerHtml += `</tr>`;
+    filterRowHtml += `</tr>`;
 
-        thead.innerHTML = headerHtml + filterRowHtml;
-    }
+    thead.innerHTML = headerHtml + filterRowHtml;
 
+    // Kích hoạt tính năng kéo thả ngay sau khi render xong Header
+    enableColumnResizing();
+}
+function enableColumnResizing() {
+    const table = document.getElementById('dataTable');
+    const cols = table.querySelectorAll('th');
+
+    cols.forEach((col) => {
+        const resizer = col.querySelector('.resizer');
+        if (!resizer) return;
+
+        let x = 0;
+        let w = 0;
+
+        const onMouseDown = function (e) {
+            x = e.clientX;
+            const styles = window.getComputedStyle(col);
+            w = parseInt(styles.width, 10);
+
+            resizer.classList.add('resizing');
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        };
+
+        const onMouseMove = function (e) {
+            const dx = e.clientX - x;
+            col.style.width = `${w + dx}px`;
+            col.style.minWidth = `${w + dx}px`; // Đảm bảo cột không bị co lại
+        };
+
+        const onMouseUp = function () {
+            resizer.classList.remove('resizing');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        resizer.addEventListener('mousedown', onMouseDown);
+    });
+}
     function formatNumberVN(val) {
         if (val === '' || val === null || val === undefined) return '';
         var num = Number(val);
