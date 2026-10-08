@@ -33,24 +33,24 @@
         }
 
         /* 3. Tiêu đề cột và ô dữ liệu - Cắt chữ dài bằng dấu ... */
-        #dataTable th, 
-        #dataTable td {
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            box-sizing: border-box !important;
-            padding: 8px 10px !important;
-            vertical-align: middle;
-            font-size: 0.85rem;
-        }
+/* 1. Tiêu đề và ô dữ liệu đều cho phép thu nhỏ tối đa */
+#dataTable th, 
+#dataTable td {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-sizing: border-box !important;
+    padding: 8px 6px !important;
+}
 
-        /* 4. Định vị tiêu đề cột phục vụ thanh Resizer */
-        #dataTable th {
-            position: relative !important;
-            user-select: none;
-            -webkit-user-select: none;
-            background-color: #f1f5f9;
-        }
+/* 2. Ép thẻ th cho phép co lại nhỏ hơn văn bản tiêu đề */
+#dataTable th {
+    position: relative !important;
+    user-select: none;
+    -webkit-user-select: none;
+    background-color: #f1f5f9;
+    min-width: 0 !important; /* Xóa bỏ giới hạn kích thước chữ tối thiểu của tiêu đề */
+}
 
         /* 5. Vạch kéo Resizer ở cạnh phải mỗi cột */
         .resizer {
