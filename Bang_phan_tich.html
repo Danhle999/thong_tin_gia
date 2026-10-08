@@ -452,7 +452,7 @@
             
             if (col.numeric) {
                 td.className = 'text-right fw-semibold';
-                td.innerText = col.percent ? (val ? val + '%' : '') : formatNumberVN(val);
+                td.innerText = col.percent ? formatPercent(val) : formatNumberVN(val);
             } else if (col.date) {
                 td.className = 'text-center';
                 if (val && typeof val === 'string' && val.includes('T')) {
