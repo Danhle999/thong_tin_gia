@@ -17,20 +17,24 @@
         .table-responsive { max-height: 62vh; overflow-y: auto; overflow-x: auto; position: relative; border: 1px solid #dee2e6; border-radius: 6px; }
         
         /* Đảm bảo tiêu đề cột cố định (Sticky) và hỗ trợ kéo thả Resizer */
+            /* Bắt buộc áp dụng layout cố định để kéo dãn/thu hẹp cột tùy ý */
         #dataTable {
-                table-layout: fixed !important; /* BẮT BUỘC: Giúp bảng tuân thủ độ rộng px khi kéo */
-                width: 100%;
-            }
+            table-layout: fixed !important;
+            width: 100%;
+        }
         
+        /* Cắt chữ và gán dấu ... cho toàn bộ các ô trong bảng khi thu hẹp */
         #dataTable th, 
         #dataTable td {
-            white-space: nowrap;         /* Không cho tự xuống dòng làm vỡ hàng */
-            overflow: hidden;            /* Ẩn phần chữ tràn ra ngoài */
-            text-overflow: ellipsis;     /* Hiển thị dấu 3 chấm (...) khi chữ bị cắt */
-            max-width: 0;                /* Xóa bỏ giới hạn độ rộng tối thiểu của văn bản */
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: 0 !important;
         }
-        #dataTable td {
-            title: attr(data-raw-val);    /* Nếu có thuộc tính title */
+        
+        /* Đảm bảo thanh resizer vẫn hoạt động chính xác khi thu nhỏ */
+        #dataTable th {
+            position: relative;
         }
         /* Thanh bắt sự kiện kéo giãn cột */
         .resizer {
@@ -450,43 +454,44 @@
     }
 
     // TẠO 1 DÒNG DỮ LIỆU
-    function appendRowToTable(row, sheetRowIndex) {
-        let activeCols = getActiveColumns();
-        let tr = document.createElement('tr');
-        tr.setAttribute('data-sheet-row', sheetRowIndex);
-        
-        let actionTd = document.createElement('td');
-        actionTd.className = 'text-center';
-        actionTd.innerHTML = `
-            <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
-        `;
-        tr.appendChild(actionTd);
+function appendRowToTable(row, sheetRowIndex) {
+    let activeCols = getActiveColumns();
+    let tr = document.createElement('tr');
+    tr.setAttribute('data-sheet-row', sheetRowIndex);
+    
+    let actionTd = document.createElement('td');
+    actionTd.className = 'text-center';
+    actionTd.innerHTML = `
+        <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
+    `;
+    tr.appendChild(actionTd);
 
-        activeCols.forEach((col, i) => {
-            let td = document.createElement('td');
-            let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
-            td.setAttribute('data-raw-val', val);
-            td.setAttribute('title', val);
-            if (col.numeric) {
-                td.className = 'text-right fw-semibold';
-                td.innerText = col.percent ? formatPercent(val) : formatNumberVN(val);
-            } else if (col.date) {
-                td.className = 'text-center';
-                if (val && typeof val === 'string' && val.includes('T')) {
-                    td.innerText = new Date(val).toLocaleDateString('vi-VN');
-                } else {
-                    td.innerText = val;
-                }
+    activeCols.forEach((col, i) => {
+        let td = document.createElement('td');
+        let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
+        td.setAttribute('data-raw-val', val);
+        td.setAttribute('title', val); // Hiện tooltip nội dung đầy đủ khi rê chuột vào
+        
+        if (col.numeric) {
+            td.className = 'text-right fw-semibold';
+            td.innerText = col.percent ? formatPercent(val) : formatNumberVN(val);
+        } else if (col.date) {
+            td.className = 'text-center';
+            if (val && typeof val === 'string' && val.includes('T')) {
+                td.innerText = new Date(val).toLocaleDateString('vi-VN');
             } else {
                 td.innerText = val;
             }
-            
-            tr.appendChild(td);
-        });
+        } else {
+            td.innerText = val;
+        }
         
-        document.getElementById('tableBody').appendChild(tr);
-    }
+        tr.appendChild(td);
+    });
+    
+    document.getElementById('tableBody').appendChild(tr);
+}
 
     // VẼ DÒNG TÍNH TỔNG DƯỚI CÙNG (FOOTER)
     function renderTableFooter() {
