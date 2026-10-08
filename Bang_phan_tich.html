@@ -560,40 +560,53 @@
     }
 
     // HÀM CHO PHÉP KÉO GIÃN ĐỘ RỘNG CÁC CỘT (RESIZER)
-    function initResizer() {
-        const thElms = document.querySelectorAll('#dataTable th');
-        
-        thElms.forEach(function(th) {
-            let resizer = th.querySelector('.resizer');
-            if (!resizer) return;
+function initResizer() {
+    const thElms = document.querySelectorAll('#dataTable th');
+    
+    thElms.forEach(function(th, colIndex) {
+        let resizer = th.querySelector('.resizer');
+        if (!resizer) return;
 
-            resizer.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+        resizer.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-                let startX = e.pageX;
-                let startWidth = th.offsetWidth;
+            let startX = e.pageX;
+            let startWidth = th.offsetWidth;
 
-                resizer.classList.add('resizing');
+            resizer.classList.add('resizing');
 
-                function mouseMoveHandler(e) {
-                    let newWidth = Math.max(30, startWidth + (e.pageX - startX));
-                    th.style.setProperty('width', `${newWidth}px`, 'important');
-                    th.style.setProperty('min-width', `${newWidth}px`, 'important');
-                    th.style.setProperty('max-width', `${newWidth}px`, 'important');
-                }
+            function mouseMoveHandler(e) {
+                // Cho phép co nhỏ về đến 20px (kể cả tiêu đề chữ dài cỡ nào)
+                let newWidth = Math.max(20, startWidth + (e.pageX - startX));
+                
+                // Ép kích thước tiêu đề th
+                th.style.setProperty('width', `${newWidth}px`, 'important');
+                th.style.setProperty('min-width', `${newWidth}px`, 'important');
+                th.style.setProperty('max-width', `${newWidth}px`, 'important');
 
-                function mouseUpHandler() {
-                    document.removeEventListener('mousemove', mouseMoveHandler);
-                    document.removeEventListener('mouseup', mouseUpHandler);
-                    resizer.classList.remove('resizing');
-                }
+                // Ép đồng bộ xuống tất cả các ô td cùng cột bên dưới
+                const rows = document.querySelectorAll('#dataTable tbody tr, #dataTable tfoot tr');
+                rows.forEach(row => {
+                    if (row.cells[colIndex]) {
+                        row.cells[colIndex].style.setProperty('width', `${newWidth}px`, 'important');
+                        row.cells[colIndex].style.setProperty('min-width', `${newWidth}px`, 'important');
+                        row.cells[colIndex].style.setProperty('max-width', `${newWidth}px`, 'important');
+                    }
+                });
+            }
 
-                document.addEventListener('mousemove', mouseMoveHandler);
-                document.addEventListener('mouseup', mouseUpHandler);
-            });
+            function mouseUpHandler() {
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+                resizer.classList.remove('resizing');
+            }
+
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
         });
-    }
+    });
+}
 
     // CHUYỂN ĐẾN TRANG CỤ THỂ
     function goToPage(page) {
