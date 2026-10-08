@@ -14,51 +14,63 @@
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-/* Khung bao ngoài bảng cho phép cuộn ngang và cuộn dọc độc lập */
+/* 1. Khung bao ngoài bảng - đảm bảo thanh cuộn ngang luôn nằm dính dưới đáy màn hình */
 .table-responsive {
     overflow-x: auto !important;
     overflow-y: auto !important;
-    max-height: calc(100vh - 250px) !important; /* Giúp thanh cuộn ngang luôn dính dưới đáy màn hình */
+    max-height: calc(100vh - 220px) !important; /* Tự điều chỉnh chiều cao khớp tầm mắt */
     width: 100% !important;
+    border: 1px solid #dee2e6;
 }
 
-/* Cấu hình bảng tự do co dãn */
+/* 2. Cấu hình bảng tự do co dãn theo kích thước px khi kéo */
 #dataTable {
-    table-layout: fixed !important; /* BẮT BUỘC: Ngăn trình duyệt tự tính độ rộng theo chữ dài */
-    width: max-content !important;  /* Giúp hiện thanh cuộn ngang khi bảng rộng */
-    min-width: 100% !important;
+    table-layout: fixed !important; /* Ép trình duyệt tuân thủ width/min-width khi kéo */
+    width: max-content !important;  /* Tự dãn rộng hơn khung nhìn để xuất hiện thanh cuộn ngang */
 }
 
-/* Áp dụng cho tiêu đề và ô dữ liệu */
+/* 3. Tiêu đề cột và ô dữ liệu - Cắt chữ dài bằng dấu ... */
 #dataTable th, 
 #dataTable td {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     box-sizing: border-box !important;
+    padding: 8px 10px !important;
 }
 
-/* Lớp resizer kéo dãn */
+/* 4. Định vị tiêu đề cột phục vụ thanh Resizer */
+#dataTable th {
+    position: relative !important;
+    user-select: none -webkit-user-select: none; /* Tránh bôi đen văn bản khi kéo chuột */
+}
+
+/* 5. Vạch kéo Resizer ở cạnh phải mỗi cột */
+.resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;                 /* Vùng rê chuột rộng 8px giúp dễ bắt điểm */
+    height: 100%;
+    cursor: col-resize !important; /* Ép hiển thị con trỏ mũi tên 2 đầu ↔ */
+    user-select: none;
+    z-index: 10;
+}
+
+/* Viền hiển thị khi rê chuột hoặc đang kéo */
+.resizer:hover,
+.resizer.resizing {
+    border-right: 3px solid #0d6efd !important;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* 6. Ô nhập liệu khi ở chế độ Edit dòng không làm phình rộng cột */
 #dataTable td input.editable-input {
     width: 100% !important;
     box-sizing: border-box !important;
+    border: 1px solid #0d6efd;
+    padding: 2px 4px;
 }
-        
-        /* Thanh bắt sự kiện kéo giãn cột */
-        .resizer {
-            position: absolute;
-            right: 0;
-            top: 0;
-            height: 100%;
-            width: 7px;
-            background: transparent;
-            cursor: col-resize;
-            z-index: 20;
-        }
-        .resizer:hover, .resizer.resizing {
-            background-color: #ffc107 !important;
-        }
-
         td { vertical-align: middle; white-space: nowrap; font-size: 0.85rem; }
         .editable-input { width: 100%; min-width: 80px; padding: 2px 5px; border: 1px solid #0d6efd; border-radius: 4px; font-size: 0.85rem; }
         
@@ -373,10 +385,13 @@ function renderTableHeader() {
         let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
         let cls = col.customer ? 'col-customer' : col.ncc ? 'col-ncc' : col.code ? 'col-code' : col.desc ? 'col-desc' : '';
         
+        // BẮT BUỘC có <div class="resizer"></div> ở cuối thẻ th
         html += `<th class="${cls}" style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
     });
     html += '</tr>';
     thead.innerHTML = html;
+    
+    // Gọi kích hoạt resizer ngay sau khi render header xong
     initResizer();
 }
 
