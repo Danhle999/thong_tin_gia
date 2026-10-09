@@ -32,7 +32,7 @@
             border-spacing: 0;
         }
 
-        /* 3. Tiêu đề và ô dữ liệu cho phép thu nhỏ tối đa */
+        /* 3. Tiêu đề và ô dữ liệu */
         #dataTable th, 
         #dataTable td {
             white-space: nowrap !important;
@@ -117,6 +117,15 @@
 
         #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 9999; justify-content: center; align-items: center; }
 
+        /* KHUNG BỘ LỌC PHÍA TRÊN */
+        .filter-card { 
+            background: #eef2f7; 
+            border-radius: 6px; 
+            padding: 12px 15px; 
+            margin-bottom: 15px; 
+            border: 1px solid #cbd5e1;
+        }
+
         .pagination-container {
             display: flex;
             justify-content: space-between;
@@ -174,13 +183,37 @@
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 / 0 dòng</span>
         </div>
+
+        <!-- BỘ LỌC 1: BỘ LỌC TỔNG HỢP / NGÀY THÁNG PHÍA TRÊN -->
+        <div class="filter-card">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
+                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyAllFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Từ ngày:</label>
+                    <input type="date" id="fromDateInput" class="form-control form-control-sm" onchange="applyAllFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Đến ngày:</label>
+                    <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyAllFilters()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
+                    <input type="text" id="customerFilterInput" class="form-control form-control-sm" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyAllFilters()">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-sm btn-secondary w-100 mt-3" onclick="resetAllFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa tất cả bộ lọc</button>
+                </div>
+            </div>
+        </div>
         
         <!-- NÚT THAO TÁC -->
         <div class="row mb-3">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
                 <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet()"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
-                <button class="btn btn-sm btn-outline-secondary" onclick="clearColumnFilters()"><i class="fa-solid fa-filter-circle-xmark me-1"></i>Xóa Bộ Lọc Cột</button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2">
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
@@ -190,7 +223,7 @@
             </div>
         </div>
 
-        <!-- BẢNG DỮ LIỆU -->
+        <!-- BẢNG DỮ LIỆU (TÍCH HỢP BỘ LỌC 2: Ô LỌC DƯỚI TỪNG TÊN CỘT) -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle" id="dataTable">
                 <thead id="tableHeader"></thead>
@@ -290,7 +323,7 @@
     let currentMode = 'BAN_HANG';
     let rawData = []; 
     let filteredData = [];
-    let columnFilters = {}; // Lưu từ khóa lọc cho từng cột
+    let columnFilters = {}; // Lưu điều kiện lọc riêng cho từng cột
     let currentPage = 1;
     let pageSize = 50;
 
@@ -310,7 +343,7 @@
         let cols = getActiveColumns();
         document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${mode} (${cols.length} Cột)`;
         
-        columnFilters = {}; // Reset bộ lọc cột khi đổi tab
+        resetAllFilters(false);
         loadDataFromSheet();
     }
 
@@ -333,7 +366,7 @@
                 filteredData = [...rawData];
                 currentPage = 1;
                 renderTableHeader();
-                applyColumnFilters();
+                applyAllFilters();
                 showLoading(false);
             })
             .catch(err => {
@@ -342,7 +375,7 @@
             });
     }
 
-    // VẼ HEADER BẢNG GỒM DÒNG TÊN CỘT + DÒNG Ô LỌC TỪNG CỘT
+    // VẼ HEADER BẢNG GỒM DÒNG TÊN CỘT + DÒNG Ô LỌC CHI TIẾT THEO CỘT
     function renderTableHeader() {
         let cols = getActiveColumns();
         let thead = document.getElementById('tableHeader');
@@ -355,11 +388,11 @@
         });
         htmlHeader += '</tr>';
 
-        // Dòng 2: Ô Lọc riêng cho từng Cột
+        // Dòng 2: Ô lọc trực tiếp trên từng cột
         let htmlFilter = '<tr class="filter-row"><th class="text-center"><i class="fa-solid fa-filter text-muted"></i></th>';
         cols.forEach((col, idx) => {
             let currentVal = columnFilters[idx] || '';
-            let placeholder = col.date ? 'Lọc ngày...' : col.numeric ? 'Lọc số...' : 'Lọc...';
+            let placeholder = 'Lọc ' + col.label.toLowerCase() + '...';
             htmlFilter += `<th><input type="text" class="column-filter-input" data-col-idx="${idx}" value="${currentVal}" placeholder="${placeholder}" onkeyup="onColumnFilterChange(this)"></th>`;
         });
         htmlFilter += '</tr>';
@@ -368,7 +401,7 @@
         initResizer();
     }
 
-    // BẮT SỰ KIỆN KHI BẤM PHÍM TRONG Ô LỌC CỘT
+    // SỰ KIỆN KHI NHẬP TỪ KHÓA VÀO Ô LỌC CỘT
     function onColumnFilterChange(input) {
         let colIdx = parseInt(input.getAttribute('data-col-idx'));
         let val = input.value.trim().toLowerCase();
@@ -379,36 +412,85 @@
             delete columnFilters[colIdx];
         }
         
-        applyColumnFilters();
+        applyAllFilters();
     }
 
-    // THỰC HIỆN LỌC DỮ LIỆU THEO TẤT CẢ CÁC CỘT ĐANG CÓ TỪ KHÓA
-    function applyColumnFilters() {
-        let filterKeys = Object.keys(columnFilters);
+    // THỰC HIỆN KẾT HỢP CẢ 2 BỘ LỌC (LỌC TRÊN & LỌC THEO CỘT)
+    function applyAllFilters() {
+        let kw = document.getElementById('globalSearchInput').value.toLowerCase();
+        let kwCustomer = document.getElementById('customerFilterInput').value.toLowerCase();
+        let fromDateStr = document.getElementById('fromDateInput').value;
+        let toDateStr = document.getElementById('toDateInput').value;
         
-        if (filterKeys.length === 0) {
-            filteredData = [...rawData];
-        } else {
-            filteredData = rawData.filter(item => {
-                let row = item.values;
-                // Kiểm tra xem hàng có thỏa mãn toàn bộ các điều kiện lọc cột không
-                return filterKeys.every(colIdx => {
+        let fromDate = fromDateStr ? new Date(fromDateStr) : null;
+        let toDate = toDateStr ? new Date(toDateStr) : null;
+        let activeCols = getActiveColumns();
+        let filterKeys = Object.keys(columnFilters);
+
+        filteredData = rawData.filter(item => {
+            let row = item.values;
+
+            // 1. Kiểm tra Lọc theo Ô Lọc Cột
+            if (filterKeys.length > 0) {
+                let matchColumns = filterKeys.every(colIdx => {
                     let searchVal = columnFilters[colIdx];
                     let cellVal = row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]).toLowerCase() : '';
                     return cellVal.includes(searchVal);
                 });
-            });
-        }
+                if (!matchColumns) return false;
+            }
+
+            // 2. Kiểm tra Tìm kiếm nhanh chung
+            let rowText = row.join(" ").toLowerCase();
+            if (kw && !rowText.includes(kw)) return false;
+
+            // 3. Kiểm tra Tên KH / NCC / Mã
+            if (kwCustomer) {
+                let matchCus = false;
+                activeCols.forEach((col, i) => {
+                    if ((col.customer || col.ncc || col.code) && row[i] && String(row[i]).toLowerCase().includes(kwCustomer)) {
+                        matchCus = true;
+                    }
+                });
+                if (!matchCus) return false;
+            }
+
+            // 4. Kiểm tra Lọc theo Ngày
+            if (fromDate || toDate) {
+                let dateIdx = activeCols.findIndex(c => c.date);
+                if (dateIdx !== -1 && row[dateIdx]) {
+                    let dateStr = String(row[dateIdx]);
+                    let rowDate = new Date(dateStr);
+                    if (isNaN(rowDate.getTime())) {
+                        let parts = dateStr.split(/[-/]/);
+                        if(parts.length === 3) {
+                            if (parts[0].length === 4) rowDate = new Date(parts[0], parts[1]-1, parts[2]);
+                            else rowDate = new Date(parts[2], parts[1]-1, parts[0]);
+                        }
+                    }
+                    if (rowDate && !isNaN(rowDate)) {
+                        if (fromDate && rowDate < fromDate) return false;
+                        if (toDate && rowDate > toDate) return false;
+                    }
+                }
+            }
+
+            return true;
+        });
 
         currentPage = 1;
         renderTablePage();
     }
 
-    // XÓA TẤT CẢ LỌC CỘT
-    function clearColumnFilters() {
+    // XÓA TẤT CẢ LỌC
+    function resetAllFilters(reload = true) {
+        document.getElementById('globalSearchInput').value = '';
+        document.getElementById('customerFilterInput').value = '';
+        document.getElementById('fromDateInput').value = '';
+        document.getElementById('toDateInput').value = '';
         columnFilters = {};
         document.querySelectorAll('.column-filter-input').forEach(input => input.value = '');
-        applyColumnFilters();
+        if (reload) applyAllFilters();
     }
 
     function formatNumberVN(val) {
@@ -593,18 +675,15 @@
                 function mouseMoveHandler(e) {
                     let newWidth = Math.max(20, startWidth + (e.pageX - startX));
                     
-                    // Ép kích thước tiêu đề th
                     th.style.setProperty('width', `${newWidth}px`, 'important');
                     th.style.setProperty('min-width', `${newWidth}px`, 'important');
 
-                    // Ép đồng bộ xuống ô lọc cột tương ứng ở dòng 2
                     const filterTh = document.querySelectorAll('#dataTable thead tr.filter-row th')[colIndex];
                     if (filterTh) {
                         filterTh.style.setProperty('width', `${newWidth}px`, 'important');
                         filterTh.style.setProperty('min-width', `${newWidth}px`, 'important');
                     }
 
-                    // Ép đồng bộ xuống tất cả ô td bên dưới
                     const rows = document.querySelectorAll('#dataTable tbody tr, #dataTable tfoot tr');
                     rows.forEach(row => {
                         if (row.cells[colIndex]) {
