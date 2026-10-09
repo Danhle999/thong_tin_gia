@@ -20,6 +20,7 @@
             overflow: hidden !important; 
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px; /* Tăng kích thước font cơ sở */
         }
 
         .table-container {
@@ -49,6 +50,7 @@
             width: max-content !important;
             border-collapse: separate;
             border-spacing: 0;
+            font-size: 1.05rem; /* TĂNG SIZE CHỮ TRONG BẢNG */
         }
 
         /* 3. Tiêu đề và ô dữ liệu */
@@ -58,7 +60,7 @@
             overflow: hidden !important;
             text-overflow: ellipsis !important;
             box-sizing: border-box !important;
-            padding: 6px 6px !important;
+            padding: 8px 8px !important; /* Tăng padding nhẹ cho chữ lớn thoáng mắt */
         }
 
         /* Sticky cho Tiêu đề bảng */
@@ -67,12 +69,14 @@
             top: 0;
             z-index: 12;
             background-color: #f1f5f9;
+            font-size: 1.05rem;
+            font-weight: 700;
         }
 
         /* Sticky cho Hàng Lọc Cột */
         #dataTable thead tr.filter-row th {
             position: sticky !important;
-            top: 35px;
+            top: 39px;
             z-index: 11;
             background-color: #e2e8f0;
             padding: 3px 4px !important;
@@ -102,14 +106,14 @@
             background-color: rgba(13, 110, 253, 0.1);
         }
 
-        /* Ô nhập liệu khi Edit hoặc Filter trong cột */
+        /* Ô nhập liệu khi Edit hoặc Filter trong cột (Tăng font chữ) */
         #dataTable td input.editable-input,
         .column-filter-input {
             width: 100% !important;
             box-sizing: border-box !important;
             border: 1px solid #ced4da;
-            padding: 2px 4px;
-            font-size: 1rem;
+            padding: 3px 6px;
+            font-size: 1.05rem !important; /* TĂNG SIZE CHỮ Ô NHẬP LỌC & EDIT */
             border-radius: 3px;
         }
 
@@ -129,6 +133,7 @@
             background-color: #e9ecef !important;
             color: #0d6efd;
             font-weight: bold;
+            font-size: 1.05rem;
             z-index: 9;
             border-top: 2px solid #0d6efd !important;
             border-bottom: 1px solid #dee2e6;
@@ -155,9 +160,10 @@
             padding-top: 8px;
             border-top: 1px solid #dee2e6;
             flex-shrink: 0;
+            font-size: 1rem;
         }
 
-        .view-mode-btn-group .btn { font-weight: 600; }
+        .view-mode-btn-group .btn { font-weight: 600; font-size: 0.95rem; }
         .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
@@ -173,21 +179,15 @@
 
 <div class="container-fluid p-2 h-100">
     <div class="table-container">
-        <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 6 SHEET -->
+        <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 6 SHEET (ĐÃ ĐỔI LAPTOP, PC, LCD LÊN ĐẦU) -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
                 <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu</h4>
-                <small class="text-muted" id="modeDescription">Đang hiển thị Trang tính: BAN_HANG (17 Cột)</small>
+                <small class="text-muted fs-6" id="modeDescription">Đang hiển thị Trang tính: LAPTOP (31 Cột)</small>
             </div>
             
             <div class="btn-group view-mode-btn-group" role="group">
-                <button type="button" id="btnModeBanHang" class="btn btn-success active" onclick="switchTableMode('BAN_HANG')">
-                    <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
-                </button>
-                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">
-                    <i class="fa-solid fa-file-import me-1"></i> NHẬP KHO
-                </button>
-                <button type="button" id="btnModeLaptop" class="btn btn-outline-warning" onclick="switchTableMode('LAPTOP')">
+                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">
                     <i class="fa-solid fa-laptop me-1"></i> LAPTOP
                 </button>
                 <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">
@@ -195,6 +195,12 @@
                 </button>
                 <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">
                     <i class="fa-solid fa-tv me-1"></i> LCD
+                </button>
+                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">
+                    <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
+                </button>
+                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">
+                    <i class="fa-solid fa-file-import me-1"></i> NHẬP KHO
                 </button>
                 <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
                     <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO
@@ -209,19 +215,19 @@
             <div class="row g-2 align-items-center">
                 <div class="col-md-3">
                     <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
-                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyAllFilters()">
+                    <input type="text" id="globalSearchInput" class="form-control form-control-sm fs-6" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyAllFilters()">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar me-1"></i>Từ ngày:</label>
-                    <input type="date" id="fromDateInput" class="form-control form-control-sm" onchange="applyAllFilters()">
+                    <input type="date" id="fromDateInput" class="form-control form-control-sm fs-6" onchange="applyAllFilters()">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar me-1"></i>Đến ngày:</label>
-                    <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyAllFilters()">
+                    <input type="date" id="toDateInput" class="form-control form-control-sm fs-6" onchange="applyAllFilters()">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
-                    <input type="text" id="customerFilterInput" class="form-control form-control-sm" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyAllFilters()">
+                    <input type="text" id="customerFilterInput" class="form-control form-control-sm fs-6" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyAllFilters()">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button class="btn btn-sm btn-secondary w-100" onclick="resetAllFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa tất cả bộ lọc</button>
@@ -277,21 +283,6 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxy-k8aQWyknyTnDVLm9CrKO9C85viGIAJ3VhhFt_Gk35kIXBIN-kUeXycd8Bs-VM/exec";
     
     const SHEET_CONFIGS = {
-        'BAN_HANG': [
-            { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
-            { label: 'Số đề nghị trả lại' }, { label: 'Ngày đề nghị trả lại', date: true }, { label: 'Mã hàng hóa', code: true },
-            { label: 'Diễn giải', code: true }, { label: 'Số lượng bán', numeric: true }, { label: 'Thành tiền bán', numeric: true },
-            { label: 'Tổng tiền bán', numeric: true }, { label: 'Số lượng trả lại', numeric: true }, { label: 'Thành tiền trả lại', numeric: true },
-            { label: 'Tổng tiền trả lại', numeric: true }, { label: 'Người thực hiện' }, { label: 'Đơn vị' },
-            { label: 'Là combo hàng hóa' }, { label: 'ĐƠN GIÁ', numeric: true }
-        ],
-        'NHAP_KHO': [
-            { label: 'Ngày HT', date: true }, { label: 'Ngày CT', date: true }, { label: 'Số CT' }, { label: 'Ngày Hóa Đơn', date: true },
-            { label: 'Mã NCC', ncc: true }, { label: 'Tên NCC', ncc: true }, { label: 'Diễn Giải', code: true }, { label: 'Mã Hàng', code: true },
-            { label: 'ĐVT' }, { label: 'Số Lượng', numeric: true }, { label: 'Đơn Giá', numeric: true }, { label: 'Thành Tiền', numeric: true },
-            { label: 'Giá cost', numeric: true }, { label: 'Chiết khấu', numeric: true }, { label: 'Sell out', numeric: true },
-            { label: 'Sell in', numeric: true }, { label: 'Tên nhóm VTHH', desc: true }
-        ],
         'LAPTOP': [
             { label: 'NGÀNH HÀNG' }, { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' },
             { label: 'Brand' }, { label: 'Màn hình INCH' }, { label: 'Chip' }, { label: 'RAM' },
@@ -330,6 +321,21 @@
             { label: 'KHO KTB', numeric: true }, { label: 'số lượng bán ra từ ngày', numeric: true },
             { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true }, { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true }
         ],
+        'BAN_HANG': [
+            { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
+            { label: 'Số đề nghị trả lại' }, { label: 'Ngày đề nghị trả lại', date: true }, { label: 'Mã hàng hóa', code: true },
+            { label: 'Diễn giải', code: true }, { label: 'Số lượng bán', numeric: true }, { label: 'Thành tiền bán', numeric: true },
+            { label: 'Tổng tiền bán', numeric: true }, { label: 'Số lượng trả lại', numeric: true }, { label: 'Thành tiền trả lại', numeric: true },
+            { label: 'Tổng tiền trả lại', numeric: true }, { label: 'Người thực hiện' }, { label: 'Đơn vị' },
+            { label: 'Là combo hàng hóa' }, { label: 'ĐƠN GIÁ', numeric: true }
+        ],
+        'NHAP_KHO': [
+            { label: 'Ngày HT', date: true }, { label: 'Ngày CT', date: true }, { label: 'Số CT' }, { label: 'Ngày Hóa Đơn', date: true },
+            { label: 'Mã NCC', ncc: true }, { label: 'Tên NCC', ncc: true }, { label: 'Diễn Giải', code: true }, { label: 'Mã Hàng', code: true },
+            { label: 'ĐVT' }, { label: 'Số Lượng', numeric: true }, { label: 'Đơn Giá', numeric: true }, { label: 'Thành Tiền', numeric: true },
+            { label: 'Giá cost', numeric: true }, { label: 'Chiết khấu', numeric: true }, { label: 'Sell out', numeric: true },
+            { label: 'Sell in', numeric: true }, { label: 'Tên nhóm VTHH', desc: true }
+        ],
         'TON_KHO': [
             { label: 'Mã Hàng', code: true }, { label: 'Tên Hàng Hóa', desc: true }, { label: 'ĐVT' },
             { label: 'Tồn Đầu Kỳ', numeric: true }, { label: 'Nhập Trong Kỳ', numeric: true },
@@ -338,7 +344,8 @@
         ]
     };
 
-    let currentMode = 'BAN_HANG';
+    // MẶC ĐỊNH SẼ NẠP VÀ HIỂN THỊ SHEET LAPTOP TRƯỚC
+    let currentMode = 'LAPTOP';
     let rawData = []; 
     let filteredData = [];
     let columnFilters = {}; 
@@ -349,14 +356,23 @@
 
     function switchTableMode(mode) {
         currentMode = mode;
-        document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => btn.classList.remove('active'));
         
-        let btnId = mode === 'BAN_HANG' ? 'btnModeBanHang' : 
-                    mode === 'NHAP_KHO' ? 'btnModeNhapKho' : 
-                    mode === 'LAPTOP' ? 'btnModeLaptop' : 
-                    mode === 'PC' ? 'btnModePc' : 
-                    mode === 'LCD' ? 'btnModeLcd' : 'btnModeTonKho';
-        document.getElementById(btnId).classList.add('active');
+        // Reset CSS nút tab active
+        document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+        });
+        
+        let btnObj = {
+            'LAPTOP': { id: 'btnModeLaptop', cls: 'btn-warning' },
+            'PC': { id: 'btnModePc', cls: 'btn-dark' },
+            'LCD': { id: 'btnModeLcd', cls: 'btn-danger' },
+            'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
+            'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
+            'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' }
+        }[mode];
+
+        let targetBtn = document.getElementById(btnObj.id);
+        targetBtn.className = `btn ${btnObj.cls} active`;
         
         let cols = getActiveColumns();
         document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${mode} (${cols.length} Cột)`;
@@ -370,12 +386,10 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    // TỐI ƯU TẢI DỮ LIỆU: BẬT CACHE HIỂN THỊ TỨC THÌ
     function loadDataFromSheet(forceRefresh = false) {
         let cacheKey = `CACHE_DATA_${currentMode}`;
         let cachedData = localStorage.getItem(cacheKey);
 
-        // Nạp tức thì từ LocalStorage nếu có
         if (cachedData && !forceRefresh) {
             let parsed = JSON.parse(cachedData);
             processDataArray(parsed);
@@ -385,7 +399,6 @@
             showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
         }
 
-        // Tải đồng bộ ngầm từ Google Sheets
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${currentMode}`)
             .then(res => res.json())
             .then(data => {
@@ -421,7 +434,7 @@
         
         let htmlHeader = '<tr class="header-row"><th style="width: 80px;" class="text-center">Thao tác</th>';
         cols.forEach((col) => {
-            let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
+            let defaultWidth = col.desc ? '300px' : (col.customer || col.ncc) ? '220px' : '160px';
             htmlHeader += `<th style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
         });
         htmlHeader += '</tr>';
@@ -572,7 +585,6 @@
         return '';
     }
 
-    // TỐI ƯU RENDER DOM VỚI DOCUMENT FRAGMENT
     function renderTablePage() {
         let tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
@@ -809,7 +821,7 @@
             setTimeout(() => {
                 showLoading(false);
                 alert("Đã lưu dữ liệu thành công!");
-                loadDataFromSheet(true); // Ép tải mới & cập nhật Cache
+                loadDataFromSheet(true);
             }, 1200);
         })
         .catch(err => {
@@ -821,13 +833,7 @@
     function addRow() {
         var activeCols = getActiveColumns();
         var emptyRow = new Array(activeCols.length).fill('');
-        if (currentMode === 'BAN_HANG') {
-            var now = new Date().toISOString().split('T')[0];
-            emptyRow[2] = now;
-            emptyRow[14] = 'Cái';
-            emptyRow[15] = 'Không';
-        }
-
+        
         showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
 
         var formData = new URLSearchParams();
