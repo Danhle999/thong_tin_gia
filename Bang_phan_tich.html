@@ -233,7 +233,7 @@
         <div class="row mb-2" style="flex-shrink: 0;">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
-                <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet()"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
+                <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2">
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
@@ -370,27 +370,49 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    function loadDataFromSheet() {
-        showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
+    // TỐI ƯU TẢI DỮ LIỆU: BẬT CACHE HIỂN THỊ TỨC THÌ
+    function loadDataFromSheet(forceRefresh = false) {
+        let cacheKey = `CACHE_DATA_${currentMode}`;
+        let cachedData = localStorage.getItem(cacheKey);
+
+        // Nạp tức thì từ LocalStorage nếu có
+        if (cachedData && !forceRefresh) {
+            let parsed = JSON.parse(cachedData);
+            processDataArray(parsed);
+            renderTableHeader();
+            applyAllFilters();
+        } else {
+            showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
+        }
+
+        // Tải đồng bộ ngầm từ Google Sheets
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${currentMode}`)
             .then(res => res.json())
             .then(data => {
-                rawData = data.slice(1).map((row, index) => {
-                    return {
-                        sheetRowIndex: index + 2,
-                        values: row
-                    };
-                });
-                filteredData = [...rawData];
-                currentPage = 1;
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                processDataArray(data);
                 renderTableHeader();
                 applyAllFilters();
                 showLoading(false);
             })
             .catch(err => {
                 showLoading(false);
-                alert("Lỗi tải dữ liệu. Vui lòng kiểm tra lại URL Apps Script hoặc kết nối mạng!");
             });
+    }
+
+    function processDataArray(data) {
+        if (!data || data.length === 0) {
+            rawData = [];
+            filteredData = [];
+            return;
+        }
+        rawData = data.slice(1).map((row, index) => {
+            return {
+                sheetRowIndex: index + 2,
+                values: row
+            };
+        });
+        filteredData = [...rawData];
     }
 
     function renderTableHeader() {
@@ -550,6 +572,7 @@
         return '';
     }
 
+    // TỐI ƯU RENDER DOM VỚI DOCUMENT FRAGMENT
     function renderTablePage() {
         let tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
@@ -558,14 +581,19 @@
         let end = start + pageSize;
         let pageData = filteredData.slice(start, end);
         
-        pageData.forEach((item) => appendRowToTable(item.values, item.sheetRowIndex));
+        let fragment = document.createDocumentFragment();
+        pageData.forEach((item) => {
+            let tr = createRowNode(item.values, item.sheetRowIndex);
+            fragment.appendChild(tr);
+        });
+        tbody.appendChild(fragment);
         
         document.getElementById('rowCountBadge').innerText = `Hiển thị: ${filteredData.length} / ${rawData.length} dòng`;
         renderPaginationControls();
         renderTableFooter();
     }
 
-    function appendRowToTable(row, sheetRowIndex) {
+    function createRowNode(row, sheetRowIndex) {
         let activeCols = getActiveColumns();
         let tr = document.createElement('tr');
         tr.setAttribute('data-sheet-row', sheetRowIndex);
@@ -600,8 +628,7 @@
             
             tr.appendChild(td);
         });
-        
-        document.getElementById('tableBody').appendChild(tr);
+        return tr;
     }
 
     function renderTableFooter() {
@@ -782,7 +809,7 @@
             setTimeout(() => {
                 showLoading(false);
                 alert("Đã lưu dữ liệu thành công!");
-                loadDataFromSheet();
+                loadDataFromSheet(true); // Ép tải mới & cập nhật Cache
             }, 1200);
         })
         .catch(err => {
@@ -819,7 +846,7 @@
         .then(() => {
             setTimeout(() => {
                 showLoading(false);
-                loadDataFromSheet();
+                loadDataFromSheet(true);
             }, 1200);
         });
     }
@@ -880,7 +907,7 @@
             setTimeout(() => {
                 showLoading(false);
                 alert(`Đã hoàn tất tải lên file Excel vào Sheet '${currentMode}'!`);
-                loadDataFromSheet();
+                loadDataFromSheet(true);
             }, 1500);
 
             event.target.value = '';
