@@ -317,7 +317,8 @@ la<!DOCTYPE html>
         ],
         'LCD': [
             { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand' },
-            { label: 'Kích Thước (inch)' }, { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
+            { label: 'Kích Thước (inch)', numeric: true }, // THÊM numeric: true Ở ĐÂY
+            { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
             { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1' }, { label: 'Cổng Xuất Hình 2' },
             { label: 'Cổng Xuất Hình 3' }, { label: 'Cổng Khác' }, { label: 'LOA' },
             { label: 'GIÁ COST', numeric: true }, { label: 'GIÁ NHẬP (VNĐ)', numeric: true },
@@ -625,43 +626,59 @@ la<!DOCTYPE html>
         renderTableFooter();
     }
 
-    function createRowNode(row, sheetRowIndex) {
-        let activeCols = getActiveColumns();
-        let tr = document.createElement('tr');
-        tr.setAttribute('data-sheet-row', sheetRowIndex);
-        
-        let actionTd = document.createElement('td');
-        actionTd.className = 'text-center';
-        actionTd.innerHTML = `
-            <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
-        `;
-        tr.appendChild(actionTd);
+function createRowNode(row, sheetRowIndex) {
+    let activeCols = getActiveColumns();
+    let tr = document.createElement('tr');
+    tr.setAttribute('data-sheet-row', sheetRowIndex);
+    
+    let actionTd = document.createElement('td');
+    actionTd.className = 'text-center';
+    actionTd.innerHTML = `
+        <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
+    `;
+    tr.appendChild(actionTd);
 
-        activeCols.forEach((col, i) => {
-            let td = document.createElement('td');
-            let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
-            td.setAttribute('data-raw-val', val);
-            td.setAttribute('title', val);
-            
-            if (col.numeric) {
-                td.className = 'text-right fw-semibold';
-                td.innerText = col.percent ? formatPercent(val) : formatNumberVN(val);
-            } else if (col.date) {
-                td.className = 'text-center';
-                if (val && typeof val === 'string' && val.includes('T')) {
-                    td.innerText = new Date(val).toLocaleDateString('vi-VN');
-                } else {
-                    td.innerText = val;
-                }
+    activeCols.forEach((col, i) => {
+        let td = document.createElement('td');
+        let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
+        td.setAttribute('data-raw-val', val);
+        td.setAttribute('title', val);
+        
+        if (col.numeric) {
+            td.className = 'text-right fw-semibold';
+            // Nếu là số thập phân inch (ví dụ 21.5, 23.8) thì giữ nguyên, còn tiền tệ/số lượng mới formatVN
+            if (col.percent) {
+                td.innerText = formatPercent(val);
+            } else if (typeof val === 'number' && !Number.isInteger(val) && val < 100) {
+                td.innerText = val; // Hiển thị nguyên con số kích thước màn hình
+            } else {
+                td.innerText = formatNumberVN(val);
+            }
+        } else if (col.date) { // CHỈ ÉP KIỂU NGÀY THÁNG KHI CỘT ĐƯỢC CẤU HÌNH date: true
+            td.className = 'text-center';
+            if (val && typeof val === 'string' && val.includes('T')) {
+                let d = new Date(val);
+                td.innerText = !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
             } else {
                 td.innerText = val;
             }
-            
-            tr.appendChild(td);
-        });
-        return tr;
-    }
+        } else {
+            // Nếu lỡ bị dính chuỗi ISO ngày tháng do Google Sheets tự convert nhầm ở cột thường
+            if (typeof val === 'string' && val.includes('T') && val.endsWith('Z')) {
+                let d = new Date(val);
+                if (!isNaN(d.getTime())) {
+                    // Chuyển ngược lại lấy số ngày hoặc định dạng gọn
+                    val = d.getDate() + (d.getMonth() > 0 ? '.' + (d.getMonth() + 1) : '');
+                }
+            }
+            td.innerText = val;
+        }
+        
+        tr.appendChild(td);
+    });
+    return tr;
+}
 
     function renderTableFooter() {
         let activeCols = getActiveColumns();
