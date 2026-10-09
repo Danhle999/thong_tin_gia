@@ -95,7 +95,7 @@
         }
 
         #loadingSpinner { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 9999; justify-content: center; align-items: center; }
-        .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+        .filter-card { background: #eef2f7; border-radius: 6px; padding: 15px; margin-top: 15px; border: 1px solid #cbd5e1; }
 
         .pagination-container {
             display: flex;
@@ -154,31 +154,6 @@
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 / 0 dòng</span>
         </div>
-
-        <!-- BỘ LỌC TÌM KIẾM NÂNG CAO -->
-        <div class="filter-card">
-            <div class="row g-2 align-items-center">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
-                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyFilters()">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Từ ngày:</label>
-                    <input type="date" id="fromDateInput" class="form-control form-control-sm" onchange="applyFilters()">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Đến ngày:</label>
-                    <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyFilters()">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
-                    <input type="text" id="customerFilterInput" class="form-control form-control-sm" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyFilters()">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-sm btn-secondary w-100 mt-3" onclick="resetFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc</button>
-                </div>
-            </div>
-        </div>
         
         <!-- NÚT THAO TÁC -->
         <div class="row mb-3">
@@ -201,6 +176,31 @@
                 <tbody id="tableBody"></tbody>
                 <tfoot id="tableFooter"></tfoot>
             </table>
+        </div>
+
+        <!-- BỘ LỌC TÌM KIẾM NÂNG CAO (ĐÃ CHUYỂN XUỐNG DƯỚI BẢNG) -->
+        <div class="filter-card">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
+                    <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Từ ngày:</label>
+                    <input type="date" id="fromDateInput" class="form-control form-control-sm" onchange="applyFilters()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Đến ngày:</label>
+                    <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyFilters()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
+                    <input type="text" id="customerFilterInput" class="form-control form-control-sm" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyFilters()">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-sm btn-secondary w-100 mt-3" onclick="resetFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc</button>
+                </div>
+            </div>
         </div>
 
         <!-- PHÂN TRANG -->
@@ -325,13 +325,12 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    // TẢI DỮ LIỆU TỪ GOOGLE APPS SCRIPT VỀ (ĐÃ SỬA: LƯU VỊ TRÍ DÒNG THỰC TẾ)
+    // TẢI DỮ LIỆU TỪ GOOGLE APPS SCRIPT VỀ
     function loadDataFromSheet() {
         showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${currentMode}`)
             .then(res => res.json())
             .then(data => {
-                // Tiêu đề nằm ở dòng 1, dữ liệu bắt đầu từ dòng 2 (index + 2)
                 rawData = data.slice(1).map((row, index) => {
                     return {
                         sheetRowIndex: index + 2,
@@ -385,6 +384,36 @@
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(num);
+    }
+
+    // Hàm chuyển đổi chuỗi ngày bất kỳ về định dạng YYYY-MM-DD cho input[type=date]
+    function formatDateForInput(dateStr) {
+        if (!dateStr) return '';
+        if (typeof dateStr === 'string' && dateStr.includes('T')) {
+            return dateStr.split('T')[0];
+        }
+        let parts = String(dateStr).trim().split(/[/.-]/);
+        if (parts.length === 3) {
+            if (parts[0].length === 4) {
+                let y = parts[0];
+                let m = parts[1].padStart(2, '0');
+                let d = parts[2].padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            } else if (parts[2].length === 4) {
+                let d = parts[0].padStart(2, '0');
+                let m = parts[1].padStart(2, '0');
+                let y = parts[2];
+                return `${y}-${m}-${d}`;
+            }
+        }
+        let d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+            let year = d.getFullYear();
+            let month = String(d.getMonth() + 1).padStart(2, '0');
+            let day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        return '';
     }
 
     // XỬ LÝ BỘ LỌC
@@ -625,29 +654,27 @@
     }
 
     // CHẾ ĐỘ SỬA DÒNG
-// CHẾ ĐỘ SỬA DÒNG (ĐÃ SỬA LỖI HIỂN THỊ NGÀY)
-function editRow(btn) {
-    var tr = btn.closest('tr');
-    var cells = tr.querySelectorAll('td');
-    var activeCols = getActiveColumns();
+    function editRow(btn) {
+        var tr = btn.closest('tr');
+        var cells = tr.querySelectorAll('td');
+        var activeCols = getActiveColumns();
 
-    for (var i = 1; i < cells.length; i++) {
-        var colIdx = i - 1;
-        var colConfig = activeCols[colIdx];
-        var rawVal = cells[i].getAttribute('data-raw-val') || cells[i].innerText.trim();
+        for (var i = 1; i < cells.length; i++) {
+            var colIdx = i - 1;
+            var colConfig = activeCols[colIdx];
+            var rawVal = cells[i].getAttribute('data-raw-val') || cells[i].innerText.trim();
 
-        if (colConfig && colConfig.date) {
-            // Chuyển đổi giá trị về chuẩn YYYY-MM-DD để hiển thị lên input date
-            var formattedDate = formatDateForInput(rawVal);
-            cells[i].innerHTML = `<input type="date" class="editable-input" value="${formattedDate}">`;
-        } else {
-            cells[i].innerHTML = `<input type="text" class="editable-input" value="${rawVal}">`;
+            if (colConfig && colConfig.date) {
+                var formattedDate = formatDateForInput(rawVal);
+                cells[i].innerHTML = `<input type="date" class="editable-input" value="${formattedDate}">`;
+            } else {
+                cells[i].innerHTML = `<input type="text" class="editable-input" value="${rawVal}">`;
+            }
         }
-    }
 
-    tr.querySelector('.btn-edit').style.display = 'none';
-    tr.querySelector('.btn-save').style.display = 'inline-block';
-}
+        tr.querySelector('.btn-edit').style.display = 'none';
+        tr.querySelector('.btn-save').style.display = 'inline-block';
+    }
 
     // LƯU CẬP NHẬT DÒNG
     function saveRow(btn) {
@@ -724,45 +751,6 @@ function editRow(btn) {
             }, 1200);
         });
     }
-    // Hàm chuyển đổi chuỗi ngày bất kỳ về định dạng YYYY-MM-DD cho input[type=date]
-function formatDateForInput(dateStr) {
-    if (!dateStr) return '';
-    
-    // Nếu đã là chuỗi ISO chứa 'T' (ví dụ 2026-09-26T00:00:00.000Z)
-    if (typeof dateStr === 'string' && dateStr.includes('T')) {
-        return dateStr.split('T')[0];
-    }
-    
-    // Nếu là định dạng DD/MM/YYYY hoặc DD-MM-YYYY
-    let parts = String(dateStr).trim().split(/[/.-]/);
-    if (parts.length === 3) {
-        // Trường hợp YYYY/MM/DD
-        if (parts[0].length === 4) {
-            let y = parts[0];
-            let m = parts[1].padStart(2, '0');
-            let d = parts[2].padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        } 
-        // Trường hợp DD/MM/YYYY
-        else if (parts[2].length === 4) {
-            let d = parts[0].padStart(2, '0');
-            let m = parts[1].padStart(2, '0');
-            let y = parts[2];
-            return `${y}-${m}-${d}`;
-        }
-    }
-    
-    // Thử dùng Date() chuẩn
-    let d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-        let year = d.getFullYear();
-        let month = String(d.getMonth() + 1).padStart(2, '0');
-        let day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-    
-    return '';
-}
 
     // XỬ LÝ TẢI FILE EXCEL LÊN SHEET
     function handleExcelUpload(event) {
