@@ -32,25 +32,24 @@
             border-spacing: 0;
         }
 
-        /* 3. Tiêu đề cột và ô dữ liệu - Cắt chữ dài bằng dấu ... */
-/* 1. Tiêu đề và ô dữ liệu đều cho phép thu nhỏ tối đa */
-#dataTable th, 
-#dataTable td {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    box-sizing: border-box !important;
-    padding: 8px 6px !important;
-}
+        /* 3. Tiêu đề và ô dữ liệu cho phép thu nhỏ tối đa */
+        #dataTable th, 
+        #dataTable td {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            box-sizing: border-box !important;
+            padding: 8px 6px !important;
+        }
 
-/* 2. Ép thẻ th cho phép co lại nhỏ hơn văn bản tiêu đề */
-#dataTable th {
-    position: relative !important;
-    user-select: none;
-    -webkit-user-select: none;
-    background-color: #f1f5f9;
-    min-width: 0 !important; /* Xóa bỏ giới hạn kích thước chữ tối thiểu của tiêu đề */
-}
+        /* 4. Ép thẻ th cho phép co lại nhỏ hơn văn bản tiêu đề */
+        #dataTable th {
+            position: relative !important;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #f1f5f9;
+            min-width: 0 !important;
+        }
 
         /* 5. Vạch kéo Resizer ở cạnh phải mỗi cột */
         .resizer {
@@ -293,7 +292,7 @@
 
     // KHAI BÁO BIẾN TOÀN CỤC
     let currentMode = 'BAN_HANG';
-    let rawData = [];
+    let rawData = []; // Mảng chứa object { sheetRowIndex, values }
     let filteredData = [];
     let currentPage = 1;
     let pageSize = 50;
@@ -326,13 +325,19 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    // TẢI DỮ LIỆU TỪ GOOGLE APPS SCRIPT VỀ
+    // TẢI DỮ LIỆU TỪ GOOGLE APPS SCRIPT VỀ (ĐÃ SỬA: LƯU VỊ TRÍ DÒNG THỰC TẾ)
     function loadDataFromSheet() {
         showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${currentMode}`)
             .then(res => res.json())
             .then(data => {
-                rawData = data.slice(1);
+                // Tiêu đề nằm ở dòng 1, dữ liệu bắt đầu từ dòng 2 (index + 2)
+                rawData = data.slice(1).map((row, index) => {
+                    return {
+                        sheetRowIndex: index + 2,
+                        values: row
+                    };
+                });
                 filteredData = [...rawData];
                 currentPage = 1;
                 renderTableHeader();
@@ -382,7 +387,7 @@
         }).format(num);
     }
 
-    // XỬ LÝ BỘ LỌC (TÌM KIẾM THEO TỪ KHÓA, KHÁCH HÀNG, NGÀY THÁNG)
+    // XỬ LÝ BỘ LỌC
     function applyFilters() {
         let kw = document.getElementById('globalSearchInput').value.toLowerCase();
         let kwCustomer = document.getElementById('customerFilterInput').value.toLowerCase();
@@ -393,7 +398,8 @@
         let toDate = toDateStr ? new Date(toDateStr) : null;
         let activeCols = getActiveColumns();
 
-        filteredData = rawData.filter(row => {
+        filteredData = rawData.filter(item => {
+            let row = item.values;
             let rowText = row.join(" ").toLowerCase();
             if (kw && !rowText.includes(kw)) return false;
 
@@ -450,7 +456,7 @@
         let end = start + pageSize;
         let pageData = filteredData.slice(start, end);
         
-        pageData.forEach((row, idx) => appendRowToTable(row, start + idx + 2));
+        pageData.forEach((item) => appendRowToTable(item.values, item.sheetRowIndex));
         
         document.getElementById('rowCountBadge').innerText = `Hiển thị: ${filteredData.length} / ${rawData.length} dòng`;
         renderPaginationControls();
@@ -510,8 +516,8 @@
         
         activeCols.forEach((col, i) => {
             if (col.numeric && !col.percent) {
-                let sum = filteredData.reduce((acc, row) => {
-                    let val = String(row[i] || '0').replace(/[,.]/g, ''); 
+                let sum = filteredData.reduce((acc, item) => {
+                    let val = String(item.values[i] || '0').replace(/[,.]/g, ''); 
                     let num = parseFloat(val);
                     return acc + (isNaN(num) ? 0 : num);
                 }, 0);
@@ -559,62 +565,59 @@
         ul.appendChild(nextLi);
     }
 
-    // HÀM CHO PHÉP KÉO GIÃN ĐỘ RỘNG CÁC CỘT (RESIZER)
-function initResizer() {
-    const thElms = document.querySelectorAll('#dataTable th');
-    
-    thElms.forEach(function(th, colIndex) {
-        let resizer = th.querySelector('.resizer');
-        if (!resizer) return;
+    // RESIZER CHO CỘT
+    function initResizer() {
+        const thElms = document.querySelectorAll('#dataTable th');
+        
+        thElms.forEach(function(th, colIndex) {
+            let resizer = th.querySelector('.resizer');
+            if (!resizer) return;
 
-        resizer.addEventListener('mousedown', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+            resizer.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-            let startX = e.pageX;
-            let startWidth = th.offsetWidth;
+                let startX = e.pageX;
+                let startWidth = th.offsetWidth;
 
-            resizer.classList.add('resizing');
+                resizer.classList.add('resizing');
 
-            function mouseMoveHandler(e) {
-                // Cho phép co nhỏ về đến 20px (kể cả tiêu đề chữ dài cỡ nào)
-                let newWidth = Math.max(20, startWidth + (e.pageX - startX));
-                
-                // Ép kích thước tiêu đề th
-                th.style.setProperty('width', `${newWidth}px`, 'important');
-                th.style.setProperty('min-width', `${newWidth}px`, 'important');
-                th.style.setProperty('max-width', `${newWidth}px`, 'important');
+                function mouseMoveHandler(e) {
+                    let newWidth = Math.max(20, startWidth + (e.pageX - startX));
+                    
+                    th.style.setProperty('width', `${newWidth}px`, 'important');
+                    th.style.setProperty('min-width', `${newWidth}px`, 'important');
+                    th.style.setProperty('max-width', `${newWidth}px`, 'important');
 
-                // Ép đồng bộ xuống tất cả các ô td cùng cột bên dưới
-                const rows = document.querySelectorAll('#dataTable tbody tr, #dataTable tfoot tr');
-                rows.forEach(row => {
-                    if (row.cells[colIndex]) {
-                        row.cells[colIndex].style.setProperty('width', `${newWidth}px`, 'important');
-                        row.cells[colIndex].style.setProperty('min-width', `${newWidth}px`, 'important');
-                        row.cells[colIndex].style.setProperty('max-width', `${newWidth}px`, 'important');
-                    }
-                });
-            }
+                    const rows = document.querySelectorAll('#dataTable tbody tr, #dataTable tfoot tr');
+                    rows.forEach(row => {
+                        if (row.cells[colIndex]) {
+                            row.cells[colIndex].style.setProperty('width', `${newWidth}px`, 'important');
+                            row.cells[colIndex].style.setProperty('min-width', `${newWidth}px`, 'important');
+                            row.cells[colIndex].style.setProperty('max-width', `${newWidth}px`, 'important');
+                        }
+                    });
+                }
 
-            function mouseUpHandler() {
-                document.removeEventListener('mousemove', mouseMoveHandler);
-                document.removeEventListener('mouseup', mouseUpHandler);
-                resizer.classList.remove('resizing');
-            }
+                function mouseUpHandler() {
+                    document.removeEventListener('mousemove', mouseMoveHandler);
+                    document.removeEventListener('mouseup', mouseUpHandler);
+                    resizer.classList.remove('resizing');
+                }
 
-            document.addEventListener('mousemove', mouseMoveHandler);
-            document.addEventListener('mouseup', mouseUpHandler);
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+            });
         });
-    });
-}
+    }
 
-    // CHUYỂN ĐẾN TRANG CỤ THỂ
+    // CHUYỂN TRANG
     function goToPage(page) {
         currentPage = page;
         renderTablePage();
     }
 
-    // THAY ĐỔI SỐ DÒNG HIỂN THỊ / TRANG
+    // THAY ĐỔI SỐ DÒNG HIỂN THỊ
     function changePageSize() {
         pageSize = parseInt(document.getElementById('pageSizeSelect').value);
         currentPage = 1;
