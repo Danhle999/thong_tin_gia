@@ -43,7 +43,7 @@
         }
 
         /* Sticky cho Tiêu đề bảng */
-        #dataTable thead tr:first-child th {
+        #dataTable thead tr.header-row th {
             position: sticky !important;
             top: 0;
             z-index: 12;
@@ -53,7 +53,7 @@
         /* Sticky cho Hàng Lọc Cột */
         #dataTable thead tr.filter-row th {
             position: sticky !important;
-            top: 37px;
+            top: 35px;
             z-index: 11;
             background-color: #e2e8f0;
             padding: 3px 4px !important;
@@ -323,7 +323,7 @@
     let currentMode = 'BAN_HANG';
     let rawData = []; 
     let filteredData = [];
-    let columnFilters = {}; // Lưu điều kiện lọc riêng cho từng cột
+    let columnFilters = {}; 
     let currentPage = 1;
     let pageSize = 50;
 
@@ -381,7 +381,7 @@
         let thead = document.getElementById('tableHeader');
         
         // Dòng 1: Tiêu đề cột
-        let htmlHeader = '<tr><th style="width: 80px;" class="text-center">Thao tác</th>';
+        let htmlHeader = '<tr class="header-row"><th style="width: 80px;" class="text-center">Thao tác</th>';
         cols.forEach((col) => {
             let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
             htmlHeader += `<th style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
@@ -415,7 +415,7 @@
         applyAllFilters();
     }
 
-    // THỰC HIỆN KẾT HỢP CẢ 2 BỘ LỌC (LỌC TRÊN & LỌC THEO CỘT)
+    // THỰC HIỆN KẾT HỢP CẢ 2 BỘ LỌC
     function applyAllFilters() {
         let kw = document.getElementById('globalSearchInput').value.toLowerCase();
         let kwCustomer = document.getElementById('customerFilterInput').value.toLowerCase();
@@ -656,10 +656,12 @@
         ul.appendChild(nextLi);
     }
 
+    // HÀM RESIZER SỬA LỖI ĐỒNG BỘ TOÀN BỘ CỘT
     function initResizer() {
-        const thElms = document.querySelectorAll('#dataTable thead tr:first-child th');
+        const headerThs = document.querySelectorAll('#dataTable thead tr.header-row th');
+        const filterThs = document.querySelectorAll('#dataTable thead tr.filter-row th');
         
-        thElms.forEach(function(th, colIndex) {
+        headerThs.forEach(function(th, colIndex) {
             let resizer = th.querySelector('.resizer');
             if (!resizer) return;
 
@@ -673,22 +675,28 @@
                 resizer.classList.add('resizing');
 
                 function mouseMoveHandler(e) {
-                    let newWidth = Math.max(20, startWidth + (e.pageX - startX));
+                    let newWidth = Math.max(30, startWidth + (e.pageX - startX));
+                    let widthPx = `${newWidth}px`;
                     
-                    th.style.setProperty('width', `${newWidth}px`, 'important');
-                    th.style.setProperty('min-width', `${newWidth}px`, 'important');
+                    // 1. Đổi kích thước hàng tiêu đề
+                    th.style.setProperty('width', widthPx, 'important');
+                    th.style.setProperty('min-width', widthPx, 'important');
+                    th.style.setProperty('max-width', widthPx, 'important');
 
-                    const filterTh = document.querySelectorAll('#dataTable thead tr.filter-row th')[colIndex];
-                    if (filterTh) {
-                        filterTh.style.setProperty('width', `${newWidth}px`, 'important');
-                        filterTh.style.setProperty('min-width', `${newWidth}px`, 'important');
+                    // 2. Đổi kích thước hàng lọc tương ứng
+                    if (filterThs[colIndex]) {
+                        filterThs[colIndex].style.setProperty('width', widthPx, 'important');
+                        filterThs[colIndex].style.setProperty('min-width', widthPx, 'important');
+                        filterThs[colIndex].style.setProperty('max-width', widthPx, 'important');
                     }
 
+                    // 3. Đổi kích thước tất cả các ô tbody & tfoot tương ứng
                     const rows = document.querySelectorAll('#dataTable tbody tr, #dataTable tfoot tr');
                     rows.forEach(row => {
                         if (row.cells[colIndex]) {
-                            row.cells[colIndex].style.setProperty('width', `${newWidth}px`, 'important');
-                            row.cells[colIndex].style.setProperty('min-width', `${newWidth}px`, 'important');
+                            row.cells[colIndex].style.setProperty('width', widthPx, 'important');
+                            row.cells[colIndex].style.setProperty('min-width', widthPx, 'important');
+                            row.cells[colIndex].style.setProperty('max-width', widthPx, 'important');
                         }
                     });
                 }
