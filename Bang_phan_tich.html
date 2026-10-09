@@ -1,4 +1,4 @@
-la<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -81,7 +81,7 @@ la<!DOCTYPE html>
         /* Sticky cho Hàng Lọc Cột */
         #dataTable thead tr.filter-row th {
             position: sticky !important;
-            top: 45px; /* Điều chỉnh vị trí sticky cho phù hợp tiêu đề 2 dòng */
+            top: 45px;
             z-index: 11;
             background-color: #e2e8f0;
             padding: 3px 4px !important;
@@ -184,7 +184,7 @@ la<!DOCTYPE html>
 
 <div class="container-fluid p-2 h-100">
     <div class="table-container">
-        <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 6 SHEET -->
+        <!-- HEADER TRANG & NÚT CHUYỂN TAB (ĐÃ THÊM TAB AIO ĐẮT SAU TAB LCD) -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
                 <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu</h4>
@@ -200,6 +200,10 @@ la<!DOCTYPE html>
                 </button>
                 <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">
                     <i class="fa-solid fa-tv me-1"></i> LCD
+                </button>
+                <!-- TAB AIO MỚI TẠO NẰM PHÍA SAU LCD -->
+                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">
+                    <i class="fa-solid fa-computer me-1"></i> AIO
                 </button>
                 <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">
                     <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
@@ -317,7 +321,7 @@ la<!DOCTYPE html>
         ],
         'LCD': [
             { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand' },
-            { label: 'Kích Thước (inch)', numeric: true }, // THÊM numeric: true Ở ĐÂY
+            { label: 'Kích Thước (inch)', numeric: true },
             { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
             { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1' }, { label: 'Cổng Xuất Hình 2' },
             { label: 'Cổng Xuất Hình 3' }, { label: 'Cổng Khác' }, { label: 'LOA' },
@@ -326,6 +330,35 @@ la<!DOCTYPE html>
             { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'So_Luong NHAP TONG', numeric: true },
             { label: 'KHO KTB', numeric: true }, { label: 'số lượng bán ra từ ngày', numeric: true },
             { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true }, { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true }
+        ],
+        // CẤU HÌNH DỮ LIỆU CỘT CHO TAB AIO MỚI TẠO (27 CỘT)
+        'AIO': [
+            { label: 'NCC' }, 
+            { label: 'Mã Sản Phẩm (SKU) NPP, Hãng' }, 
+            { label: 'Mã KTB' }, 
+            { label: 'Brand' }, 
+            { label: 'chip' }, 
+            { label: 'ram' }, 
+            { label: 'ssd' }, 
+            { label: 'win' }, 
+            { label: 'màn hình' }, 
+            { label: 'Bao_Hanh' }, 
+            { label: 'office' }, 
+            { label: 'So_Luong NHAP TONG', numeric: true }, 
+            { label: 'So_Luong TON', numeric: true }, 
+            { label: 'SL BÁN TỪ NGÀY', numeric: true }, 
+            { label: '% Loi Nhuan Công Nợ', numeric: true, percent: true }, 
+            { label: 'Hàng gửi NPP' }, 
+            { label: 'COST_KTB', numeric: true }, 
+            { label: 'GIÁ NHẬP CŨ(VNĐ)', numeric: true }, 
+            { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true }, 
+            { label: 'GIÁ NHẬP MỚI(VNĐ)', numeric: true }, 
+            { label: '% Loi Nhuan Tiền Mặt', numeric: true, percent: true }, 
+            { label: 'GIÁ BÁN KTB TIỀN MẶT', numeric: true }, 
+            { label: 'GIÁ BÁN KTB CÔNG NỢ', numeric: true }, 
+            { label: 'GIÁ EU', numeric: true }, 
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, 
+            { label: 'NGÀY NHẬP GẦN NHẤT', date: true }
         ],
         'BAN_HANG': [
             { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
@@ -363,13 +396,14 @@ la<!DOCTYPE html>
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
         });
         
         let btnObj = {
             'LAPTOP': { id: 'btnModeLaptop', cls: 'btn-warning' },
             'PC': { id: 'btnModePc', cls: 'btn-dark' },
             'LCD': { id: 'btnModeLcd', cls: 'btn-danger' },
+            'AIO': { id: 'btnModeAio', cls: 'btn-secondary' },
             'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
             'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' }
@@ -432,14 +466,12 @@ la<!DOCTYPE html>
         filteredData = [...rawData];
     }
 
-    // TỐI ƯU KÍCH THƯỚC BAN ĐẦU CỦA CỘT VÀ WRAP TEXT TIÊU ĐỀ
     function renderTableHeader() {
         let cols = getActiveColumns();
         let thead = document.getElementById('tableHeader');
         
         let htmlHeader = '<tr class="header-row"><th style="width: 75px;" class="text-center">Thao tác</th>';
         cols.forEach((col) => {
-            // Thiết lập độ rộng cột gọn gàng vừa vặn khi tải trang
             let defaultWidth = col.desc ? '220px' : (col.customer || col.ncc) ? '170px' : '110px';
             htmlHeader += `<th style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
         });
@@ -455,7 +487,6 @@ la<!DOCTYPE html>
 
         thead.innerHTML = htmlHeader + htmlFilter;
         
-        // Cập nhật lại vị trí sticky của hàng lọc cột dựa trên chiều cao tiêu đề wrap text
         setTimeout(() => {
             let headerRow = thead.querySelector('tr.header-row');
             if (headerRow) {
@@ -626,59 +657,56 @@ la<!DOCTYPE html>
         renderTableFooter();
     }
 
-function createRowNode(row, sheetRowIndex) {
-    let activeCols = getActiveColumns();
-    let tr = document.createElement('tr');
-    tr.setAttribute('data-sheet-row', sheetRowIndex);
-    
-    let actionTd = document.createElement('td');
-    actionTd.className = 'text-center';
-    actionTd.innerHTML = `
-        <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
-    `;
-    tr.appendChild(actionTd);
-
-    activeCols.forEach((col, i) => {
-        let td = document.createElement('td');
-        let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
-        td.setAttribute('data-raw-val', val);
-        td.setAttribute('title', val);
+    function createRowNode(row, sheetRowIndex) {
+        let activeCols = getActiveColumns();
+        let tr = document.createElement('tr');
+        tr.setAttribute('data-sheet-row', sheetRowIndex);
         
-        if (col.numeric) {
-            td.className = 'text-right fw-semibold';
-            // Nếu là số thập phân inch (ví dụ 21.5, 23.8) thì giữ nguyên, còn tiền tệ/số lượng mới formatVN
-            if (col.percent) {
-                td.innerText = formatPercent(val);
-            } else if (typeof val === 'number' && !Number.isInteger(val) && val < 100) {
-                td.innerText = val; // Hiển thị nguyên con số kích thước màn hình
+        let actionTd = document.createElement('td');
+        actionTd.className = 'text-center';
+        actionTd.innerHTML = `
+            <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
+        `;
+        tr.appendChild(actionTd);
+
+        activeCols.forEach((col, i) => {
+            let td = document.createElement('td');
+            let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
+            td.setAttribute('data-raw-val', val);
+            td.setAttribute('title', val);
+            
+            if (col.numeric) {
+                td.className = 'text-right fw-semibold';
+                if (col.percent) {
+                    td.innerText = formatPercent(val);
+                } else if (typeof val === 'number' && !Number.isInteger(val) && val < 100) {
+                    td.innerText = val;
+                } else {
+                    td.innerText = formatNumberVN(val);
+                }
+            } else if (col.date) {
+                td.className = 'text-center';
+                if (val && typeof val === 'string' && val.includes('T')) {
+                    let d = new Date(val);
+                    td.innerText = !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
+                } else {
+                    td.innerText = val;
+                }
             } else {
-                td.innerText = formatNumberVN(val);
-            }
-        } else if (col.date) { // CHỈ ÉP KIỂU NGÀY THÁNG KHI CỘT ĐƯỢC CẤU HÌNH date: true
-            td.className = 'text-center';
-            if (val && typeof val === 'string' && val.includes('T')) {
-                let d = new Date(val);
-                td.innerText = !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
-            } else {
+                if (typeof val === 'string' && val.includes('T') && val.endsWith('Z')) {
+                    let d = new Date(val);
+                    if (!isNaN(d.getTime())) {
+                        val = d.getDate() + (d.getMonth() > 0 ? '.' + (d.getMonth() + 1) : '');
+                    }
+                }
                 td.innerText = val;
             }
-        } else {
-            // Nếu lỡ bị dính chuỗi ISO ngày tháng do Google Sheets tự convert nhầm ở cột thường
-            if (typeof val === 'string' && val.includes('T') && val.endsWith('Z')) {
-                let d = new Date(val);
-                if (!isNaN(d.getTime())) {
-                    // Chuyển ngược lại lấy số ngày hoặc định dạng gọn
-                    val = d.getDate() + (d.getMonth() > 0 ? '.' + (d.getMonth() + 1) : '');
-                }
-            }
-            td.innerText = val;
-        }
-        
-        tr.appendChild(td);
-    });
-    return tr;
-}
+            
+            tr.appendChild(td);
+        });
+        return tr;
+    }
 
     function renderTableFooter() {
         let activeCols = getActiveColumns();
