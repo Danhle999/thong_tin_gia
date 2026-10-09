@@ -20,7 +20,7 @@
             overflow: hidden !important; 
             background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 16px; /* Tăng kích thước font cơ sở */
+            font-size: 16px;
         }
 
         .table-container {
@@ -50,33 +50,38 @@
             width: max-content !important;
             border-collapse: separate;
             border-spacing: 0;
-            font-size: 1.05rem; /* TĂNG SIZE CHỮ TRONG BẢNG */
+            font-size: 1.05rem;
         }
 
-        /* 3. Tiêu đề và ô dữ liệu */
-        #dataTable th, 
-        #dataTable td {
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            box-sizing: border-box !important;
-            padding: 8px 8px !important; /* Tăng padding nhẹ cho chữ lớn thoáng mắt */
-        }
-
-        /* Sticky cho Tiêu đề bảng */
+        /* 3. Tiêu đề (Bật Wrap Text cho tiêu đề) */
         #dataTable thead tr.header-row th {
             position: sticky !important;
             top: 0;
             z-index: 12;
             background-color: #f1f5f9;
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             font-weight: 700;
+            white-space: normal !important; /* CHO PHÉP WRAP TEXT TỰ ĐỘNG XUỐNG DÒNG */
+            word-wrap: break-word !important;
+            vertical-align: middle !important;
+            text-align: center;
+            line-height: 1.2;
+            padding: 6px 4px !important;
+        }
+
+        /* Ô dữ liệu dưới bảng */
+        #dataTable td {
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            box-sizing: border-box !important;
+            padding: 6px 8px !important;
         }
 
         /* Sticky cho Hàng Lọc Cột */
         #dataTable thead tr.filter-row th {
             position: sticky !important;
-            top: 39px;
+            top: 45px; /* Điều chỉnh vị trí sticky cho phù hợp tiêu đề 2 dòng */
             z-index: 11;
             background-color: #e2e8f0;
             padding: 3px 4px !important;
@@ -106,14 +111,14 @@
             background-color: rgba(13, 110, 253, 0.1);
         }
 
-        /* Ô nhập liệu khi Edit hoặc Filter trong cột (Tăng font chữ) */
+        /* Ô nhập liệu khi Edit hoặc Filter trong cột */
         #dataTable td input.editable-input,
         .column-filter-input {
             width: 100% !important;
             box-sizing: border-box !important;
             border: 1px solid #ced4da;
-            padding: 3px 6px;
-            font-size: 1.05rem !important; /* TĂNG SIZE CHỮ Ô NHẬP LỌC & EDIT */
+            padding: 2px 4px;
+            font-size: 0.95rem !important;
             border-radius: 3px;
         }
 
@@ -179,7 +184,7 @@
 
 <div class="container-fluid p-2 h-100">
     <div class="table-container">
-        <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 6 SHEET (ĐÃ ĐỔI LAPTOP, PC, LCD LÊN ĐẦU) -->
+        <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 6 SHEET -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
                 <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu</h4>
@@ -249,7 +254,7 @@
             </div>
         </div>
 
-        <!-- BẢNG DỮ LIỆU (DUY NHẤT 1 THANH CUỘN ĐƯỢC ĐẶT Ở ĐÂY) -->
+        <!-- BẢNG DỮ LIỆU -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle" id="dataTable">
                 <thead id="tableHeader"></thead>
@@ -344,7 +349,6 @@
         ]
     };
 
-    // MẶC ĐỊNH SẼ NẠP VÀ HIỂN THỊ SHEET LAPTOP TRƯỚC
     let currentMode = 'LAPTOP';
     let rawData = []; 
     let filteredData = [];
@@ -357,7 +361,6 @@
     function switchTableMode(mode) {
         currentMode = mode;
         
-        // Reset CSS nút tab active
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
             btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
         });
@@ -428,13 +431,15 @@
         filteredData = [...rawData];
     }
 
+    // TỐI ƯU KÍCH THƯỚC BAN ĐẦU CỦA CỘT VÀ WRAP TEXT TIÊU ĐỀ
     function renderTableHeader() {
         let cols = getActiveColumns();
         let thead = document.getElementById('tableHeader');
         
-        let htmlHeader = '<tr class="header-row"><th style="width: 80px;" class="text-center">Thao tác</th>';
+        let htmlHeader = '<tr class="header-row"><th style="width: 75px;" class="text-center">Thao tác</th>';
         cols.forEach((col) => {
-            let defaultWidth = col.desc ? '300px' : (col.customer || col.ncc) ? '220px' : '160px';
+            // Thiết lập độ rộng cột gọn gàng vừa vặn khi tải trang
+            let defaultWidth = col.desc ? '220px' : (col.customer || col.ncc) ? '170px' : '110px';
             htmlHeader += `<th style="width: ${defaultWidth};">${col.label} <div class="resizer"></div></th>`;
         });
         htmlHeader += '</tr>';
@@ -442,12 +447,27 @@
         let htmlFilter = '<tr class="filter-row"><th class="text-center"><i class="fa-solid fa-filter text-muted"></i></th>';
         cols.forEach((col, idx) => {
             let currentVal = columnFilters[idx] || '';
-            let placeholder = 'Lọc ' + col.label.toLowerCase() + '...';
+            let placeholder = 'Lọc...';
             htmlFilter += `<th><input type="text" class="column-filter-input" data-col-idx="${idx}" value="${currentVal}" placeholder="${placeholder}" onkeyup="onColumnFilterChange(this)"></th>`;
         });
         htmlFilter += '</tr>';
 
         thead.innerHTML = htmlHeader + htmlFilter;
+        
+        // Cập nhật lại vị trí sticky của hàng lọc cột dựa trên chiều cao tiêu đề wrap text
+        setTimeout(() => {
+            let headerRow = thead.querySelector('tr.header-row');
+            if (headerRow) {
+                let h = headerRow.offsetHeight;
+                let filterRow = thead.querySelector('tr.filter-row');
+                if (filterRow) {
+                    filterRow.querySelectorAll('th').forEach(th => {
+                        th.style.top = `${h}px`;
+                    });
+                }
+            }
+        }, 50);
+
         initResizer();
     }
 
@@ -833,7 +853,7 @@
     function addRow() {
         var activeCols = getActiveColumns();
         var emptyRow = new Array(activeCols.length).fill('');
-        
+
         showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
 
         var formData = new URLSearchParams();
