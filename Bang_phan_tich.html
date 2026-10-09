@@ -657,56 +657,57 @@
         renderTableFooter();
     }
 
-    function createRowNode(row, sheetRowIndex) {
-        let activeCols = getActiveColumns();
-        let tr = document.createElement('tr');
-        tr.setAttribute('data-sheet-row', sheetRowIndex);
-        
-        let actionTd = document.createElement('td');
-        actionTd.className = 'text-center';
-        actionTd.innerHTML = `
-            <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
-        `;
-        tr.appendChild(actionTd);
+function createRowNode(row, sheetRowIndex) {
+    let activeCols = getActiveColumns();
+    let tr = document.createElement('tr');
+    tr.setAttribute('data-sheet-row', sheetRowIndex);
+    
+    let actionTd = document.createElement('td');
+    actionTd.className = 'text-center';
+    actionTd.innerHTML = `
+        <button class="btn btn-sm btn-outline-primary btn-edit" onclick="editRow(this)" title="Sửa dòng này"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn btn-sm btn-success btn-save" style="display:none;" onclick="saveRow(this)" title="Lưu lại"><i class="fa-solid fa-floppy-disk"></i></button>
+    `;
+    tr.appendChild(actionTd);
 
-        activeCols.forEach((col, i) => {
-            let td = document.createElement('td');
-            let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
-            td.setAttribute('data-raw-val', val);
-            td.setAttribute('title', val);
-            
-            if (col.numeric) {
-                td.className = 'text-right fw-semibold';
-                if (col.percent) {
-                    td.innerText = formatPercent(val);
-                } else if (typeof val === 'number' && !Number.isInteger(val) && val < 100) {
-                    td.innerText = val;
-                } else {
-                    td.innerText = formatNumberVN(val);
-                }
-            } else if (col.date) {
-                td.className = 'text-center';
-                if (val && typeof val === 'string' && val.includes('T')) {
-                    let d = new Date(val);
+    activeCols.forEach((col, i) => {
+        let td = document.createElement('td');
+        let val = row[i] !== undefined && row[i] !== null ? row[i] : '';
+        td.setAttribute('data-raw-val', val);
+        td.setAttribute('title', val);
+        
+        if (col.numeric) {
+            td.className = 'text-right fw-semibold';
+            if (col.percent) {
+                td.innerText = formatPercent(val);
+            } else if (typeof val === 'number' && !Number.isInteger(val) && val < 100) {
+                td.innerText = val;
+            } else {
+                td.innerText = formatNumberVN(val);
+            }
+        } else if (col.date) {
+            td.className = 'text-center';
+            if (val) {
+                let d = new Date(val);
+                // Nếu là dạng chuỗi ISO có chữ T
+                if (typeof val === 'string' && val.includes('T')) {
                     td.innerText = !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
+                } else if (!isNaN(d.getTime()) && isNaN(val)) {
+                    td.innerText = d.toLocaleDateString('vi-VN');
                 } else {
                     td.innerText = val;
                 }
             } else {
-                if (typeof val === 'string' && val.includes('T') && val.endsWith('Z')) {
-                    let d = new Date(val);
-                    if (!isNaN(d.getTime())) {
-                        val = d.getDate() + (d.getMonth() > 0 ? '.' + (d.getMonth() + 1) : '');
-                    }
-                }
-                td.innerText = val;
+                td.innerText = '';
             }
-            
-            tr.appendChild(td);
-        });
-        return tr;
-    }
+        } else {
+            td.innerText = val;
+        }
+        
+        tr.appendChild(td);
+    });
+    return tr;
+}
 
     function renderTableFooter() {
         let activeCols = getActiveColumns();
