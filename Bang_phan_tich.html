@@ -12,16 +12,35 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .table-container { background: #ffffff; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        /* Ép toàn bộ trang không tạo thêm thanh cuộn ngoài */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden !important; 
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .table-container {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
         
-        /* 1. Khung bao ngoài bảng */
+        /* 1. KHUNG BAO BẢNG CÓ THANH CUỘN DUY NHẤT */
         .table-responsive {
+            flex: 1 1 auto;
             overflow-x: auto !important;
             overflow-y: auto !important;
-            max-height: calc(100vh - 220px) !important;
             width: 100% !important;
             border: 1px solid #dee2e6;
+            margin-bottom: 10px;
         }
 
         /* 2. Cấu hình bảng co dãn linh hoạt */
@@ -121,9 +140,10 @@
         .filter-card { 
             background: #eef2f7; 
             border-radius: 6px; 
-            padding: 12px 15px; 
-            margin-bottom: 15px; 
+            padding: 10px 15px; 
+            margin-bottom: 10px; 
             border: 1px solid #cbd5e1;
+            flex-shrink: 0;
         }
 
         .pagination-container {
@@ -132,9 +152,9 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
-            margin-top: 15px;
-            padding-top: 10px;
+            padding-top: 8px;
             border-top: 1px solid #dee2e6;
+            flex-shrink: 0;
         }
 
         .view-mode-btn-group .btn { font-weight: 600; }
@@ -151,10 +171,10 @@
     </div>
 </div>
 
-<div class="container-fluid my-3">
+<div class="container-fluid p-2 h-100">
     <div class="table-container">
         <!-- HEADER TRANG & NÚT CHUYỂN TAB CẢ 6 SHEET -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
                 <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu</h4>
                 <small class="text-muted" id="modeDescription">Đang hiển thị Trang tính: BAN_HANG (17 Cột)</small>
@@ -184,33 +204,33 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 / 0 dòng</span>
         </div>
 
-        <!-- BỘ LỌC 1: BỘ LỌC TỔNG HỢP / NGÀY THÁNG PHÍA TRÊN -->
+        <!-- BỘ LỌC 1: PHÍA TRÊN -->
         <div class="filter-card">
             <div class="row g-2 align-items-center">
                 <div class="col-md-3">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh:</label>
                     <input type="text" id="globalSearchInput" class="form-control form-control-sm" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyAllFilters()">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Từ ngày:</label>
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar me-1"></i>Từ ngày:</label>
                     <input type="date" id="fromDateInput" class="form-control form-control-sm" onchange="applyAllFilters()">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar me-1"></i>Đến ngày:</label>
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar me-1"></i>Đến ngày:</label>
                     <input type="date" id="toDateInput" class="form-control form-control-sm" onchange="applyAllFilters()">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
                     <input type="text" id="customerFilterInput" class="form-control form-control-sm" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyAllFilters()">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-sm btn-secondary w-100 mt-3" onclick="resetAllFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa tất cả bộ lọc</button>
+                    <button class="btn btn-sm btn-secondary w-100" onclick="resetAllFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa tất cả bộ lọc</button>
                 </div>
             </div>
         </div>
         
         <!-- NÚT THAO TÁC -->
-        <div class="row mb-3">
+        <div class="row mb-2" style="flex-shrink: 0;">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
                 <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet()"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
@@ -223,7 +243,7 @@
             </div>
         </div>
 
-        <!-- BẢNG DỮ LIỆU (TÍCH HỢP BỘ LỌC 2: Ô LỌC DƯỚI TỪNG TÊN CỘT) -->
+        <!-- BẢNG DỮ LIỆU (DUY NHẤT 1 THANH CUỘN ĐƯỢC ĐẶT Ở ĐÂY) -->
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle" id="dataTable">
                 <thead id="tableHeader"></thead>
@@ -256,7 +276,6 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxy-k8aQWyknyTnDVLm9CrKO9C85viGIAJ3VhhFt_Gk35kIXBIN-kUeXycd8Bs-VM/exec";
     
-    // Bảng cấu hình chi tiết cho cả 6 Sheet
     const SHEET_CONFIGS = {
         'BAN_HANG': [
             { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
@@ -319,7 +338,6 @@
         ]
     };
 
-    // KHAI BÁO BIẾN TOÀN CỤC
     let currentMode = 'BAN_HANG';
     let rawData = []; 
     let filteredData = [];
@@ -375,12 +393,10 @@
             });
     }
 
-    // VẼ HEADER BẢNG GỒM DÒNG TÊN CỘT + DÒNG Ô LỌC CHI TIẾT THEO CỘT
     function renderTableHeader() {
         let cols = getActiveColumns();
         let thead = document.getElementById('tableHeader');
         
-        // Dòng 1: Tiêu đề cột
         let htmlHeader = '<tr class="header-row"><th style="width: 80px;" class="text-center">Thao tác</th>';
         cols.forEach((col) => {
             let defaultWidth = col.desc ? '280px' : (col.customer || col.ncc) ? '200px' : '140px';
@@ -388,7 +404,6 @@
         });
         htmlHeader += '</tr>';
 
-        // Dòng 2: Ô lọc trực tiếp trên từng cột
         let htmlFilter = '<tr class="filter-row"><th class="text-center"><i class="fa-solid fa-filter text-muted"></i></th>';
         cols.forEach((col, idx) => {
             let currentVal = columnFilters[idx] || '';
@@ -401,7 +416,6 @@
         initResizer();
     }
 
-    // SỰ KIỆN KHI NHẬP TỪ KHÓA VÀO Ô LỌC CỘT
     function onColumnFilterChange(input) {
         let colIdx = parseInt(input.getAttribute('data-col-idx'));
         let val = input.value.trim().toLowerCase();
@@ -415,7 +429,6 @@
         applyAllFilters();
     }
 
-    // THỰC HIỆN KẾT HỢP CẢ 2 BỘ LỌC
     function applyAllFilters() {
         let kw = document.getElementById('globalSearchInput').value.toLowerCase();
         let kwCustomer = document.getElementById('customerFilterInput').value.toLowerCase();
@@ -430,7 +443,6 @@
         filteredData = rawData.filter(item => {
             let row = item.values;
 
-            // 1. Kiểm tra Lọc theo Ô Lọc Cột
             if (filterKeys.length > 0) {
                 let matchColumns = filterKeys.every(colIdx => {
                     let searchVal = columnFilters[colIdx];
@@ -440,11 +452,9 @@
                 if (!matchColumns) return false;
             }
 
-            // 2. Kiểm tra Tìm kiếm nhanh chung
             let rowText = row.join(" ").toLowerCase();
             if (kw && !rowText.includes(kw)) return false;
 
-            // 3. Kiểm tra Tên KH / NCC / Mã
             if (kwCustomer) {
                 let matchCus = false;
                 activeCols.forEach((col, i) => {
@@ -455,7 +465,6 @@
                 if (!matchCus) return false;
             }
 
-            // 4. Kiểm tra Lọc theo Ngày
             if (fromDate || toDate) {
                 let dateIdx = activeCols.findIndex(c => c.date);
                 if (dateIdx !== -1 && row[dateIdx]) {
@@ -482,7 +491,6 @@
         renderTablePage();
     }
 
-    // XÓA TẤT CẢ LỌC
     function resetAllFilters(reload = true) {
         document.getElementById('globalSearchInput').value = '';
         document.getElementById('customerFilterInput').value = '';
@@ -656,7 +664,6 @@
         ul.appendChild(nextLi);
     }
 
-    // HÀM RESIZER SỬA LỖI ĐỒNG BỘ TOÀN BỘ CỘT
     function initResizer() {
         const headerThs = document.querySelectorAll('#dataTable thead tr.header-row th');
         const filterThs = document.querySelectorAll('#dataTable thead tr.filter-row th');
@@ -678,19 +685,16 @@
                     let newWidth = Math.max(30, startWidth + (e.pageX - startX));
                     let widthPx = `${newWidth}px`;
                     
-                    // 1. Đổi kích thước hàng tiêu đề
                     th.style.setProperty('width', widthPx, 'important');
                     th.style.setProperty('min-width', widthPx, 'important');
                     th.style.setProperty('max-width', widthPx, 'important');
 
-                    // 2. Đổi kích thước hàng lọc tương ứng
                     if (filterThs[colIndex]) {
                         filterThs[colIndex].style.setProperty('width', widthPx, 'important');
                         filterThs[colIndex].style.setProperty('min-width', widthPx, 'important');
                         filterThs[colIndex].style.setProperty('max-width', widthPx, 'important');
                     }
 
-                    // 3. Đổi kích thước tất cả các ô tbody & tfoot tương ứng
                     const rows = document.querySelectorAll('#dataTable tbody tr, #dataTable tfoot tr');
                     rows.forEach(row => {
                         if (row.cells[colIndex]) {
