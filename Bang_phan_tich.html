@@ -625,26 +625,29 @@
     }
 
     // CHẾ ĐỘ SỬA DÒNG
-    function editRow(btn) {
-        var tr = btn.closest('tr');
-        var cells = tr.querySelectorAll('td');
-        var activeCols = getActiveColumns();
+// CHẾ ĐỘ SỬA DÒNG (ĐÃ SỬA LỖI HIỂN THỊ NGÀY)
+function editRow(btn) {
+    var tr = btn.closest('tr');
+    var cells = tr.querySelectorAll('td');
+    var activeCols = getActiveColumns();
 
-        for (var i = 1; i < cells.length; i++) {
-            var colIdx = i - 1;
-            var colConfig = activeCols[colIdx];
-            var rawVal = cells[i].getAttribute('data-raw-val') || cells[i].innerText.trim();
+    for (var i = 1; i < cells.length; i++) {
+        var colIdx = i - 1;
+        var colConfig = activeCols[colIdx];
+        var rawVal = cells[i].getAttribute('data-raw-val') || cells[i].innerText.trim();
 
-            if (colConfig && colConfig.date) {
-                cells[i].innerHTML = `<input type="date" class="editable-input" value="${rawVal}">`;
-            } else {
-                cells[i].innerHTML = `<input type="text" class="editable-input" value="${rawVal}">`;
-            }
+        if (colConfig && colConfig.date) {
+            // Chuyển đổi giá trị về chuẩn YYYY-MM-DD để hiển thị lên input date
+            var formattedDate = formatDateForInput(rawVal);
+            cells[i].innerHTML = `<input type="date" class="editable-input" value="${formattedDate}">`;
+        } else {
+            cells[i].innerHTML = `<input type="text" class="editable-input" value="${rawVal}">`;
         }
-
-        tr.querySelector('.btn-edit').style.display = 'none';
-        tr.querySelector('.btn-save').style.display = 'inline-block';
     }
+
+    tr.querySelector('.btn-edit').style.display = 'none';
+    tr.querySelector('.btn-save').style.display = 'inline-block';
+}
 
     // LƯU CẬP NHẬT DÒNG
     function saveRow(btn) {
@@ -721,6 +724,45 @@
             }, 1200);
         });
     }
+    // Hàm chuyển đổi chuỗi ngày bất kỳ về định dạng YYYY-MM-DD cho input[type=date]
+function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    
+    // Nếu đã là chuỗi ISO chứa 'T' (ví dụ 2026-09-26T00:00:00.000Z)
+    if (typeof dateStr === 'string' && dateStr.includes('T')) {
+        return dateStr.split('T')[0];
+    }
+    
+    // Nếu là định dạng DD/MM/YYYY hoặc DD-MM-YYYY
+    let parts = String(dateStr).trim().split(/[/.-]/);
+    if (parts.length === 3) {
+        // Trường hợp YYYY/MM/DD
+        if (parts[0].length === 4) {
+            let y = parts[0];
+            let m = parts[1].padStart(2, '0');
+            let d = parts[2].padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        } 
+        // Trường hợp DD/MM/YYYY
+        else if (parts[2].length === 4) {
+            let d = parts[0].padStart(2, '0');
+            let m = parts[1].padStart(2, '0');
+            let y = parts[2];
+            return `${y}-${m}-${d}`;
+        }
+    }
+    
+    // Thử dùng Date() chuẩn
+    let d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+        let year = d.getFullYear();
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    return '';
+}
 
     // XỬ LÝ TẢI FILE EXCEL LÊN SHEET
     function handleExcelUpload(event) {
