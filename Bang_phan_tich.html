@@ -313,7 +313,7 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-\$1').replace('active', '').trim();
         });
         
         let btnObj = {
@@ -470,7 +470,8 @@
             }
         ];
 
-        // Cột Thao tác trực tiếp thao tác DOM để đổi trạng thái Sửa <-> Lưu cực nhạy
+        // Cột Thao tác: Bấm [ Sửa ] -> Mở khóa dòng, nút chuyển thành [ Lưu ] (màu đỏ). 
+        // Khi chỉnh sửa xong, bấm [ Lưu ] lần nữa -> Ghi dữ liệu lên Google Sheets và khóa dòng lại.
         if (currentMode !== 'THONG_KE_QUY') {
             columnsConfig.push({
                 title: "Thao tác",
@@ -479,7 +480,7 @@
                     let rowData = cell.getRow().getData();
                     let isEditing = rowData._isEditing || false;
                     if (isEditing) {
-                        return `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action" title="Đang mở chỉnh sửa (Bấm để khóa lại)"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
+                        return `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action" title="Bấm để lưu và khóa dòng này"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
                     } else {
                         return `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action" title="Bấm để mở khóa sửa dòng này"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
                     }
@@ -491,20 +492,21 @@
                 cellClick: function(e, cell) {
                     let row = cell.getRow();
                     let rowData = row.getData();
-                    
-                    // Đảo trạng thái
-                    rowData._isEditing = !rowData._isEditing;
-                    
-                    // Cập nhật trực tiếp giao diện nút bấm ngay trên DOM của cell hiện tại
+                    let activeCols = getActiveColumns();
                     let cellEl = cell.getElement();
                     let btn = cellEl.querySelector('button');
-                    
-                    if (rowData._isEditing) {
+
+                    if (!rowData._isEditing) {
+                        // Bước 1: Mở khóa chỉnh sửa dòng
+                        rowData._isEditing = true;
                         btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
                         btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
-                        btn.title = "Đang mở chỉnh sửa (Bấm để khóa lại)";
+                        btn.title = "Bấm để lưu và khóa dòng này";
                         
-                        // Tự động focus vào ô dữ liệu đầu tiên để nhập luôn
+                        // Cập nhật lại row trong table để bật quyền editable
+                        row.update(rowData);
+
+                        // Focus vào ô dữ liệu đầu tiên để gõ luôn
                         let cells = row.getCells();
                         for (let c of cells) {
                             if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
@@ -513,9 +515,23 @@
                             }
                         }
                     } else {
+                        // Bước 2: Bấm Lưu -> Ghi dữ liệu lên Google Sheets và Khóa lại
+                        let fullRowData = [];
+                        for(let i = 0; i < activeCols.length; i++) {
+                            fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
+                        }
+
+                        // Gọi hàm lưu
+                        saveRowToSheet(rowData.sheetRowIndex, fullRowData);
+
+                        // Đổi trạng thái về Khóa
+                        rowData._isEditing = false;
                         btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
                         btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
                         btn.title = "Bấm để mở khóa sửa dòng này";
+                        
+                        // Cập nhật lại row để vô hiệu hóa editor các ô
+                        row.update(rowData);
                     }
                 }
             });
@@ -578,204 +594,4 @@
             rowsToProcess = rawData.slice(1);
         }
 
-        let tableData = rowsToProcess.map((row, rowIndex) => {
-            let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
-            activeCols.forEach((col, index) => {
-                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
-            });
-            return obj;
-        });
-
-        if (table) {
-            table.destroy();
-        }
-
-        table = new Tabulator("#example-table", {
-            data: tableData,
-            layout: "fitData",
-            responsiveLayout: false,
-            height: "100%",
-            columns: columnsConfig,
-            pagination: "local",
-            paginationSize: 50,
-            paginationSizeSelector: [25, 50, 100, 200, 500],
-            movableColumns: true,
-            columnDefaults: {
-                resizable: true,
-            },
-        });
-
-        table.on("dataFiltered", function(filters, rows){
-            document.getElementById('rowCountBadge').innerText = `Hiển thị: ${rows.length} / ${tableData.length} dòng`;
-        });
-
-        table.on("tableBuilt", function() {
-            document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} / ${tableData.length} dòng`;
-        });
-
-        if (currentMode !== 'THONG_KE_QUY') {
-            table.on("cellEdited", function(cell){
-                let rowData = cell.getRow().getData();
-                let sheetRowIndex = rowData.sheetRowIndex;
-                let fullRowData = [];
-                for(let i = 0; i < activeCols.length; i++) {
-                    fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
-                }
-                saveRowToSheet(sheetRowIndex, fullRowData);
-            });
-        }
-    }
-
-    function applyGlobalSearch() {
-        if (!table) return;
-        let kw = document.getElementById('globalSearchInput').value.toLowerCase();
-        let kwCus = document.getElementById('customerFilterInput').value.toLowerCase();
-
-        table.setFilter(function(data){
-            let matchGlobal = true;
-            let matchCus = true;
-
-            if (kw) {
-                matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
-            }
-
-            if (kwCus) {
-                matchCus = Object.entries(data).some(([key, val]) => {
-                    if (key.startsWith('col_')) {
-                        let idx = parseInt(key.replace('col_', ''));
-                        let col = getActiveColumns()[idx];
-                        if (col && (col.customer || col.ncc || col.code)) {
-                            return String(val).toLowerCase().includes(kwCus);
-                        }
-                    }
-                    return false;
-                });
-            }
-
-            return matchGlobal && matchCus;
-        });
-    }
-
-    function resetAllFilters(reload = true) {
-        document.getElementById('globalSearchInput').value = '';
-        document.getElementById('customerFilterInput').value = '';
-        if (table) {
-            table.clearFilter(true);
-            table.clearHeaderFilter();
-        }
-    }
-
-    function saveRowToSheet(sheetRowIndex, fullRowData) {
-        showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
-        var formData = new URLSearchParams();
-        formData.append("payload", JSON.stringify({
-            action: "updateRow",
-            sheetName: currentMode,
-            rowIndex: sheetRowIndex,
-            rowData: fullRowData
-        }));
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
-        }).catch(err => {
-            console.error(err);
-        });
-
-        setTimeout(() => {
-            showLoading(false);
-        }, 900);
-    }
-
-    function addRow() {
-        var activeCols = getActiveColumns();
-        var emptyRow = new Array(activeCols.length).fill('');
-
-        showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
-
-        var formData = new URLSearchParams();
-        formData.append("payload", JSON.stringify({
-            action: "appendRows",
-            sheetName: currentMode,
-            rows: [emptyRow]
-        }));
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
-        }).catch(err => {});
-
-        setTimeout(() => {
-            showLoading(false);
-            loadDataFromSheet();
-        }, 1200);
-    }
-
-    function handleExcelUpload(event) {
-        var file = event.target.files[0];
-        if (!file) return;
-
-        var activeCols = getActiveColumns();
-        var reader = new FileReader();
-        reader.onload = async function(e) {
-            var data = new Uint8Array(e.target.result);
-            var workbook = XLSX.read(data, { type: 'array' });
-            var worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-            var rawRows = excelData.slice(1).filter(r => r.length > 0 && r.some(cell => cell !== null && cell !== ''));
-            if (rawRows.length === 0) {
-                alert("File Excel không chứa dữ liệu!");
-                return;
-            }
-
-            var formattedRows = rawRows.map(row => {
-                var newRow = [];
-                for (var i = 0; i < activeCols.length; i++) {
-                    var cellVal = row[i] !== undefined && row[i] !== null ? row[i] : '';
-                    newRow.push(String(cellVal));
-                }
-                return newRow;
-            });
-
-            showLoading(true, `Đang đẩy ${formattedRows.length} dòng vào Sheet '${currentMode}'...`);
-            
-            var formData = new URLSearchParams();
-            formData.append("payload", JSON.stringify({
-                action: "appendRows",
-                sheetName: currentMode,
-                rows: formattedRows
-            }));
-
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: formData.toString()
-                });
-            } catch (err) {}
-
-            setTimeout(() => {
-                showLoading(false);
-                alert(`Đã hoàn tất tải lên file Excel vào Sheet '${currentMode}'!`);
-                loadDataFromSheet();
-            }, 1500);
-
-            event.target.value = '';
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    window.onload = function() {
-        loadDataFromSheet();
-    };
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+        let tableData = rowsToProcess.map((row, rowIndex)
