@@ -475,13 +475,12 @@
         ];
 
         // Cột nút Sửa với hiệu ứng thay đổi trạng thái khi bấm
-        if (currentMode !== 'THONG_KE_QUY') {
+if (currentMode !== 'THONG_KE_QUY') {
             columnsConfig.push({
                 title: "Sửa",
                 formatter: function(cell) {
                     let rowData = cell.getRow().getData();
                     let isEditing = rowData._isEditing || false;
-                    // Đổi màu và biểu tượng khi bật chế độ sửa
                     let btnClass = isEditing ? "btn-success shadow-sm" : "btn-outline-primary";
                     let iconClass = isEditing ? "fa-check" : "fa-pen";
                     let tooltipText = isEditing ? "Đang mở khóa sửa (Bấm để khóa lại)" : "Bấm để mở khóa sửa dòng này";
@@ -495,12 +494,20 @@
                     let row = cell.getRow();
                     let rowData = row.getData();
                     
-                    // Chuyển đổi trạng thái khóa/mở sửa của dòng
+                    // Đảo trạng thái chỉnh sửa
                     rowData._isEditing = !rowData._isEditing;
-                    row.update(rowData);
                     
-                    // Nếu mở khóa, tự động focus vào ô dữ liệu đầu tiên của dòng
+                    // Tìm trực tiếp nút bấm trong ô hiện tại để đổi giao diện ngay lập tức mà không cần render lại cả bảng
+                    let cellEl = cell.getElement();
+                    let btn = cellEl.querySelector('button');
+                    let icon = btn.querySelector('i');
+                    
                     if (rowData._isEditing) {
+                        btn.className = "btn btn-sm btn-success shadow-sm py-0 px-1 btn-edit-action";
+                        icon.className = "fa-solid fa-check";
+                        btn.title = "Đang mở khóa sửa (Bấm để khóa lại)";
+                        
+                        // Tự động focus vào ô dữ liệu đầu tiên của dòng để cho phép nhập luôn
                         let cells = row.getCells();
                         for (let c of cells) {
                             if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
@@ -508,6 +515,10 @@
                                 break;
                             }
                         }
+                    } else {
+                        btn.className = "btn btn-sm btn-outline-primary py-0 px-1 btn-edit-action";
+                        icon.className = "fa-solid fa-pen";
+                        btn.title = "Bấm để mở khóa sửa dòng này";
                     }
                 }
             });
