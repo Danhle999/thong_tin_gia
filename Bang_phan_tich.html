@@ -73,6 +73,14 @@
             font-size: 1.05rem;
         }
 
+        /* Hiệu ứng chuyển động mượt mà cho nút sửa */
+        .btn-edit-action {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-edit-action:hover {
+            transform: scale(1.1);
+        }
+
         /* Cho phép tiêu đề cột Tabulator tự động xuống dòng và tự co giãn chiều cao */
         .tabulator .tabulator-header .tabulator-col {
             white-space: normal !important;
@@ -309,7 +317,7 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-\$1').replace('active', '').trim();
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
         });
         
         let btnObj = {
@@ -455,7 +463,7 @@
 
         let activeCols = getActiveColumns();
         
-let columnsConfig = [
+        let columnsConfig = [
             {
                 formatter: "rownum", 
                 hozAlign: "center", 
@@ -466,25 +474,39 @@ let columnsConfig = [
             }
         ];
 
+        // Cột nút Sửa với hiệu ứng thay đổi trạng thái khi bấm
         if (currentMode !== 'THONG_KE_QUY') {
             columnsConfig.push({
                 title: "Sửa",
                 formatter: function(cell) {
-                    return `<button class="btn btn-sm btn-outline-primary py-0 px-1" title="Bấm để sửa dòng này"><i class="fa-solid fa-pen"></i></button>`;
+                    let rowData = cell.getRow().getData();
+                    let isEditing = rowData._isEditing || false;
+                    // Đổi màu và biểu tượng khi bật chế độ sửa
+                    let btnClass = isEditing ? "btn-success shadow-sm" : "btn-outline-primary";
+                    let iconClass = isEditing ? "fa-check" : "fa-pen";
+                    let tooltipText = isEditing ? "Đang mở khóa sửa (Bấm để khóa lại)" : "Bấm để mở khóa sửa dòng này";
+                    return `<button class="btn btn-sm ${btnClass} py-0 px-1 btn-edit-action" title="${tooltipText}"><i class="fa-solid ${iconClass}"></i></button>`;
                 },
                 width: 65,
                 hozAlign: "center",
                 headerSort: false,
                 frozen: true,
                 cellClick: function(e, cell) {
-                    // Khi bấm vào nút bút, tự động chọn ô đầu tiên của dòng để bật chế độ chỉnh sửa
                     let row = cell.getRow();
-                    let cells = row.getCells();
-                    // Tìm ô dữ liệu đầu tiên có thể chỉnh sửa để focus vào
-                    for (let c of cells) {
-                        if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
-                            c.edit();
-                            break;
+                    let rowData = row.getData();
+                    
+                    // Chuyển đổi trạng thái khóa/mở sửa của dòng
+                    rowData._isEditing = !rowData._isEditing;
+                    row.update(rowData);
+                    
+                    // Nếu mở khóa, tự động focus vào ô dữ liệu đầu tiên của dòng
+                    if (rowData._isEditing) {
+                        let cells = row.getCells();
+                        for (let c of cells) {
+                            if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
+                                c.edit();
+                                break;
+                            }
                         }
                     }
                 }
@@ -497,7 +519,12 @@ let columnsConfig = [
                 field: "col_" + index,
                 width: col.width || undefined, 
                 minWidth: 80, 
-                editor: (currentMode === 'THONG_KE_QUY') ? false : "input", 
+                // Chỉ cho phép chỉnh sửa khi dòng đã được bấm nút mở khóa (_isEditing == true)
+                editor: function(cell) {
+                    let rowData = cell.getRow().getData();
+                    if (currentMode === 'THONG_KE_QUY') return false;
+                    return rowData._isEditing ? "input" : false;
+                },
                 headerFilter: "input", 
                 headerFilterFunc: "like", 
                 headerFilterPlaceholder: "Lọc..."
@@ -541,7 +568,7 @@ let columnsConfig = [
         }
 
         let tableData = rowsToProcess.map((row, rowIndex) => {
-            let obj = { sheetRowIndex: rowIndex + 2 }; 
+            let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
             activeCols.forEach((col, index) => {
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
