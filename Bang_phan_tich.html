@@ -353,19 +353,16 @@
         ];
 
         // Tạo cấu hình từng cột kết hợp headerFilter kiểu Excel (list + multiselect)
+// Thay thế phần cấu hình cột cũ bằng đoạn này:
         activeCols.forEach((col, index) => {
             let colDef = {
                 title: col.label,
                 field: "col_" + index,
                 width: col.desc ? 350 : (col.customer || col.ncc) ? 170 : 130,
-                editor: "input", // Hỗ trợ click đúp để chỉnh sửa trực tiếp giống Excel
-                headerFilter: "list",
-                headerFilterParams: {
-                    values: true,         // Tự động liệt kê các giá trị duy nhất trong cột
-                    multiselect: true,    // Cho phép tích chọn nhiều giá trị cùng lúc hệt như Excel
-                    clearable: true       // Nút xóa lọc nhanh
-                },
-                headerFilterLiveFilter: true
+                editor: "input", 
+                headerFilter: "input", // Sử dụng dạng input để gõ tìm kiếm tự do, không bị lỗi "No Results Found"
+                headerFilterFunc: "like", // Cho phép tìm kiếm chứa ký tự (giống như gõ từ khóa lọc)
+                headerFilterPlaceholder: "Lọc..."
             };
 
             if (col.numeric) {
@@ -373,7 +370,7 @@
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
                     if (val === null || val === undefined || val === '') return '';
-                    if (col.percent) return val; // Hiển thị %
+                    if (col.percent) return val; 
                     let num = parseFloat(String(val).replace(/[,.]/g, ''));
                     return isNaN(num) ? val : num.toLocaleString('vi-VN');
                 };
