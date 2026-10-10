@@ -465,23 +465,13 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    function loadDataFromSheet(forceRefresh = false) {
-        let cacheKey = `CACHE_DATA_${currentMode}`;
-        let cachedData = localStorage.getItem(cacheKey);
-
-        if (cachedData && !forceRefresh) {
-            let parsed = JSON.parse(cachedData);
-            processDataArray(parsed);
-            renderTableHeader();
-            applyAllFilters();
-        } else {
-            showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
-        }
+function loadDataFromSheet(forceRefresh = true) {
+        // Luôn bật forceRefresh = true để không bị dính dữ liệu cache cũ giữa các tab
+        showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
 
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${currentMode}`)
             .then(res => res.json())
             .then(data => {
-                localStorage.setItem(cacheKey, JSON.stringify(data));
                 processDataArray(data);
                 renderTableHeader();
                 applyAllFilters();
@@ -489,6 +479,7 @@
             })
             .catch(err => {
                 showLoading(false);
+                alert("Không thể tải dữ liệu từ Google Sheets!");
             });
     }
 
