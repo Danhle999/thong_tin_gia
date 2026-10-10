@@ -214,8 +214,14 @@
                 <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
                     <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO
                 </button>
-                <button type="button" id="btnModeBaoGia" class="btn btn-outline-warning" onclick="switchTableMode('BANG_BAO_GIA')">
-                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BẢNG BÁO GIÁ
+                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_BAO_GIA_1')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ 1
+                </button>
+                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_BAO_GIA_2')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ 2
+                </button>
+                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_BAO_GIA_3')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ 3
                 </button>
             </div>
 
@@ -385,14 +391,32 @@
             { label: 'Đơn giá bán 1', numeric: true },  { label: 'Đơn giá bán sàn', numeric: true }, { label: 'Giá trị tồn kho', numeric: true },
             { label: 'Đơn vị tính', numeric: true }
         ],
-        'BANG_BAO_GIA': [
+        'BANG_BAO_GIA_1': [
             { label: 'STT', numeric: true },
-            { label: 'Mã Sản Phẩm / SKU' },
-            { label: 'Tên Sản Phẩm / Mô Tả Cấu Hình', desc: true },
-            { label: 'Giá tiền mặt' },
-            { label: 'Giá công nợ', numeric: true },
-            { label: 'Tồn kho', numeric: true },
-            { label: 'Ghi Chú' }
+            { label: 'NCC' },
+            { label: 'Mã part', code: true },
+            { label: 'TÊN SẢN PHẨM', desc: true },
+            { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'GIÁ CÔNG NỢ', numeric: true },
+            { label: 'Tồn kho', numeric: true }
+        ],
+        'BANG_BAO_GIA_2': [
+            { label: 'STT', numeric: true },
+            { label: 'NCC' },
+            { label: 'Mã part', code: true },
+            { label: 'TÊN SẢN PHẨM', desc: true },
+            { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'GIÁ CÔNG NỢ', numeric: true },
+            { label: 'Tồn kho', numeric: true }
+        ],
+        'BANG_BAO_GIA_3': [
+            { label: 'STT', numeric: true },
+            { label: 'NCC' },
+            { label: 'Mã part', code: true },
+            { label: 'TÊN SẢN PHẨM', desc: true },
+            { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'GIÁ CÔNG NỢ', numeric: true },
+            { label: 'Tồn kho', numeric: true }
         ]
     };
 
@@ -420,7 +444,9 @@
             'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
             'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
-            'BANG_BAO_GIA': { id: 'btnModeBaoGia', cls: 'btn-warning' }
+            'BANG_BAO_GIA_1': { id: 'btnModeBaoGia1', cls: 'btn-warning' },
+            'BANG_BAO_GIA_2': { id: 'btnModeBaoGia2', cls: 'btn-warning' },
+            'BANG_BAO_GIA_3': { id: 'btnModeBaoGia3', cls: 'btn-warning' }
         }[mode];
 
         let targetBtn = document.getElementById(btnObj.id);
