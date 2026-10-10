@@ -90,9 +90,12 @@
             line-height: 1.25;
         }
         .tabulator .tabulator-row .tabulator-cell {
-            white-space: normal !important;
-            word-wrap: break-word !important;
-        }
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                max-height: 45px !important; /* Giới hạn chiều cao tối đa cho mỗi ô */
+                overflow: hidden !important;   /* Ẩn bớt phần tràn nếu quá dài để dòng luôn đều nhau */
+                text-overflow: ellipsis !important;
+            }
     </style>
 </head>
 <body>
@@ -278,17 +281,17 @@
         ],
         'BANG_GIA_DELL': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true },
-            { label: 'TÊN SẢN PHẨM', desc: true }, { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'TÊN SẢN PHẨM', desc: true, width: 220 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
             { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
         ],
         'BANG_GIA_HP': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true },
-            { label: 'TÊN SẢN PHẨM', desc: true }, { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'TÊN SẢN PHẨM', desc: true, width: 220 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
             { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
         ],
         'BANG_GIA_LENOVO': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true },
-            { label: 'TÊN SẢN PHẨM', desc: true }, { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'TÊN SẢN PHẨM', desc: true, width: 220 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
             { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
         ]
     };
