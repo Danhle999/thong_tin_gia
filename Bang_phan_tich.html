@@ -368,17 +368,35 @@
                 headerFilterPlaceholder: "Lọc..."
             };
 
-            if (col.numeric) {
+if (col.numeric) {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
                     if (val === null || val === undefined || val === '') return '';
-                    if (col.percent) return val; 
+                    if (col.percent) {
+                        let cleanVal = String(val).replace('%', '').trim();
+                        let num = parseFloat(cleanVal);
+                        if (isNaN(num)) return val;
+                        return num > 1 ? num.toFixed(2) + '%' : (num * 100).toFixed(2) + '%';
+                    }
                     let num = parseFloat(String(val).replace(/[,.]/g, ''));
                     return isNaN(num) ? val : num.toLocaleString('vi-VN');
                 };
             } else if (col.date) {
                 colDef.hozAlign = "center";
+                colDef.formatter = function(cell) {
+                    let val = cell.getValue();
+                    if (!val) return '';
+                    
+                    // Xử lý chuyển đổi ngày tháng chuẩn kiểu Việt Nam
+                    let d = new Date(val);
+                    if (typeof val === 'string' && val.includes('T')) {
+                        return !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
+                    } else if (!isNaN(d.getTime()) && isNaN(val)) {
+                        return d.toLocaleDateString('vi-VN');
+                    }
+                    return val;
+                };
             }
 
             columnsConfig.push(colDef);
