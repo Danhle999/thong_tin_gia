@@ -454,7 +454,7 @@
         buildTabulatorTable(formattedRawData);
     }
 
-    function buildTabulatorTable(rawData) {
+function buildTabulatorTable(rawData) {
         if (!rawData || rawData.length === 0) {
             if (table) table.clearData();
             return;
@@ -492,6 +492,7 @@
                 field: "col_" + index,
                 width: col.width || undefined, 
                 minWidth: 80, 
+                // Tab Thống kê quý không cho sửa trực tiếp, các tab khác cho phép nhập/sửa
                 editor: (currentMode === 'THONG_KE_QUY') ? false : "input", 
                 headerFilter: "input", 
                 headerFilterFunc: "like", 
@@ -530,8 +531,9 @@
             columnsConfig.push(colDef);
         });
 
+        // Ánh xạ dữ liệu thô (bỏ qua dòng tiêu đề ở index 0, tính đúng dòng sheetRowIndex)
         let tableData = rawData.slice(1).map((row, rowIndex) => {
-            let obj = { sheetRowIndex: rowIndex + 2 };
+            let obj = { sheetRowIndex: rowIndex + 2 }; // Dòng thực tế trên Google Sheets bắt đầu từ dòng 2 (vì dòng 1 là tiêu đề)
             activeCols.forEach((col, index) => {
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
@@ -565,13 +567,14 @@
             document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} / ${tableData.length} dòng`;
         });
 
+        // Kích hoạt sự kiện lưu dữ liệu khi chỉnh sửa ô (trừ tab thống kê quý)
         if (currentMode !== 'THONG_KE_QUY') {
             table.on("cellEdited", function(cell){
                 let rowData = cell.getRow().getData();
                 let sheetRowIndex = rowData.sheetRowIndex;
                 let fullRowData = [];
                 for(let i = 0; i < activeCols.length; i++) {
-                    fullRowData.push(rowData["col_" + i]);
+                    fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                 }
                 saveRowToSheet(sheetRowIndex, fullRowData);
             });
@@ -617,7 +620,7 @@
         }
     }
 
-    function saveRowToSheet(sheetRowIndex, fullRowData) {
+function saveRowToSheet(sheetRowIndex, fullRowData) {
         showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
         var formData = new URLSearchParams();
         formData.append("payload", JSON.stringify({
