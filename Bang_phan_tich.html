@@ -214,6 +214,9 @@
                 <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
                     <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO
                 </button>
+                <button type="button" id="btnModeBaoGia" class="btn btn-outline-warning" onclick="switchTableMode('BANG_BAO_GIA')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BẢNG BÁO GIÁ
+                </button>
             </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 / 0 dòng</span>
@@ -381,6 +384,16 @@
             { label: 'SL tồn tiếu thiểu', numeric: true }, { label: 'SL tồn', numeric: true },
             { label: 'Đơn giá bán 1', numeric: true },  { label: 'Đơn giá bán sàn', numeric: true }, { label: 'Giá trị tồn kho', numeric: true },
             { label: 'Đơn vị tính', numeric: true }
+        ],
+        'BANG_BAO_GIA': [
+            { label: 'STT', numeric: true },
+            { label: 'Mã Sản Phẩm / SKU' },
+            { label: 'Tên Sản Phẩm / Mô Tả Cấu Hình', desc: true },
+            { label: 'Đơn Vị Tính' },
+            { label: 'Số Lượng', numeric: true },
+            { label: 'Đơn Giá (VNĐ)', numeric: true },
+            { label: 'Thành Tiền (VNĐ)', numeric: true },
+            { label: 'Ghi Chú' }
         ]
     };
 
@@ -407,7 +420,8 @@
             'AIO': { id: 'btnModeAio', cls: 'btn-secondary' },
             'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
-            'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' }
+            'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
+            'BANG_BAO_GIA': { id: 'btnModeBaoGia', cls: 'btn-warning' }
         }[mode];
 
         let targetBtn = document.getElementById(btnObj.id);
