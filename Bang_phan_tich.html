@@ -71,8 +71,26 @@
         
         /* Tùy chỉnh giao diện Tabulator cho hiện đại */
         .tabulator {
-            font-size: 0.95rem;
+            font-size: 1.2rem;
         }
+        <style>
+    /* Cho phép tiêu đề cột Tabulator tự động xuống dòng và tự co giãn chiều cao */
+    .tabulator .tabulator-header .tabulator-col {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        vertical-align: middle !important;
+    }
+    
+    .tabulator .tabulator-header .tabulator-col-content {
+        padding: 4px !important;
+    }
+
+    .tabulator .tabulator-header .tabulator-col-title {
+        white-space: normal !important;
+        text-overflow: clip !important;
+        line-height: 1.25;
+    }
+</style>
     </style>
 </head>
 <body>
