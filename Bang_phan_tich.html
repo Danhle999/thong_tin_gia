@@ -354,14 +354,17 @@
 
         // Tạo cấu hình từng cột kết hợp headerFilter kiểu Excel (list + multiselect)
 // Thay thế phần cấu hình cột cũ bằng đoạn này:
+// Thay thế đoạn cấu hình colDef cũ bằng đoạn này:
         activeCols.forEach((col, index) => {
             let colDef = {
                 title: col.label,
                 field: "col_" + index,
-                width: col.desc ? 350 : (col.customer || col.ncc) ? 170 : 130,
+                // Ưu tiên lấy width bạn định nghĩa trong SHEET_CONFIGS, nếu không có thì tự động co giãn theo dữ liệu (fitData)
+                width: col.width || undefined, 
+                minWidth: 80, // Đặt chiều rộng tối thiểu để không bị bóp quá nhỏ
                 editor: "input", 
-                headerFilter: "input", // Sử dụng dạng input để gõ tìm kiếm tự do, không bị lỗi "No Results Found"
-                headerFilterFunc: "like", // Cho phép tìm kiếm chứa ký tự (giống như gõ từ khóa lọc)
+                headerFilter: "input", 
+                headerFilterFunc: "like", 
                 headerFilterPlaceholder: "Lọc..."
             };
 
