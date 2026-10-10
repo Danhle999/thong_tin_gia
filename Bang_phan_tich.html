@@ -313,7 +313,7 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-\$1').replace('active', '').trim();
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
         });
         
         let btnObj = {
@@ -470,10 +470,11 @@
             }
         ];
 
-        // Cột Thao tác phân biệt rõ ràng: [ Sửa ] (Xanh dương) <---> [ Lưu ] (Đỏ nổi bật)
+        // Cột Thao tác trực tiếp thao tác DOM để đổi trạng thái Sửa <-> Lưu cực nhạy
         if (currentMode !== 'THONG_KE_QUY') {
             columnsConfig.push({
                 title: "Thao tác",
+                field: "_actionCol",
                 formatter: function(cell) {
                     let rowData = cell.getRow().getData();
                     let isEditing = rowData._isEditing || false;
@@ -491,11 +492,19 @@
                     let row = cell.getRow();
                     let rowData = row.getData();
                     
-                    // Đảo trạng thái chỉnh sửa
+                    // Đảo trạng thái
                     rowData._isEditing = !rowData._isEditing;
-                    row.update(rowData);
+                    
+                    // Cập nhật trực tiếp giao diện nút bấm ngay trên DOM của cell hiện tại
+                    let cellEl = cell.getElement();
+                    let btn = cellEl.querySelector('button');
                     
                     if (rowData._isEditing) {
+                        btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
+                        btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
+                        btn.title = "Đang mở chỉnh sửa (Bấm để khóa lại)";
+                        
+                        // Tự động focus vào ô dữ liệu đầu tiên để nhập luôn
                         let cells = row.getCells();
                         for (let c of cells) {
                             if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
@@ -503,6 +512,10 @@
                                 break;
                             }
                         }
+                    } else {
+                        btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
+                        btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
+                        btn.title = "Bấm để mở khóa sửa dòng này";
                     }
                 }
             });
