@@ -313,7 +313,7 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-\$1').replace('active', '').trim();
         });
         
         let btnObj = {
@@ -470,7 +470,7 @@
             }
         ];
 
-        // Cột Thao tác: Khi khóa hiển thị nút Sửa (xanh dương), khi mở sửa chuyển thành nút Lưu (màu đỏ)
+        // Cột Thao tác phân biệt rõ ràng: [ Sửa ] (Xanh dương) <---> [ Lưu ] (Đỏ nổi bật)
         if (currentMode !== 'THONG_KE_QUY') {
             columnsConfig.push({
                 title: "Thao tác",
@@ -478,12 +478,12 @@
                     let rowData = cell.getRow().getData();
                     let isEditing = rowData._isEditing || false;
                     if (isEditing) {
-                        return `<button class="btn btn-sm btn-danger px-2 py-1 rounded-pill shadow-sm btn-edit-action" title="Đang mở chỉnh sửa (Bấm để khóa lại)"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
+                        return `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action" title="Đang mở chỉnh sửa (Bấm để khóa lại)"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
                     } else {
-                        return `<button class="btn btn-sm btn-outline-primary px-2 py-1 rounded-pill shadow-sm btn-edit-action" title="Bấm để mở khóa sửa dòng này"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
+                        return `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action" title="Bấm để mở khóa sửa dòng này"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
                     }
                 },
-                width: 85,
+                width: 95,
                 hozAlign: "center",
                 headerSort: false,
                 frozen: true,
