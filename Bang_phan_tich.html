@@ -89,14 +89,18 @@
             text-overflow: clip !important;
             line-height: 1.25;
         }
+
+        /* Định dạng nội dung ô dữ liệu: wrap text gọn gàng, không bị dính chân chữ */
         .tabulator .tabulator-row .tabulator-cell {
-                white-space: normal !important;
-                word-wrap: break-word !important;
-                max-height: 52px !important; /* Giới hạn chiều cao tối đa cho mỗi ô */
-                overflow: hidden !important;   /* Ẩn bớt phần tràn nếu quá dài để dòng luôn đều nhau */
-                text-overflow: ellipsis !important;
-                line-height: 1.45 !important; /* Tăng khoảng cách giữa các dòng */
-            }
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            max-height: 52px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.45 !important;
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
+        }
     </style>
 </head>
 <body>
@@ -272,7 +276,6 @@
             { label: 'Đơn giá bán 1', numeric: true },  { label: 'Đơn giá bán sàn', numeric: true }, { label: 'Giá trị tồn kho', numeric: true },
             { label: 'Đơn vị tính', numeric: true }
         ],
-        // CẤU HÌNH CỘT CHO TAB THỐNG KÊ QUÝ
         'THONG_KE_QUY': [
             { label: 'Quý / Thời gian', width: 140 },
             { label: 'Hãng (Brand)', width: 130 },
@@ -306,7 +309,7 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-\$1').replace('active', '').trim();
         });
         
         let btnObj = {
@@ -331,7 +334,6 @@
         let cols = getActiveColumns();
         document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${mode} (${cols.length} Cột)`;
         
-        // Ẩn/hiện nút thêm dòng và nhập excel nếu ở tab thống kê quý
         if (mode === 'THONG_KE_QUY') {
             document.getElementById('actionButtonsRow').style.display = 'none';
         } else {
@@ -348,7 +350,6 @@
     }
 
     function loadDataFromSheet() {
-        // Nếu chọn tab Thống Kê Quý, lấy dữ liệu gốc từ sheet NHAP_KHO để tự động tổng hợp
         let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
         showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
@@ -368,7 +369,6 @@
             });
     }
 
-    // Hàm tự động tổng hợp dữ liệu Quý, Brand, Loại sản phẩm từ bảng Nhập Kho
     function processThongKeQuyData(rawData) {
         if (!rawData || rawData.length <= 1) {
             buildTabulatorTable([]);
@@ -379,14 +379,13 @@
         let aggregatedMap = {};
 
         rows.forEach(r => {
-            let ngayStr = r[0] || ''; // Cột Ngày HT (index 0)
-            let tenHang = String(r[7] || '').toLowerCase(); // Cột Tên hàng (index 7)
-            let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; // Cột Số lượng (index 9)
-            let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; // Cột Thành tiền (index 11)
+            let ngayStr = r[0] || ''; 
+            let tenHang = String(r[7] || '').toLowerCase(); 
+            let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
+            let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; 
 
             if (!ngayStr) return;
 
-            // Xác định Quý từ ngày tháng
             let d = new Date(ngayStr);
             if (isNaN(d.getTime())) return;
             let month = d.getMonth() + 1;
@@ -397,14 +396,12 @@
             else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
             else quarter = `Quý 4 / ${year}`;
 
-            // Xác định Brand (Dell, HP, Lenovo)
             let brand = 'Khác';
             if (tenHang.includes('dell')) brand = 'Dell';
             else if (tenHang.includes('hp') || tenHang.includes('hewlett')) brand = 'HP';
             else if (tenHang.includes('lenovo')) brand = 'Lenovo';
-            else return; // Chỉ lấy các brand yêu cầu
+            else return; 
 
-            // Xác định Loại sản phẩm
             let productType = 'Khác';
             if (tenHang.includes('laptop') || tenHang.includes('xách tay') || tenHang.includes('notebook')) {
                 productType = 'Máy tính xách tay';
@@ -413,7 +410,7 @@
             } else if (tenHang.includes('lcd') || tenHang.includes('màn hình') || tenHang.includes('monitor') || tenHang.includes('se2225h')) {
                 productType = 'Màn hình';
             } else {
-                return; // Chỉ lấy 3 loại sản phẩm yêu cầu
+                return; 
             }
 
             let key = `${quarter}_${brand}_${productType}`;
@@ -430,9 +427,7 @@
             aggregatedMap[key].totalAmount += thanhTien;
         });
 
-        // Chuyển kết quả gom nhóm thành mảng dữ liệu để đổ vào Tabulator
         let processedDataArray = [];
-        let index = 1;
         for (let key in aggregatedMap) {
             let item = aggregatedMap[key];
             processedDataArray.push([
@@ -442,10 +437,8 @@
                 item.totalQty,
                 item.totalAmount
             ]);
-            index++;
         }
 
-        // Tạo cấu trúc dữ liệu giả lập cho Tabulator đọc
         let formattedRawData = [
             ['Quý / Thời gian', 'Hãng (Brand)', 'Loại Sản Phẩm', 'Tổng Số Lượng Nhập', 'Tổng Giá Trị Nhập (VNĐ)'],
             ...processedDataArray
@@ -454,7 +447,7 @@
         buildTabulatorTable(formattedRawData);
     }
 
-function buildTabulatorTable(rawData) {
+    function buildTabulatorTable(rawData) {
         if (!rawData || rawData.length === 0) {
             if (table) table.clearData();
             return;
@@ -473,7 +466,6 @@ function buildTabulatorTable(rawData) {
             }
         ];
 
-        // Nếu không phải tab thống kê quý thì thêm nút thao tác sửa
         if (currentMode !== 'THONG_KE_QUY') {
             columnsConfig.push({
                 formatter: function(cell) {
@@ -492,7 +484,6 @@ function buildTabulatorTable(rawData) {
                 field: "col_" + index,
                 width: col.width || undefined, 
                 minWidth: 80, 
-                // Tab Thống kê quý không cho sửa trực tiếp, các tab khác cho phép nhập/sửa
                 editor: (currentMode === 'THONG_KE_QUY') ? false : "input", 
                 headerFilter: "input", 
                 headerFilterFunc: "like", 
@@ -531,9 +522,13 @@ function buildTabulatorTable(rawData) {
             columnsConfig.push(colDef);
         });
 
-        // Ánh xạ dữ liệu thô (bỏ qua dòng tiêu đề ở index 0, tính đúng dòng sheetRowIndex)
-        let tableData = rawData.slice(1).map((row, rowIndex) => {
-            let obj = { sheetRowIndex: rowIndex + 2 }; // Dòng thực tế trên Google Sheets bắt đầu từ dòng 2 (vì dòng 1 là tiêu đề)
+        let rowsToProcess = rawData;
+        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
+            rowsToProcess = rawData.slice(1);
+        }
+
+        let tableData = rowsToProcess.map((row, rowIndex) => {
+            let obj = { sheetRowIndex: rowIndex + 2 }; 
             activeCols.forEach((col, index) => {
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
@@ -567,7 +562,6 @@ function buildTabulatorTable(rawData) {
             document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} / ${tableData.length} dòng`;
         });
 
-        // Kích hoạt sự kiện lưu dữ liệu khi chỉnh sửa ô (trừ tab thống kê quý)
         if (currentMode !== 'THONG_KE_QUY') {
             table.on("cellEdited", function(cell){
                 let rowData = cell.getRow().getData();
@@ -620,7 +614,7 @@ function buildTabulatorTable(rawData) {
         }
     }
 
-function saveRowToSheet(sheetRowIndex, fullRowData) {
+    function saveRowToSheet(sheetRowIndex, fullRowData) {
         showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
         var formData = new URLSearchParams();
         formData.append("payload", JSON.stringify({
