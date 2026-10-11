@@ -219,7 +219,7 @@
             { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true, width: 80 }, 
             { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 }, { label: 'NGÀY NHẬP CŨ', date: true },
-            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa', width: 80 },
             { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'PC': [
@@ -232,7 +232,8 @@
             { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP', numeric: true },
             { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 80 }, { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 80 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 },
-            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa', width: 80 },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'LCD': [
             { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand' },
@@ -664,6 +665,24 @@
                         
                         data["col_" + idxCheckGia] = valBan - valNhap;
                         row.update(data);
+                    }
+                }
+            }
+// === (B) THÊM HÀM TÔ MÀU ĐỎ CHO TOÀN BỘ HÀNG NẾU < 0 ===
+            rowFormatter: function(row) {
+                if (currentMode === 'LAPTOP') {
+                    let data = row.getData();
+                    let activeCols = getActiveColumns();
+                    let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
+                    
+                    if (idxCheckGia !== -1) {
+                        let checkVal = parseFloat(String(data["col_" + idxCheckGia]).replace(/[,.]/g, '')) || 0;
+                        let rowEl = row.getElement();
+                        if (checkVal < 0) {
+                            rowEl.style.backgroundColor = "#ffdddd"; // Tô màu đỏ nhạt cả hàng
+                        } else {
+                            rowEl.style.backgroundColor = ""; // Trả về mặc định nếu >= 0
+                        }
                     }
                 }
             }
