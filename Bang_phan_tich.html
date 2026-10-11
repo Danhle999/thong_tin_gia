@@ -372,20 +372,85 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
+let tableMucTieu = null;
+    let tableThongKe = null;
+
     function loadDataFromSheet() {
-        let targetSheet = currentMode; // Gửi thẳng tên chế độ hiện tại lên Backend (bao gồm cả THONG_KE_QUY)
+        let targetSheet = currentMode;
         showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${targetSheet}`)
             .then(res => res.json())
             .then(data => {
-                buildTabulatorTable(data);
+                if (currentMode === 'THONG_KE_QUY') {
+                    // Ẩn bảng đơn, hiện khung 2 bảng song song
+                    document.getElementById('example-table').style.display = 'none';
+                    document.getElementById('dualTableContainer').style.display = 'flex';
+                    
+                    buildDualTables(data.targets, data.actuals);
+                } else {
+                    // Hiện bảng đơn bình thường, ẩn khung song song
+                    document.getElementById('example-table').style.display = 'block';
+                    document.getElementById('dualTableContainer').style.display = 'none';
+
+                    buildTabulatorTable(data);
+                }
                 showLoading(false);
             })
             .catch(err => {
                 showLoading(false);
                 alert("Lỗi kết nối đến Google Sheets!");
             });
+    }
+
+    function buildDualTables(targetRaw, actualRaw) {
+        // 1. Khởi tạo Bảng Mục Tiêu (Bên trái)
+        let targetCols = [
+            { formatter: "rownum", hozAlign: "center", width: 50, headerSort: false, title: "STT" },
+            { title: "Quý / Thời gian", field: "col_0", width: 110 },
+            { title: "Hãng (Brand)", field: "col_1", width: 90 },
+            { title: "Loại Sản Phẩm", field: "col_2", width: 140 },
+            { title: "Mục Tiêu SL", field: "col_3", hozAlign: "right", width: 100, formatter: function(cell) { let n = parseFloat(String(cell.getValue()).replace(/[,.]/g, '')); return isNaN(n) ? cell.getValue() : n.toLocaleString('vi-VN'); } },
+            { title: "Mục Tiêu Giá Trị", field: "col_4", hozAlign: "right", width: 130, formatter: function(cell) { let n = parseFloat(String(cell.getValue()).replace(/[,.]/g, '')); return isNaN(n) ? cell.getValue() : n.toLocaleString('vi-VN'); } }
+        ];
+
+        let targetRows = targetRaw.length > 1 ? targetRaw.slice(1) : [];
+        let targetTableData = targetRows.map((row) => ({
+            col_0: row[0] || '', col_1: row[1] || '', col_2: row[2] || '', col_3: row[3] || '', col_4: row[4] || ''
+        }));
+
+        if (tableMucTieu) tableMucTieu.destroy();
+        tableMucTieu = new Tabulator("#table-muc-tieu", {
+            data: targetTableData,
+            layout: "fitColumns",
+            height: "100%",
+            columns: targetCols,
+        });
+
+        // 2. Khởi tạo Bảng Thống Kê Thực Tế (Bên phải)
+        let actualCols = [
+            { formatter: "rownum", hozAlign: "center", width: 50, headerSort: false, title: "STT" },
+            { title: "Quý / Thời gian", field: "col_0", width: 110 },
+            { title: "Hãng (Brand)", field: "col_1", width: 90 },
+            { title: "Loại Sản Phẩm", field: "col_2", width: 140 },
+            { title: "Tổng SL Nhập", field: "col_3", hozAlign: "right", width: 100, formatter: function(cell) { let n = parseFloat(String(cell.getValue()).replace(/[,.]/g, '')); return isNaN(n) ? cell.getValue() : n.toLocaleString('vi-VN'); } },
+            { title: "Tổng Giá Trị Nhập", field: "col_4", hozAlign: "right", width: 130, formatter: function(cell) { let n = parseFloat(String(cell.getValue()).replace(/[,.]/g, '')); return isNaN(n) ? cell.getValue() : n.toLocaleString('vi-VN'); } }
+        ];
+
+        let actualRows = actualRaw.length > 1 ? actualRaw.slice(1) : [];
+        let actualTableData = actualRows.map((row) => ({
+            col_0: row[0] || '', col_1: row[1] || '', col_2: row[2] || '', col_3: row[3] || '', col_4: row[4] || ''
+        }));
+
+        if (tableThongKe) tableThongKe.destroy();
+        tableThongKe = new Tabulator("#table-thong-ke", {
+            data: actualTableData,
+            layout: "fitColumns",
+            height: "100%",
+            columns: actualCols,
+        });
+
+        document.getElementById('rowCountBadge').innerText = `Mục tiêu: ${targetTableData.length} dòng | Thực tế: ${actualTableData.length} dòng`;
     }
 
     function buildTabulatorTable(rawData) {
