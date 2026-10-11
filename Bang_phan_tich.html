@@ -464,7 +464,7 @@ function processThongKeQuyData(rawData) {
         ...processedDataArray
     ];
 
-    return ContentService.createTextOutput(JSON.stringify(formattedRawData)).setMimeType(ContentService.MimeType.JSON);
+    buildTabulatorTable(formattedRawData);
 }
 
     function buildTabulatorTable(rawData) {
