@@ -219,7 +219,7 @@
             { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true, width: 80 }, 
             { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 }, { label: 'NGÀY NHẬP CŨ', date: true },
-            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa' }
+            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa' },{ label: 'CHECK GIÁ BÁN', numeric: true, width: 120 }
         ],
         'PC': [
             { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' },
@@ -594,32 +594,62 @@
             rowsToProcess = rawData.slice(1);
         }
 
-        let tableData = rowsToProcess.map((row, rowIndex) => {
-            let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
-            activeCols.forEach((col, index) => {
-                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
-            });
-            return obj;
-        });
+let tableData = rowsToProcess.map((row, rowIndex) => {
+         let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
+         activeCols.forEach((col, index) => {
+             obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
+         });
+
+         // Tự động tính toán cho cột CHECK GIÁ BÁN ở Tab LAPTOP (Cột Giá bán tiền mặt và Giá nhập mới nằm ở index tương ứng)
+         if (currentMode === 'LAPTOP') {
+             let idxGiaBanTienMat = activeCols.findIndex(c => c.label === 'GIÁ BÁN TIỀN MẶT');
+             let idxGiaNhapMoi = activeCols.findIndex(c => c.label === 'GIÁ NHẬP MỚI');
+             let idxCheckGia = activeCols.findIndex(c => c.label === 'CHECK GIÁ BÁN');
+
+             if (idxGiaBanTienMat !== -1 && idxGiaNhapMoi !== -1 && idxCheckGia !== -1) {
+                 let valBan = parseFloat(String(obj["col_" + idxGiaBanTienMat]).replace(/[,.]/g, '')) || 0;
+                 let valNhap = parseFloat(String(obj["col_" + idxGiaNhapMoi]).replace(/[,.]/g, '')) || 0;
+                 obj["col_" + idxCheckGia] = valBan - valNhap;
+             }
+         }
+
+         return obj;
+     });
 
         if (table) {
             table.destroy();
         }
 
-        table = new Tabulator("#example-table", {
-            data: tableData,
-            layout: "fitData",
-            responsiveLayout: false,
-            height: "100%",
-            columns: columnsConfig,
-            pagination: "local",
-            paginationSize: 50,
-            paginationSizeSelector: [25, 50, 100, 200, 500],
-            movableColumns: true,
-            columnDefaults: {
-                resizable: true,
-            },
-        });
+table = new Tabulator("#example-table", {
+         data: tableData,
+         layout: "fitData",
+         responsiveLayout: false,
+         height: "100%",
+         columns: columnsConfig,
+         pagination: "local",
+         paginationSize: 50,
+         paginationSizeSelector: [25, 50, 100, 200, 500],
+         movableColumns: true,
+         columnDefaults: {
+             resizable: true,
+         },
+         // --- THÊM PHẦN TÔ MÀU ĐỎ CHO DÒNG KHI THỎA ĐIỀU KIỆN ---
+         rowFormatter: function(row) {
+             if (currentMode === 'LAPTOP') {
+                 let data = row.getData();
+                 let activeCols = getActiveColumns();
+                 let idxCheckGia = activeCols.findIndex(c => c.label === 'CHECK GIÁ BÁN');
+                 if (idxCheckGia !== -1) {
+                     let checkVal = parseFloat(data["col_" + idxCheckGia]) || 0;
+                     if (checkVal < 0) {
+                         row.getElement().style.backgroundColor = "#ffdddd"; // Tô màu nền đỏ nhạt cho cả dòng
+                     } else {
+                         row.getElement().style.backgroundColor = ""; // Giữ nguyên mặc định nếu không thỏa
+                     }
+                 }
+             }
+         }
+     });
 
         table.on("dataFiltered", function(filters, rows){
             document.getElementById('rowCountBadge').innerText = `Hiển thị: ${rows.length} / ${tableData.length} dòng`;
