@@ -622,34 +622,60 @@ let tableData = rowsToProcess.map((row, rowIndex) => {
 
 table = new Tabulator("#example-table", {
          data: tableData,
-         layout: "fitData",
-         responsiveLayout: false,
-         height: "100%",
-         columns: columnsConfig,
-         pagination: "local",
-         paginationSize: 50,
-         paginationSizeSelector: [25, 50, 100, 200, 500],
-         movableColumns: true,
-         columnDefaults: {
-             resizable: true,
-         },
-         // --- THÊM PHẦN TÔ MÀU ĐỎ CHO DÒNG KHI THỎA ĐIỀU KIỆN ---
-         rowFormatter: function(row) {
-             if (currentMode === 'LAPTOP') {
-                 let data = row.getData();
-                 let activeCols = getActiveColumns();
-                 let idxCheckGia = activeCols.findIndex(c => c.label === 'CHECK GIÁ BÁN');
-                 if (idxCheckGia !== -1) {
-                     let checkVal = parseFloat(data["col_" + idxCheckGia]) || 0;
-                     if (checkVal < 0) {
-                         row.getElement().style.backgroundColor = "#ffdddd"; // Tô màu nền đỏ nhạt cho cả dòng
-                     } else {
-                         row.getElement().style.backgroundColor = ""; // Giữ nguyên mặc định nếu không thỏa
-                     }
-                 }
-             }
-         }
-     });
+table = new Tabulator("#example-table", {
+            data: tableData,
+            layout: "fitData",
+            responsiveLayout: false,
+            height: "100%",
+            columns: columnsConfig,
+            pagination: "local",
+            paginationSize: 50,
+            paginationSizeSelector: [25, 50, 100, 200, 500],
+            movableColumns: true,
+            columnDefaults: {
+                resizable: true,
+            },
+            // --- THÊM SỰ KIỆN TỰ ĐỘNG TÍNH LẠI KHI DỮ LIỆU THAY ĐỔI ---
+            cellEdited: function(cell) {
+                if (currentMode === 'LAPTOP') {
+                    let row = cell.getRow();
+                    let data = row.getData();
+                    let activeCols = getActiveColumns();
+                    
+                    let idxGiaBanTienMat = activeCols.findIndex(c => c.label === 'GIÁ BÁN TIỀN MẶT');
+                    let idxGiaNhapMoi = activeCols.findIndex(c => c.label === 'GIÁ NHẬP MỚI');
+                    let idxCheckGia = activeCols.findIndex(c => c.label === 'CHECK GIÁ BÁN');
+
+                    if (idxGiaBanTienMat !== -1 && idxGiaNhapMoi !== -1 && idxCheckGia !== -1) {
+                        let valBan = parseFloat(String(data["col_" + idxGiaBanTienMat]).replace(/[,.]/g, '')) || 0;
+                        let valNhap = parseFloat(String(data["col_" + idxGiaNhapMoi]).replace(/[,.]/g, '')) || 0;
+                        
+                        // Tính lại giá trị mới
+                        let newCheckVal = valBan - valNhap;
+                        data["col_" + idxCheckGia] = newCheckVal;
+                        
+                        // Cập nhật lại dữ liệu dòng trên bảng và ép vẽ lại màu nền ngay lập tức
+                        row.update(data);
+                    }
+                }
+            },
+            // --- HÀM TÔ MÀU ĐỎ DÒNG ---
+            rowFormatter: function(row) {
+                if (currentMode === 'LAPTOP') {
+                    let data = row.getData();
+                    let activeCols = getActiveColumns();
+                    let idxCheckGia = activeCols.findIndex(c => c.label === 'CHECK GIÁ BÁN');
+                    if (idxCheckGia !== -1) {
+                        let checkVal = parseFloat(data["col_" + idxCheckGia]) || 0;
+                        if (checkVal < 0) {
+                            row.getElement().style.backgroundColor = "#ffdddd"; // Đỏ nhạt
+                        } else {
+                            row.getElement().style.backgroundColor = ""; // Trả về mặc định nếu >= 0
+                        }
+                    }
+                }
+            }
+        });
 
         table.on("dataFiltered", function(filters, rows){
             document.getElementById('rowCountBadge').innerText = `Hiển thị: ${rows.length} / ${tableData.length} dòng`;
