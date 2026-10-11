@@ -281,11 +281,15 @@
             { label: 'Đơn vị tính', numeric: true }
         ],
         'THONG_KE_QUY': [
-            { label: 'Quý / Thời gian', width: 140 },
-            { label: 'Hãng (Brand)', width: 130 },
-            { label: 'Loại Sản Phẩm', width: 220 },
-            { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 },
-            { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
+            { label: 'Quý / Thời gian', width: 130 },
+            { label: 'Hãng (Brand)', width: 110 },
+            { label: 'Loại Sản Phẩm', width: 180 },
+            { label: 'Tổng Số Lượng Nhập', numeric: true, width: 130 },
+            { label: 'Mục Tiêu Số Lượng', numeric: true, width: 130 },
+            { label: '% Hoàn Thành SL', numeric: true, percent: true, width: 110 },
+            { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 170 },
+            { label: 'Mục Tiêu Giá Trị (VNĐ)', numeric: true, width: 170 },
+            { label: '% Hoàn Thành Giá Trị', numeric: true, percent: true, width: 130 }
         ],
         'BANG_GIA_DELL': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
@@ -313,7 +317,7 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-\$1').replace('active', '').trim();
         });
         
         let btnObj = {
@@ -354,101 +358,19 @@
     }
 
     function loadDataFromSheet() {
-        let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
+        let targetSheet = currentMode; // Gửi thẳng tên chế độ hiện tại lên Backend (bao gồm cả THONG_KE_QUY)
         showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${targetSheet}`)
             .then(res => res.json())
             .then(data => {
-                if (currentMode === 'THONG_KE_QUY') {
-                    processThongKeQuyData(data);
-                } else {
-                    buildTabulatorTable(data);
-                }
+                buildTabulatorTable(data);
                 showLoading(false);
             })
             .catch(err => {
                 showLoading(false);
                 alert("Lỗi kết nối đến Google Sheets!");
             });
-    }
-
-    function processThongKeQuyData(rawData) {
-        if (!rawData || rawData.length <= 1) {
-            buildTabulatorTable([]);
-            return;
-        }
-
-        let rows = rawData.slice(1);
-        let aggregatedMap = {};
-
-        rows.forEach(r => {
-            let ngayStr = r[0] || ''; 
-            let tenHang = String(r[7] || '').toLowerCase(); 
-            let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
-            let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; 
-
-            if (!ngayStr) return;
-
-            let d = new Date(ngayStr);
-            if (isNaN(d.getTime())) return;
-            let month = d.getMonth() + 1;
-            let year = d.getFullYear();
-            let quarter = '';
-            if (month >= 1 && month <= 3) quarter = `Quý 1 / ${year}`;
-            else if (month >= 4 && month <= 6) quarter = `Quý 2 / ${year}`;
-            else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
-            else quarter = `Quý 4 / ${year}`;
-
-            let brand = 'Khác';
-            if (tenHang.includes('dell')) brand = 'Dell';
-            else if (tenHang.includes('hp') || tenHang.includes('hewlett')) brand = 'HP';
-            else if (tenHang.includes('lenovo')) brand = 'Lenovo';
-            else return; 
-
-            let productType = 'Khác';
-            if (tenHang.includes('laptop') || tenHang.includes('xách tay') || tenHang.includes('notebook')) {
-                productType = 'Máy tính xách tay';
-            } else if (tenHang.includes('thinkcentre') || tenHang.includes('desktop') || tenHang.includes('máy tính để bàn') || tenHang.includes('pc') || tenHang.includes('pro tower') || tenHang.includes('m70s')) {
-                productType = 'Máy tính để bàn';
-            } else if (tenHang.includes('lcd') || tenHang.includes('màn hình') || tenHang.includes('monitor') || tenHang.includes('se2225h')) {
-                productType = 'Màn hình';
-            } else {
-                return; 
-            }
-
-            let key = `${quarter}_${brand}_${productType}`;
-            if (!aggregatedMap[key]) {
-                aggregatedMap[key] = {
-                    quarter: quarter,
-                    brand: brand,
-                    productType: productType,
-                    totalQty: 0,
-                    totalAmount: 0
-                };
-            }
-            aggregatedMap[key].totalQty += soLuong;
-            aggregatedMap[key].totalAmount += thanhTien;
-        });
-
-        let processedDataArray = [];
-        for (let key in aggregatedMap) {
-            let item = aggregatedMap[key];
-            processedDataArray.push([
-                item.quarter,
-                item.brand,
-                item.productType,
-                item.totalQty,
-                item.totalAmount
-            ]);
-        }
-
-        let formattedRawData = [
-            ['Quý / Thời gian', 'Hãng (Brand)', 'Loại Sản Phẩm', 'Tổng Số Lượng Nhập', 'Tổng Giá Trị Nhập (VNĐ)'],
-            ...processedDataArray
-        ];
-
-        buildTabulatorTable(formattedRawData);
     }
 
     function buildTabulatorTable(rawData) {
@@ -470,8 +392,7 @@
             }
         ];
 
-        // Cột Thao tác: Bấm [ Sửa ] -> Mở khóa dòng, nút chuyển thành [ Lưu ] (màu đỏ). 
-        // Khi chỉnh sửa xong, bấm [ Lưu ] lần nữa -> Ghi dữ liệu lên Google Sheets và khóa dòng lại.
+        // Cột Thao tác sửa/lưu dữ liệu
         if (currentMode !== 'THONG_KE_QUY') {
             columnsConfig.push({
                 title: "Thao tác",
@@ -497,16 +418,11 @@
                     let btn = cellEl.querySelector('button');
 
                     if (!rowData._isEditing) {
-                        // Bước 1: Mở khóa chỉnh sửa dòng
                         rowData._isEditing = true;
                         btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
                         btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
-                        btn.title = "Bấm để lưu và khóa dòng này";
-                        
-                        // Cập nhật lại row trong table để bật quyền editable
                         row.update(rowData);
 
-                        // Focus vào ô dữ liệu đầu tiên để gõ luôn
                         let cells = row.getCells();
                         for (let c of cells) {
                             if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
@@ -515,22 +431,16 @@
                             }
                         }
                     } else {
-                        // Bước 2: Bấm Lưu -> Ghi dữ liệu lên Google Sheets và Khóa lại
                         let fullRowData = [];
                         for(let i = 0; i < activeCols.length; i++) {
                             fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                         }
 
-                        // Gọi hàm lưu
                         saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
-                        // Đổi trạng thái về Khóa
                         rowData._isEditing = false;
                         btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
                         btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
-                        btn.title = "Bấm để mở khóa sửa dòng này";
-                        
-                        // Cập nhật lại row để vô hiệu hóa editor các ô
                         row.update(rowData);
                     }
                 }
@@ -542,7 +452,7 @@
                 title: col.label,
                 field: "col_" + index,
                 width: col.width || undefined, 
-                minWidth: 80, 
+                minWidth: 90, 
                 editor: "input",
                 editable: function(cell) {
                     if (currentMode === 'THONG_KE_QUY') return false;
@@ -608,7 +518,7 @@
 
         table = new Tabulator("#example-table", {
             data: tableData,
-            layout: "fitData",
+            layout: "fitColumns", // Tự động co giãn cột lấp đầy màn hình, không bị khoảng trống
             responsiveLayout: false,
             height: "100%",
             columns: columnsConfig,
@@ -628,8 +538,6 @@
         table.on("tableBuilt", function() {
             document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} / ${tableData.length} dòng`;
         });
-
-        // Đã bỏ sự kiện tự động cellEdited theo từng ô để nhường quyền lưu chính xác cho nút [ Lưu ]
     }
 
     function applyGlobalSearch() {
