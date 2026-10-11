@@ -286,7 +286,8 @@
             { label: 'Loại Sản Phẩm', width: 220 },
             { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 },
             { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 },
-            { label: 'Mục Tiêu Quý Tới', numeric: true, width: 160 }
+            { label: 'Mục Tiêu Quý Tới', numeric: true, width: 160 },
+            { label: '% Hoàn Thành', numeric: true, percent: true, width: 130 }
         ],
         'BANG_GIA_DELL': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
@@ -374,83 +375,97 @@
             });
     }
 
-    function processThongKeQuyData(rawData) {
-        if (!rawData || rawData.length <= 1) {
-            buildTabulatorTable([]);
-            return;
-        }
-
-        let rows = rawData.slice(1);
-        let aggregatedMap = {};
-
-        rows.forEach(r => {
-            let ngayStr = r[0] || ''; 
-            let tenHang = String(r[7] || '').toLowerCase(); 
-            let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
-            let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; 
-
-            if (!ngayStr) return;
-
-            let d = new Date(ngayStr);
-            if (isNaN(d.getTime())) return;
-            let month = d.getMonth() + 1;
-            let year = d.getFullYear();
-            let quarter = '';
-            if (month >= 1 && month <= 3) quarter = `Quý 1 / ${year}`;
-            else if (month >= 4 && month <= 6) quarter = `Quý 2 / ${year}`;
-            else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
-            else quarter = `Quý 4 / ${year}`;
-
-            let brand = 'Khác';
-            if (tenHang.includes('dell')) brand = 'Dell';
-            else if (tenHang.includes('hp') || tenHang.includes('hewlett')) brand = 'HP';
-            else if (tenHang.includes('lenovo')) brand = 'Lenovo';
-            else return; 
-
-            let productType = 'Khác';
-            if (tenHang.includes('laptop') || tenHang.includes('xách tay') || tenHang.includes('notebook')) {
-                productType = 'Máy tính xách tay';
-            } else if (tenHang.includes('thinkcentre') || tenHang.includes('desktop') || tenHang.includes('máy tính để bàn') || tenHang.includes('pc') || tenHang.includes('pro tower') || tenHang.includes('m70s')) {
-                productType = 'Máy tính để bàn';
-            } else if (tenHang.includes('lcd') || tenHang.includes('màn hình') || tenHang.includes('monitor') || tenHang.includes('se2225h')) {
-                productType = 'Màn hình';
-            } else {
-                return; 
-            }
-
-            let key = `${quarter}_${brand}_${productType}`;
-            if (!aggregatedMap[key]) {
-                aggregatedMap[key] = {
-                    quarter: quarter,
-                    brand: brand,
-                    productType: productType,
-                    totalQty: 0,
-                    totalAmount: 0
-                };
-            }
-            aggregatedMap[key].totalQty += soLuong;
-            aggregatedMap[key].totalAmount += thanhTien;
-        });
-
-        let processedDataArray = [];
-        for (let key in aggregatedMap) {
-            let item = aggregatedMap[key];
-            processedDataArray.push([
-                item.quarter,
-                item.brand,
-                item.productType,
-                item.totalQty,
-                item.totalAmount
-            ]);
-        }
-
-        let formattedRawData = [
-            ['Quý / Thời gian', 'Hãng (Brand)', 'Loại Sản Phẩm', 'Tổng Số Lượng Nhập', 'Tổng Giá Trị Nhập (VNĐ)', 'Mục Tiêu Quý Tới'],
-            ...processedDataArray
-        ];
-
-        buildTabulatorTable(formattedRawData);
+function processThongKeQuyData(rawData) {
+    if (!rawData || rawData.length <= 1) {
+        buildTabulatorTable([]);
+        return;
     }
+
+    let rows = rawData.slice(1);
+    let aggregatedMap = {};
+
+    rows.forEach(r => {
+        let ngayStr = r[0] || ''; 
+        let tenHang = String(r[7] || '').toLowerCase(); 
+        let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
+        let thanhTien = parseFloat(String(r[11] || '0'].replace(/[,.]/g, '')) || 0; 
+        
+        // Lấy dữ liệu từ các cột S, T, U (tương ứng index 18, 19, 20 nếu tính từ 0)
+        // Cột S (index 18): Mục tiêu số lượng hoặc giá trị tùy bạn quy ước
+        let mucTieuQuy = parseFloat(String(r[18] || '0').replace(/[,.]/g, '')) || 0;
+
+        if (!ngayStr) return;
+
+        let d = new Date(ngayStr);
+        if (isNaN(d.getTime())) return;
+        let month = d.getMonth() + 1;
+        let year = d.getFullYear();
+        let quarter = '';
+        if (month >= 1 && month <= 3) quarter = `Quý 1 / ${year}`;
+        else if (month >= 4 && month <= 6) quarter = `Quý 2 / ${year}`;
+        else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
+        else quarter = `Quý 4 / ${year}`;
+
+        let brand = 'Khác';
+        if (tenHang.includes('dell')) brand = 'Dell';
+        else if (tenHang.includes('hp') || tenHang.includes('hewlett')) brand = 'HP';
+        else if (tenHang.includes('lenovo')) brand = 'Lenovo';
+        else return; 
+
+        let productType = 'Khác';
+        if (tenHang.includes('laptop') || tenHang.includes('xách tay') || tenHang.includes('notebook')) {
+            productType = 'Máy tính xách tay';
+        } else if (tenHang.includes('thinkcentre') || tenHang.includes('desktop') || tenHang.includes('máy tính để bàn') || tenHang.includes('pc') || tenHang.includes('pro tower') || tenHang.includes('m70s')) {
+            productType = 'Máy tính để bàn';
+        } else if (tenHang.includes('lcd') || tenHang.includes('màn hình') || tenHang.includes('monitor') || tenHang.includes('se2225h')) {
+            productType = 'Màn hình';
+        } else {
+            return; 
+        }
+
+        let key = `${quarter}_${brand}_${productType}`;
+        if (!aggregatedMap[key]) {
+            aggregatedMap[key] = {
+                quarter: quarter,
+                brand: brand,
+                productType: productType,
+                totalQty: 0,
+                totalAmount: 0,
+                targetQty: mucTieuQuy // Lưu mục tiêu gom nhóm
+            };
+        }
+        aggregatedMap[key].totalQty += soLuong;
+        aggregatedMap[key].totalAmount += thanhTien;
+        // Nếu muốn cộng dồn hoặc lấy max mục tiêu từ các dòng trong sheet NHAP_KHO
+        if(mucTieuQuy > aggregatedMap[key].targetQty) {
+            aggregatedMap[key].targetQty = mucTieuQuy;
+        }
+    });
+
+    let processedDataArray = [];
+    for (let key in aggregatedMap) {
+        let item = aggregatedMap[key];
+        // Tính % hoàn thành dựa trên Tổng Số Lượng Nhập so với Mục tiêu (nếu có mục tiêu > 0)
+        let percentComplete = item.targetQty > 0 ? (item.totalQty / item.targetQty) * 100 : 0;
+
+        processedDataArray.push([
+            item.quarter,
+            item.brand,
+            item.productType,
+            item.totalQty,
+            item.totalAmount,
+            item.targetQty,
+            percentComplete.toFixed(2) + '%'
+        ]);
+    }
+
+    let formattedRawData = [
+        ['Quý / Thời gian', 'Hãng (Brand)', 'Loại Sản Phẩm', 'Tổng Số Lượng Nhập', 'Tổng Giá Trị Nhập (VNĐ)', 'Mục tiêu (Cột S)', '% Hoàn Thành'],
+        ...processedDataArray
+    ];
+
+    return ContentService.createTextOutput(JSON.stringify(formattedRawData)).setMimeType(ContentService.MimeType.JSON);
+}
 
     function buildTabulatorTable(rawData) {
         if (!rawData || rawData.length === 0) {
