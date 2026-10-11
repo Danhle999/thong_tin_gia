@@ -72,7 +72,7 @@
         .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
         
         .tabulator {
-            font-size: 1.05rem;
+            font-size: 1.00rem;
         }
 
         .btn-edit-action {
@@ -113,7 +113,7 @@
         .dashboard-container {
             display: none;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             flex: 1 1 auto;
             overflow-y: auto;
             padding-bottom: 10px;
@@ -122,7 +122,7 @@
             background: #ffffff;
             border-left: 4px solid #0d6efd;
             border-radius: 6px;
-            padding: 12px 15px;
+            padding: 10px 15px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             border-top: 1px solid #e9ecef;
             border-right: 1px solid #e9ecef;
@@ -131,14 +131,21 @@
         .chart-box {
             background: #ffffff;
             border-radius: 8px;
-            padding: 15px;
+            padding: 10px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.06);
             border: 1px solid #dee2e6;
-            height: 320px;
+            height: 260px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+        }
+        .table-section-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: #334155;
+            margin-bottom: 5px;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -231,35 +238,35 @@
             </div>
         </div>
 
-        <!-- KHUNG CHỨA BẢNG TABULATOR -->
+        <!-- KHUNG CHỨA BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
-        <!-- KHUNG CHỨA DASHBOARD (Dành riêng cho THỐNG KÊ QUÝ) -->
+        <!-- KHUNG CHỨA DASHBOARD & 2 TABULATOR (Dành riêng cho THỐNG KÊ QUÝ) -->
         <div id="dashboardView" class="dashboard-container">
             <!-- 3 Thẻ thống kê tổng quan -->
-            <div class="row g-3">
+            <div class="row g-2">
                 <div class="col-md-4">
                     <div class="stat-card">
-                        <span class="text-muted small fw-bold uppercase">Tổng Số Lượng Nhập Kho</span>
-                        <h3 class="text-primary fw-bold mt-1 mb-0" id="statTotalQty">0</h3>
+                        <span class="text-muted small fw-bold">TỔNG SỐ LƯỢNG NHẬP KHO</span>
+                        <h4 class="text-primary fw-bold mt-1 mb-0" id="statTotalQty">0</h4>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-card" style="border-left-color: #198754;">
-                        <span class="text-muted small fw-bold uppercase">Tổng Giá Trị Nhập Kho</span>
-                        <h3 class="text-success fw-bold mt-1 mb-0" id="statTotalAmount">0 VNĐ</h3>
+                        <span class="text-muted small fw-bold">TỔNG GIÁ TRỊ NHẬP KHO</span>
+                        <h4 class="text-success fw-bold mt-1 mb-0" id="statTotalAmount">0 VNĐ</h4>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-card" style="border-left-color: #ffc107;">
-                        <span class="text-muted small fw-bold uppercase">Số Lượng Bản Ghi Thống Kê</span>
-                        <h3 class="text-dark fw-bold mt-1 mb-0" id="statTotalRecords">0</h3>
+                        <span class="text-muted small fw-bold">SỐ LƯỢNG BẢN GHI THỐNG KÊ</span>
+                        <h4 class="text-dark fw-bold mt-1 mb-0" id="statTotalRecords">0</h4>
                     </div>
                 </div>
             </div>
 
             <!-- 2 Biểu đồ trực quan -->
-            <div class="row g-3 mt-1">
+            <div class="row g-2">
                 <div class="col-md-7">
                     <div class="chart-box">
                         <canvas id="barChartBrandQty"></canvas>
@@ -270,6 +277,18 @@
                         <canvas id="doughnutChartType"></canvas>
                     </div>
                 </div>
+            </div>
+
+            <!-- Bảng Tabulator 1: Chi tiết theo Quý -->
+            <div>
+                <div class="table-section-title"><i class="fa-solid fa-table me-1"></i> 1. Chi Tiết Nhập Kho Theo Quý & Hãng</div>
+                <div id="table-quarter-detail" style="height: 220px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+            </div>
+
+            <!-- Bảng Tabulator 2: Tổng hợp theo Hãng & Loại -->
+            <div>
+                <div class="table-section-title"><i class="fa-solid fa-table-cells me-1"></i> 2. Tổng Hợp Lũy Kế Theo Hãng & Loại Sản Phẩm</div>
+                <div id="table-brand-summary" style="height: 220px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
         </div>
     </div>
@@ -380,6 +399,8 @@
 
     let currentMode = 'LAPTOP';
     let table = null;
+    let tableQuarterDetail = null;
+    let tableBrandSummary = null;
     let barChartInstance = null;
     let doughnutChartInstance = null;
 
@@ -414,7 +435,6 @@
         let cols = getActiveColumns();
         document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${mode} (${cols.length} Cột)`;
         
-        // Điều chỉnh hiển thị giao diện tùy theo tab THỐNG KÊ QUÝ hay các tab thông thường
         let isThongKe = (mode === 'THONG_KE_QUY');
         document.getElementById('actionButtonsRow').style.display = isThongKe ? 'none' : 'flex';
         document.getElementById('globalFilterCard').style.display = isThongKe ? 'none' : 'block';
@@ -452,13 +472,13 @@
 
     function processThongKeQuyData(rawData) {
         if (!rawData || rawData.length <= 1) {
-            buildTabulatorTable([]);
-            renderDashboard([]);
+            renderDashboardAndTables([], []);
             return;
         }
 
         let rows = rawData.slice(1);
         let aggregatedMap = {};
+        let summaryBrandMap = {};
 
         rows.forEach(r => {
             let ngayStr = r[0] || ''; 
@@ -495,48 +515,45 @@
                 return; 
             }
 
+            // Map cho Bảng 1 (Chi tiết theo Quý)
             let key = `${quarter}_${brand}_${productType}`;
             if (!aggregatedMap[key]) {
-                aggregatedMap[key] = {
-                    quarter: quarter,
-                    brand: brand,
-                    productType: productType,
-                    totalQty: 0,
-                    totalAmount: 0
-                };
+                aggregatedMap[key] = { quarter, brand, productType, totalQty: 0, totalAmount: 0 };
             }
             aggregatedMap[key].totalQty += soLuong;
             aggregatedMap[key].totalAmount += thanhTien;
+
+            // Map cho Bảng 2 (Tổng hợp Lũy kế theo Hãng & Loại)
+            let sumKey = `${brand}_${productType}`;
+            if (!summaryBrandMap[sumKey]) {
+                summaryBrandMap[sumKey] = { brand, productType, totalQty: 0, totalAmount: 0 };
+            }
+            summaryBrandMap[sumKey].totalQty += soLuong;
+            summaryBrandMap[sumKey].totalAmount += thanhTien;
         });
 
-        let processedDataArray = [];
+        let detailDataArray = [];
         for (let key in aggregatedMap) {
             let item = aggregatedMap[key];
-            processedDataArray.push([
-                item.quarter,
-                item.brand,
-                item.productType,
-                item.totalQty,
-                item.totalAmount
-            ]);
+            detailDataArray.push([item.quarter, item.brand, item.productType, item.totalQty, item.totalAmount]);
         }
 
-        let formattedRawData = [
-            ['Quý / Thời gian', 'Hãng (Brand)', 'Loại Sản Phẩm', 'Tổng Số Lượng Nhập', 'Tổng Giá Trị Nhập (VNĐ)'],
-            ...processedDataArray
-        ];
+        let summaryDataArray = [];
+        for (let key in summaryBrandMap) {
+            let item = summaryBrandMap[key];
+            summaryDataArray.push([item.brand, item.productType, item.totalQty, item.totalAmount]);
+        }
 
-        buildTabulatorTable(formattedRawData);
-        renderDashboard(processedDataArray);
+        renderDashboardAndTables(detailDataArray, summaryDataArray);
     }
 
-    function renderDashboard(dataArray) {
+    function renderDashboardAndTables(detailArray, summaryArray) {
         let totalQty = 0;
         let totalAmount = 0;
         let brandQtyMap = {};
         let typeAmountMap = {};
 
-        dataArray.forEach(item => {
+        detailArray.forEach(item => {
             let qty = parseFloat(item[3]) || 0;
             let amt = parseFloat(item[4]) || 0;
             let brand = item[1];
@@ -551,9 +568,10 @@
 
         document.getElementById('statTotalQty').innerText = totalQty.toLocaleString('vi-VN');
         document.getElementById('statTotalAmount').innerText = totalAmount.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('statTotalRecords').innerText = dataArray.length;
+        document.getElementById('statTotalRecords').innerText = detailArray.length;
+        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${detailArray.length} mục`;
 
-        // Vẽ biểu đồ Cột (Số lượng theo hãng)
+        // Vẽ biểu đồ Cột
         let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
         if (barChartInstance) barChartInstance.destroy();
         
@@ -572,13 +590,13 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng', font: { size: 14, weight: 'bold' } },
+                    title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng', font: { size: 13, weight: 'bold' } },
                     legend: { display: false }
                 }
             }
         });
 
-        // Vẽ biểu đồ Tròn (Giá trị theo loại sản phẩm)
+        // Vẽ biểu đồ Tròn
         let ctxDoughnut = document.getElementById('doughnutChartType').getContext('2d');
         if (doughnutChartInstance) doughnutChartInstance.destroy();
 
@@ -595,10 +613,58 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại', font: { size: 14, weight: 'bold' } },
-                    legend: { position: 'bottom', labels: { boxWidth: 12 } }
+                    title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại', font: { size: 13, weight: 'bold' } },
+                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } }
                 }
             }
+        });
+
+        // --- KHỞI TẠO BẢNG TABULATOR 1 (Chi tiết theo Quý) ---
+        let detailTableData = detailArray.map((row, idx) => ({
+            id: idx + 1,
+            col_0: row[0],
+            col_1: row[1],
+            col_2: row[2],
+            col_3: row[3],
+            col_4: row[4]
+        }));
+
+        if (tableQuarterDetail) tableQuarterDetail.destroy();
+        tableQuarterDetail = new Tabulator("#table-quarter-detail", {
+            data: detailTableData,
+            layout: "fitColumns",
+            height: "100%",
+            columns: [
+                { formatter: "rownum", hozAlign: "center", width: 60, title: "STT" },
+                { title: "Quý / Thời gian", field: "col_0", width: 150 },
+                { title: "Hãng (Brand)", field: "col_1", width: 140 },
+                { title: "Loại Sản Phẩm", field: "col_2" },
+                { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+            ]
+        });
+
+        // --- KHỞI TẠO BẢNG TABULATOR 2 (Tổng hợp lũy kế theo hãng) ---
+        let summaryTableData = summaryArray.map((row, idx) => ({
+            id: idx + 1,
+            col_0: row[0],
+            col_1: row[1],
+            col_2: row[2],
+            col_3: row[3]
+        }));
+
+        if (tableBrandSummary) tableBrandSummary.destroy();
+        tableBrandSummary = new Tabulator("#table-brand-summary", {
+            data: summaryTableData,
+            layout: "fitColumns",
+            height: "100%",
+            columns: [
+                { formatter: "rownum", hozAlign: "center", width: 60, title: "STT" },
+                { title: "Hãng (Brand)", field: "col_0", width: 180 },
+                { title: "Loại Sản Phẩm", field: "col_1" },
+                { title: "Tổng Số Lượng Lũy Kế", field: "col_2", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị Lũy Kế (VNĐ)", field: "col_3", hozAlign: "right", width: 220, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+            ]
         });
     }
 
@@ -609,75 +675,61 @@
         }
 
         let activeCols = getActiveColumns();
-        
         let columnsConfig = [
-            {
-                formatter: "rownum", 
-                hozAlign: "center", 
-                width: 60, 
-                headerSort: false, 
-                frozen: true,
-                title: "STT"
-            }
+            { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
         ];
 
-        if (currentMode !== 'THONG_KE_QUY') {
-            columnsConfig.push({
-                title: "Thao tác",
-                field: "_actionCol",
-                formatter: function(cell) {
-                    let rowData = cell.getRow().getData();
-                    let isEditing = rowData._isEditing || false;
-                    if (isEditing) {
-                        return `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action" title="Bấm để lưu và khóa dòng này"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
-                    } else {
-                        return `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action" title="Bấm để mở khóa sửa dòng này"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
-                    }
-                },
-                width: 95,
-                hozAlign: "center",
-                headerSort: false,
-                frozen: true,
-                cellClick: function(e, cell) {
-                    let row = cell.getRow();
-                    let rowData = row.getData();
-                    let activeCols = getActiveColumns();
-                    let cellEl = cell.getElement();
-                    let btn = cellEl.querySelector('button');
-
-                    if (!rowData._isEditing) {
-                        rowData._isEditing = true;
-                        btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
-                        btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
-                        btn.title = "Bấm để lưu và khóa dòng này";
-                        
-                        row.update(rowData);
-
-                        let cells = row.getCells();
-                        for (let c of cells) {
-                            if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
-                                c.edit();
-                                break;
-                            }
-                        }
-                    } else {
-                        let fullRowData = [];
-                        for(let i = 0; i < activeCols.length; i++) {
-                            fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
-                        }
-
-                        saveRowToSheet(rowData.sheetRowIndex, fullRowData);
-
-                        rowData._isEditing = false;
-                        btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
-                        btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
-                        btn.title = "Bấm để mở khóa sửa dòng này";
-                        
-                        row.update(rowData);
-                    }
+        columnsConfig.push({
+            title: "Thao tác",
+            field: "_actionCol",
+            formatter: function(cell) {
+                let rowData = cell.getRow().getData();
+                let isEditing = rowData._isEditing || false;
+                if (isEditing) {
+                    return `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
+                } else {
+                    return `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
                 }
-            });
-        }
+            },
+            width: 95,
+            hozAlign: "center",
+            headerSort: false,
+            frozen: true,
+            cellClick: function(e, cell) {
+                let row = cell.getRow();
+                let rowData = row.getData();
+                let activeCols = getActiveColumns();
+                let cellEl = cell.getElement();
+                let btn = cellEl.querySelector('button');
+
+                if (!rowData._isEditing) {
+                    rowData._isEditing = true;
+                    btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
+                    btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
+                    row.update(rowData);
+
+                    let cells = row.getCells();
+                    for (let c of cells) {
+                        if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
+                            c.edit();
+                            break;
+                        }
+                    }
+                } else {
+                    let fullRowData = [];
+                    for(let i = 0; i < activeCols.length; i++) {
+                        fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
+                    }
+
+                    saveRowToSheet(rowData.sheetRowIndex, fullRowData);
+
+                    rowData._isEditing = false;
+                    btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
+                    btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
+                    row.update(rowData);
+                }
+            }
+        });
 
         activeCols.forEach((col, index) => {
             let colDef = {
@@ -687,14 +739,11 @@
                 minWidth: 80, 
                 editor: "input",
                 editable: function(cell) {
-                    if (currentMode === 'THONG_KE_QUY') return false;
                     if (currentMode === 'LAPTOP' && col.label.trim().toUpperCase() === 'CHECK GIÁ BÁN') return false;
                     let rowData = cell.getRow().getData();
                     return rowData._isEditing === true;
                 },
-                editorParams: {
-                    selectContents: true
-                },
+                editorParams: { selectContents: true },
                 headerFilter: "input", 
                 headerFilterFunc: "like", 
                 headerFilterPlaceholder: "Lọc..."
@@ -758,9 +807,7 @@
             return obj;
         });
 
-        if (table) {
-            table.destroy();
-        }
+        if (table) table.destroy();
 
         table = new Tabulator("#example-table", {
             data: tableData,
@@ -772,9 +819,7 @@
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: {
-                resizable: true,
-            },
+            columnDefaults: { resizable: true },
             cellEdited: function(cell) {
                 if (currentMode === 'LAPTOP') {
                     let row = cell.getRow();
@@ -878,9 +923,7 @@
             body: formData.toString()
         }).catch(err => {});
 
-        setTimeout(() => {
-            showLoading(false);
-        }, 900);
+        setTimeout(() => { showLoading(false); }, 900);
     }
 
     function addRow() {
