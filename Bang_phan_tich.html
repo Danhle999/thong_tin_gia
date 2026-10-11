@@ -332,7 +332,7 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-\$1').replace('active', '').trim();
+           btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
         });
         
         let btnObj = {
