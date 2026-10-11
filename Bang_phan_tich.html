@@ -285,7 +285,7 @@
                 </div>
             </div>
 
-            <!-- Bảng Tabulator 1: Chi tiết theo Quý (Chiều cao rộng rãi 240px + Ô lọc riêng) -->
+            <!-- Bảng Tabulator 1: Chi tiết theo Quý & Hãng -->
             <div>
                 <div class="table-section-header">
                     <div class="table-section-title"><i class="fa-solid fa-table me-1"></i> 1. Chi Tiết Nhập Kho Theo Quý & Hãng</div>
@@ -296,10 +296,10 @@
                 <div id="table-quarter-detail" style="height: 240px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
 
-            <!-- Bảng Tabulator 2: Tổng hợp theo Hãng & Loại (Chiều cao rộng rãi 240px + Ô lọc riêng) -->
+            <!-- Bảng Tabulator 2: Mục tiêu doanh số quý cho từng brand -->
             <div>
                 <div class="table-section-header">
-                    <div class="table-section-title"><i class="fa-solid fa-table-cells me-1"></i> 2. Tổng Hợp Lũy Kế Theo Hãng & Loại Sản Phẩm</div>
+                    <div class="table-section-title"><i class="fa-solid fa-bullseye me-1"></i> 2. Theo Dõi Mục Tiêu Doanh Số Quý Cho Từng Brand</div>
                     <div style="width: 280px;">
                         <input type="text" id="filterSummaryInput" class="form-control form-control-sm" placeholder="Lọc nhanh bảng 2..." onkeyup="filterBrandSummaryTable()">
                     </div>
@@ -488,13 +488,12 @@
 
     function processThongKeQuyData(rawData) {
         if (!rawData || rawData.length <= 1) {
-            renderDashboardAndTables([], []);
+            renderDashboardAndTables([]);
             return;
         }
 
         let rows = rawData.slice(1);
         let aggregatedMap = {};
-        let summaryBrandMap = {};
 
         rows.forEach(r => {
             let ngayStr = r[0] || ''; 
@@ -537,13 +536,6 @@
             }
             aggregatedMap[key].totalQty += soLuong;
             aggregatedMap[key].totalAmount += thanhTien;
-
-            let sumKey = `${brand}_${productType}`;
-            if (!summaryBrandMap[sumKey]) {
-                summaryBrandMap[sumKey] = { brand, productType, totalQty: 0, totalAmount: 0 };
-            }
-            summaryBrandMap[sumKey].totalQty += soLuong;
-            summaryBrandMap[sumKey].totalAmount += thanhTien;
         });
 
         let detailDataArray = [];
@@ -552,16 +544,10 @@
             detailDataArray.push([item.quarter, item.brand, item.productType, item.totalQty, item.totalAmount]);
         }
 
-        let summaryDataArray = [];
-        for (let key in summaryBrandMap) {
-            let item = summaryBrandMap[key];
-            summaryDataArray.push([item.brand, item.productType, item.totalQty, item.totalAmount]);
-        }
-
-        renderDashboardAndTables(detailDataArray, summaryDataArray);
+        renderDashboardAndTables(detailDataArray);
     }
 
-    function renderDashboardAndTables(detailArray, summaryArray) {
+    function renderDashboardAndTables(detailArray) {
         let totalQty = 0;
         let totalAmount = 0;
         let brandQtyMap = {};
@@ -633,7 +619,7 @@
             }
         });
 
-        // --- BẢNG TABULATOR 1 (Chiều cao 240px, phân trang 8 dòng) ---
+        // --- BẢNG TABULATOR 1 ---
         let detailTableData = detailArray.map((row, idx) => ({
             id: idx + 1,
             col_0: row[0],
@@ -660,43 +646,107 @@
             ]
         });
 
-        // --- BẢNG TABULATOR 2 (Chiều cao 240px, phân trang 8 dòng) ---
-        let summaryTableData = summaryArray.map((row, idx) => ({
+        // --- BẢNG TABULATOR 2 ---
+        let targetTableData = detailArray.map((row, idx) => ({
             id: idx + 1,
-            col_0: row[0],
-            col_1: row[1],
-            col_2: row[3],
-            col_3: row[3]
+            quarter: row[0],
+            brand: row[1],
+            productType: row[2],
+            targetAmount: 0,
+            actualAmount: row[4] || 0,
+            pctActual: 0,
+            remainingAmount: 0,
+            pctRemaining: 0
         }));
 
         if (tableBrandSummary) tableBrandSummary.destroy();
         tableBrandSummary = new Tabulator("#table-brand-summary", {
-            data: summaryArray.map((row, idx) => ({
-                id: idx + 1,
-                col_0: row[0],
-                col_1: row[1],
-                col_2: row[2],
-                col_3: row[3]
-            })),
+            data: targetTableData,
             layout: "fitColumns",
             height: "240px",
             pagination: "local",
             paginationSize: 8,
+            cellEdited: function(cell) {
+                if (cell.getField() === "targetAmount") {
+                    let row = cell.getRow();
+                    let data = row.getData();
+                    let target = parseFloat(data.targetAmount) || 0;
+                    let actual = parseFloat(data.actualAmount) || 0;
+
+                    if (target > 0) {
+                        data.pctActual = (actual / target) * 100;
+                        data.remainingAmount = target - actual;
+                        data.pctRemaining = (data.remainingAmount / target) * 100;
+                    } else {
+                        data.pctActual = 0;
+                        data.remainingAmount = 0 - actual;
+                        data.pctRemaining = 0;
+                    }
+                    row.update(data);
+                }
+            },
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
-                { title: "Hãng (Brand)", field: "col_0" },
-                { title: "Loại Sản Phẩm", field: "col_1" },
-                { title: "Tổng Số Lượng Lũy Kế", field: "col_2", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Giá Trị Lũy Kế (VNĐ)", field: "col_3", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+                { title: "Quý / Brand", field: "quarter", width: 110, formatter: function(cell){
+                    return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} - ${cell.getRow().getData().productType}</small>`;
+                }},
+                { 
+                    title: "Mục tiêu doanh số", 
+                    field: "targetAmount", 
+                    hozAlign: "right", 
+                    editor: "number",
+                    cssClass: "bg-light text-primary fw-bold",
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toLocaleString('vi-VN') : "-";
+                    }
+                },
+                { 
+                    title: "Đã thực hiện", 
+                    field: "actualAmount", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toLocaleString('vi-VN') : "-";
+                    }
+                },
+                { 
+                    title: "% Đã thực hiện", 
+                    field: "pctActual", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toFixed(2) + "%" : "-";
+                    }
+                },
+                { 
+                    title: "Còn thực hiện", 
+                    field: "remainingAmount", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        if (v === 0 && cell.getRow().getData().targetAmount === 0) return "-";
+                        return v.toLocaleString('vi-VN');
+                    }
+                },
+                { 
+                    title: "% Còn thực hiện", 
+                    field: "pctRemaining", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        if (v === 0 && cell.getRow().getData().targetAmount === 0) return "-";
+                        return v.toFixed(2) + "%";
+                    }
+                }
             ]
         });
 
-        // Reset ô input lọc
         document.getElementById('filterDetailInput').value = '';
         document.getElementById('filterSummaryInput').value = '';
     }
 
-    // Hàm lọc dữ liệu cho Bảng 1
+    // Hàm lọc dữ liệu Bảng 1
     function filterQuarterDetailTable() {
         if (!tableQuarterDetail) return;
         let keyword = document.getElementById('filterDetailInput').value.toLowerCase();
@@ -709,7 +759,7 @@
         });
     }
 
-    // Hàm lọc dữ liệu cho Bảng 2
+    // Hàm lọc dữ liệu Bảng 2
     function filterBrandSummaryTable() {
         if (!tableBrandSummary) return;
         let keyword = document.getElementById('filterSummaryInput').value.toLowerCase();
