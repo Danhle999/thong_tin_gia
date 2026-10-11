@@ -629,41 +629,38 @@
             col_4: row[4]
         }));
 
+// --- BẢNG 1: Chi tiết theo Quý ---
         if (tableQuarterDetail) tableQuarterDetail.destroy();
         tableQuarterDetail = new Tabulator("#table-quarter-detail", {
             data: detailTableData,
             layout: "fitColumns",
-            height: "100%",
+            height: "160px", // <--- Chỉnh chiều cao gọn lại tại đây (ví dụ: 160px)
+            pagination: "local",
+            paginationSize: 5,  // Giới hạn số dòng hiển thị mỗi trang để bảng lùn xuống
             columns: [
-                { formatter: "rownum", hozAlign: "center", width: 60, title: "STT" },
-                { title: "Quý / Thời gian", field: "col_0", width: 150 },
-                { title: "Hãng (Brand)", field: "col_1", width: 140 },
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
+                { title: "Quý / Thời gian", field: "col_0", width: 130 },
+                { title: "Hãng (Brand)", field: "col_1", width: 120 },
                 { title: "Loại Sản Phẩm", field: "col_2" },
-                { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+                { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
             ]
         });
 
-        // --- KHỞI TẠO BẢNG TABULATOR 2 (Tổng hợp lũy kế theo hãng) ---
-        let summaryTableData = summaryArray.map((row, idx) => ({
-            id: idx + 1,
-            col_0: row[0],
-            col_1: row[1],
-            col_2: row[2],
-            col_3: row[3]
-        }));
-
+// --- BẢNG 2: Tổng hợp lũy kế ---
         if (tableBrandSummary) tableBrandSummary.destroy();
         tableBrandSummary = new Tabulator("#table-brand-summary", {
             data: summaryTableData,
             layout: "fitColumns",
-            height: "100%",
+            height: "160px", // <--- Chỉnh chiều cao gọn lại tại đây
+            pagination: "local",
+            paginationSize: 5,  // Giới hạn số dòng hiển thị mỗi trang
             columns: [
-                { formatter: "rownum", hozAlign: "center", width: 60, title: "STT" },
-                { title: "Hãng (Brand)", field: "col_0", width: 180 },
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
+                { title: "Hãng (Brand)", field: "col_0", width: 150 },
                 { title: "Loại Sản Phẩm", field: "col_1" },
-                { title: "Tổng Số Lượng Lũy Kế", field: "col_2", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Giá Trị Lũy Kế (VNĐ)", field: "col_3", hozAlign: "right", width: 220, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+                { title: "Tổng Số Lượng Lũy Kế", field: "col_2", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị Lũy Kế (VNĐ)", field: "col_3", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
             ]
         });
     }
