@@ -285,26 +285,60 @@
                 </div>
             </div>
 
-            <!-- Bảng Tabulator 1: Chi tiết theo Quý & Hãng -->
+            <!-- BẢNG 1: Chi tiết theo Quý & Hãng (Kèm Bộ Lọc Đồng Thời Quý, Hãng, Loại SP) -->
             <div>
                 <div class="table-section-header">
                     <div class="table-section-title"><i class="fa-solid fa-table me-1"></i> 1. Chi Tiết Nhập Kho Theo Quý & Hãng</div>
-                    <div style="width: 480px;">
-                        <input type="text" id="filterDetailInput" class="form-control form-control-sm" placeholder="Lọc nhanh bảng 1..." onkeyup="filterQuarterDetailTable()">
+                </div>
+                <div class="row g-2 mb-1 p-2 bg-light border rounded">
+                    <div class="col-md-3">
+                        <select id="filter1Quarter" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Quý --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filter1Brand" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Hãng --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filter1Type" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Loại sản phẩm --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilterTable1()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
                     </div>
                 </div>
-                <div id="table-quarter-detail" style="height: 240px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+                <div id="table-quarter-detail" style="height: 420px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
 
-            <!-- Bảng Tabulator 2: Mục tiêu doanh số quý cho từng brand -->
+            <!-- BẢNG 2: Mục tiêu doanh số quý (Kèm Bộ Lọc Đồng Thời Quý, Hãng, Loại SP) -->
             <div>
                 <div class="table-section-header">
                     <div class="table-section-title"><i class="fa-solid fa-bullseye me-1"></i> 2. Theo Dõi Mục Tiêu Doanh Số Quý Cho Từng Brand</div>
-                    <div style="width: 480px;">
-                        <input type="text" id="filterSummaryInput" class="form-control form-control-sm" placeholder="Lọc nhanh bảng 2..." onkeyup="filterBrandSummaryTable()">
+                </div>
+                <div class="row g-2 mb-1 p-2 bg-light border rounded">
+                    <div class="col-md-3">
+                        <select id="filter2Quarter" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Quý --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filter2Brand" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Hãng --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filter2Type" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Loại sản phẩm --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilterTable2()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
                     </div>
                 </div>
-                <div id="table-brand-summary" style="height: 240px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+                <div id="table-brand-summary" style="height: 420px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
         </div>
     </div>
@@ -553,9 +587,14 @@
         let brandQtyMap = {};
         let typeAmountMap = {};
 
+        let quartersSet = new Set();
+        let brandsSet = new Set();
+        let typesSet = new Set();
+
         detailArray.forEach(item => {
             let qty = parseFloat(item[3]) || 0;
             let amt = parseFloat(item[4]) || 0;
+            let quarter = item[0];
             let brand = item[1];
             let type = item[2];
 
@@ -564,12 +603,21 @@
 
             brandQtyMap[brand] = (brandQtyMap[brand] || 0) + qty;
             typeAmountMap[type] = (typeAmountMap[type] || 0) + amt;
+
+            quartersSet.add(quarter);
+            brandsSet.add(brand);
+            typesSet.add(type);
         });
 
         document.getElementById('statTotalQty').innerText = totalQty.toLocaleString('vi-VN');
         document.getElementById('statTotalAmount').innerText = totalAmount.toLocaleString('vi-VN') + ' VNĐ';
         document.getElementById('statTotalRecords').innerText = detailArray.length;
         document.getElementById('rowCountBadge').innerText = `Hiển thị: ${detailArray.length} mục`;
+
+        // Đổ dữ liệu vào các thẻ select lọc
+        populateSelectOptions('filter1Quarter', 'filter2Quarter', quartersSet);
+        populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
+        populateSelectOptions('filter1Type', 'filter2Type', typesSet);
 
         // Vẽ biểu đồ Cột
         let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
@@ -633,7 +681,7 @@
         tableQuarterDetail = new Tabulator("#table-quarter-detail", {
             data: detailTableData,
             layout: "fitColumns",
-            height: "240px",
+            height: "220px",
             pagination: "local",
             paginationSize: 8,
             columns: [
@@ -663,7 +711,7 @@
         tableBrandSummary = new Tabulator("#table-brand-summary", {
             data: targetTableData,
             layout: "fitColumns",
-            height: "240px",
+            height: "220px",
             pagination: "local",
             paginationSize: 8,
             cellEdited: function(cell) {
@@ -742,34 +790,74 @@
             ]
         });
 
-        document.getElementById('filterDetailInput').value = '';
-        document.getElementById('filterSummaryInput').value = '';
+        resetFilterTable1(false);
+        resetFilterTable2(false);
     }
 
-    // Hàm lọc dữ liệu Bảng 1
-    function filterQuarterDetailTable() {
+    function populateSelectOptions(selectId1, selectId2, setValues) {
+        let sel1 = document.getElementById(selectId1);
+        let sel2 = document.getElementById(selectId2);
+        let defaultText1 = sel1.options[0].text;
+        let defaultText2 = sel2.options[0].text;
+
+        sel1.innerHTML = `<option value="">${defaultText1}</option>`;
+        sel2.innerHTML = `<option value="">${defaultText2}</option>`;
+
+        Array.from(setValues).sort().forEach(val => {
+            let opt1 = document.createElement('option');
+            opt1.value = val;
+            opt1.text = val;
+            sel1.appendChild(opt1);
+
+            let opt2 = document.createElement('option');
+            opt2.value = val;
+            opt2.text = val;
+            sel2.appendChild(opt2);
+        });
+    }
+
+    // Hàm lọc đồng thời cho Bảng 1
+    function applyMultiFilterTable1() {
         if (!tableQuarterDetail) return;
-        let keyword = document.getElementById('filterDetailInput').value.toLowerCase();
-        if (!keyword) {
-            tableQuarterDetail.clearFilter();
-            return;
-        }
-        tableQuarterDetail.setFilter(function(data){
-            return Object.values(data).some(val => String(val).toLowerCase().includes(keyword));
+        let qVal = document.getElementById('filter1Quarter').value;
+        let bVal = document.getElementById('filter1Brand').value;
+        let tVal = document.getElementById('filter1Type').value;
+
+        tableQuarterDetail.setFilter(function(data) {
+            let matchQ = !qVal || data.col_0 === qVal;
+            let matchB = !bVal || data.col_1 === bVal;
+            let matchT = !tVal || data.col_2 === tVal;
+            return matchQ && matchB && matchT;
         });
     }
 
-    // Hàm lọc dữ liệu Bảng 2
-    function filterBrandSummaryTable() {
+    function resetFilterTable1(reapply = true) {
+        document.getElementById('filter1Quarter').value = "";
+        document.getElementById('filter1Brand').value = "";
+        document.getElementById('filter1Type').value = "";
+        if (tableQuarterDetail && reapply) tableQuarterDetail.clearFilter();
+    }
+
+    // Hàm lọc đồng thời cho Bảng 2
+    function applyMultiFilterTable2() {
         if (!tableBrandSummary) return;
-        let keyword = document.getElementById('filterSummaryInput').value.toLowerCase();
-        if (!keyword) {
-            tableBrandSummary.clearFilter();
-            return;
-        }
-        tableBrandSummary.setFilter(function(data){
-            return Object.values(data).some(val => String(val).toLowerCase().includes(keyword));
+        let qVal = document.getElementById('filter2Quarter').value;
+        let bVal = document.getElementById('filter2Brand').value;
+        let tVal = document.getElementById('filter2Type').value;
+
+        tableBrandSummary.setFilter(function(data) {
+            let matchQ = !qVal || data.quarter === qVal;
+            let matchB = !bVal || data.brand === bVal;
+            let matchT = !tVal || data.productType === tVal;
+            return matchQ && matchB && matchT;
         });
+    }
+
+    function resetFilterTable2(reapply = true) {
+        document.getElementById('filter2Quarter').value = "";
+        document.getElementById('filter2Brand').value = "";
+        document.getElementById('filter2Type').value = "";
+        if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
     function buildTabulatorTable(rawData) {
