@@ -356,7 +356,7 @@
     }
 
     function loadDataFromSheet() {
-        let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
+        let targetSheet = currentMode;
         showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${targetSheet}`)
@@ -388,7 +388,7 @@ function processThongKeQuyData(rawData) {
         let ngayStr = r[0] || ''; 
         let tenHang = String(r[7] || '').toLowerCase(); 
         let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
-        let thanhTien = parseFloat(String(r[11] || '0'].replace(/[,.]/g, '')) || 0; 
+        let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0;
         
         // Lấy dữ liệu từ các cột S, T, U (tương ứng index 18, 19, 20 nếu tính từ 0)
         // Cột S (index 18): Mục tiêu số lượng hoặc giá trị tùy bạn quy ước
