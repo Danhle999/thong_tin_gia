@@ -279,13 +279,13 @@
                 </div>
             </div>
 
-            <!-- Bảng Tabulator 1: Chi tiết theo Quý (Đã rút gọn chiều cao) -->
+            <!-- Bảng Tabulator 1: Chi tiết theo Quý (Co giãn vừa khít màn hình) -->
             <div>
                 <div class="table-section-title"><i class="fa-solid fa-table me-1"></i> 1. Chi Tiết Nhập Kho Theo Quý & Hãng</div>
                 <div id="table-quarter-detail" style="height: 160px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
 
-            <!-- Bảng Tabulator 2: Tổng hợp theo Hãng & Loại (Đã rút gọn chiều cao) -->
+            <!-- Bảng Tabulator 2: Tổng hợp theo Hãng & Loại (Co giãn vừa khít màn hình) -->
             <div>
                 <div class="table-section-title"><i class="fa-solid fa-table-cells me-1"></i> 2. Tổng Hợp Lũy Kế Theo Hãng & Loại Sản Phẩm</div>
                 <div id="table-brand-summary" style="height: 160px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
@@ -617,7 +617,7 @@
             }
         });
 
-        // --- BẢNG TABULATOR 1 (Chi tiết theo Quý - Rút gọn chiều cao) ---
+        // --- BẢNG TABULATOR 1 (Dùng fitColumns để thu hẹp chiều rộng vừa khít) ---
         let detailTableData = detailArray.map((row, idx) => ({
             id: idx + 1,
             col_0: row[0],
@@ -630,21 +630,21 @@
         if (tableQuarterDetail) tableQuarterDetail.destroy();
         tableQuarterDetail = new Tabulator("#table-quarter-detail", {
             data: detailTableData,
-            layout: "fitColumns",
+            layout: "fitColumns", // <--- Thu hẹp chiều rộng tự động phân bổ vừa màn hình
             height: "160px",
             pagination: "local",
             paginationSize: 5,
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
-                { title: "Quý / Thời gian", field: "col_0", width: 130 },
-                { title: "Hãng (Brand)", field: "col_1", width: 120 },
+                { title: "Quý / Thời gian", field: "col_0" },
+                { title: "Hãng (Brand)", field: "col_1" },
                 { title: "Loại Sản Phẩm", field: "col_2" },
-                { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+                { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } }
             ]
         });
 
-        // --- BẢNG TABULATOR 2 (Tổng hợp lũy kế - Rút gọn chiều cao) ---
+        // --- BẢNG TABULATOR 2 (Dùng fitColumns để thu hẹp chiều rộng vừa khít) ---
         let summaryTableData = summaryArray.map((row, idx) => ({
             id: idx + 1,
             col_0: row[0],
@@ -656,16 +656,16 @@
         if (tableBrandSummary) tableBrandSummary.destroy();
         tableBrandSummary = new Tabulator("#table-brand-summary", {
             data: summaryTableData,
-            layout: "fitColumns",
+            layout: "fitColumns", // <--- Thu hẹp chiều rộng tự động phân bổ vừa màn hình
             height: "160px",
             pagination: "local",
             paginationSize: 5,
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
-                { title: "Hãng (Brand)", field: "col_0", width: 150 },
+                { title: "Hãng (Brand)", field: "col_0" },
                 { title: "Loại Sản Phẩm", field: "col_1" },
-                { title: "Tổng Số Lượng Lũy Kế", field: "col_2", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Giá Trị Lũy Kế (VNĐ)", field: "col_3", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+                { title: "Tổng Số Lượng Lũy Kế", field: "col_2", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị Lũy Kế (VNĐ)", field: "col_3", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } }
             ]
         });
     }
@@ -813,7 +813,7 @@
 
         table = new Tabulator("#example-table", {
             data: tableData,
-            layout: "fitData",
+            layout: "fitColumns", // <--- Thu hẹp chiều rộng tự động phân bổ vừa màn hình cho các tab thường
             responsiveLayout: false,
             height: "100%",
             columns: columnsConfig,
