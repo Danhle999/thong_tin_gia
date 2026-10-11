@@ -12,6 +12,8 @@
     <link href="https://unpkg.com/tabulator-tables@6.2.5/dist/css/tabulator.min.css" rel="stylesheet">
     <!-- SheetJS đọc file Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Chart.js cho Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Tabulator JS -->
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.5/dist/js/tabulator.min.js"></script>
 
@@ -106,6 +108,38 @@
             padding-top: 4px !important;
             padding-bottom: 4px !important;
         }
+
+        /* Dashboard Styles */
+        .dashboard-container {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding-bottom: 10px;
+        }
+        .stat-card {
+            background: #ffffff;
+            border-left: 4px solid #0d6efd;
+            border-radius: 6px;
+            padding: 12px 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 1px solid #e9ecef;
+            border-right: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .chart-box {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            border: 1px solid #dee2e6;
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -167,7 +201,7 @@
         </div>
 
         <!-- BỘ LỌC TOÀN CỤC PHÍA TRÊN -->
-        <div class="filter-card">
+        <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh toàn bảng:</label>
@@ -199,6 +233,45 @@
 
         <!-- KHUNG CHỨA BẢNG TABULATOR -->
         <div id="example-table"></div>
+
+        <!-- KHUNG CHỨA DASHBOARD (Dành riêng cho THỐNG KÊ QUÝ) -->
+        <div id="dashboardView" class="dashboard-container">
+            <!-- 3 Thẻ thống kê tổng quan -->
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <span class="text-muted small fw-bold uppercase">Tổng Số Lượng Nhập Kho</span>
+                        <h3 class="text-primary fw-bold mt-1 mb-0" id="statTotalQty">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card" style="border-left-color: #198754;">
+                        <span class="text-muted small fw-bold uppercase">Tổng Giá Trị Nhập Kho</span>
+                        <h3 class="text-success fw-bold mt-1 mb-0" id="statTotalAmount">0 VNĐ</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card" style="border-left-color: #ffc107;">
+                        <span class="text-muted small fw-bold uppercase">Số Lượng Bản Ghi Thống Kê</span>
+                        <h3 class="text-dark fw-bold mt-1 mb-0" id="statTotalRecords">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2 Biểu đồ trực quan -->
+            <div class="row g-3 mt-1">
+                <div class="col-md-7">
+                    <div class="chart-box">
+                        <canvas id="barChartBrandQty"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="chart-box">
+                        <canvas id="doughnutChartType"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -219,7 +292,7 @@
             { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true, width: 80 }, 
             { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 }, { label: 'NGÀY NHẬP CŨ', date: true },
-            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa', width: 80},
+            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa' },
             { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'PC': [
@@ -232,21 +305,20 @@
             { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP', numeric: true },
             { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 80 }, { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 80 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 },
-            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa', width: 80},
-            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }
         ],
         'LCD': [
-            { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand', width: 80 },
-            { label: 'Kích Thước', numeric: true },
+            { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand' },
+            { label: 'Kích Thước (inch)', numeric: true },
             { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
-            { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1', width: 80 }, { label: 'Cổng Xuất Hình 2', width: 80 },
-            { label: 'Cổng Xuất Hình 3', width: 80 }, { label: 'Cổng Khác', width: 150 }, { label: 'LOA' },
+            { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1' }, { label: 'Cổng Xuất Hình 2' },
+            { label: 'Cổng Xuất Hình 3' }, { label: 'Cổng Khác' }, { label: 'LOA' },
             { label: 'GIÁ COST', numeric: true }, { label: 'GIÁ NHẬP (VNĐ)', numeric: true },
             { label: 'GIÁ BÁN KTB', numeric: true }, { label: 'GIÁ ĐỀ XUẤT', numeric: true },
-            { label: 'NGÀY NHẬP GẦN NHẤT', date: true, width: 120 }, { label: 'SL NHAP TONG', numeric: true, width: 80 },
-            { label: 'KHO KTB', numeric: true, width: 80 }, { label: 'SL bán ra từ ngày', numeric: true, width: 80 },
+            { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'So_Luong NHAP TONG', numeric: true },
+            { label: 'KHO KTB', numeric: true }, { label: 'số lượng bán ra từ ngày', numeric: true },
             { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true }, { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true },
-            { label: 'Tên Hàng Hóa', width: 80 }
+            { label: 'Tên Hàng Hóa' }
         ],
         'AIO': [
             { label: 'NCC' }, { label: 'Mã Sản Phẩm (SKU) NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' }, 
@@ -258,7 +330,7 @@
             { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true }, 
             { label: '% Loi Nhuan Tiền Mặt', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, 
             { label: 'GIÁ BÁN CÔNG NỢ', numeric: true ,width: 120 }, { label: 'GIÁ EU', numeric: true }, 
-            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa', width: 80 }
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }
         ],
         'BAN_HANG': [
             { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
@@ -308,6 +380,8 @@
 
     let currentMode = 'LAPTOP';
     let table = null;
+    let barChartInstance = null;
+    let doughnutChartInstance = null;
 
     function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
 
@@ -340,11 +414,12 @@
         let cols = getActiveColumns();
         document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${mode} (${cols.length} Cột)`;
         
-        if (mode === 'THONG_KE_QUY') {
-            document.getElementById('actionButtonsRow').style.display = 'none';
-        } else {
-            document.getElementById('actionButtonsRow').style.display = 'flex';
-        }
+        // Điều chỉnh hiển thị giao diện tùy theo tab THỐNG KÊ QUÝ hay các tab thông thường
+        let isThongKe = (mode === 'THONG_KE_QUY');
+        document.getElementById('actionButtonsRow').style.display = isThongKe ? 'none' : 'flex';
+        document.getElementById('globalFilterCard').style.display = isThongKe ? 'none' : 'block';
+        document.getElementById('example-table').style.display = isThongKe ? 'none' : 'block';
+        document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
 
         resetAllFilters(false);
         loadDataFromSheet();
@@ -378,6 +453,7 @@
     function processThongKeQuyData(rawData) {
         if (!rawData || rawData.length <= 1) {
             buildTabulatorTable([]);
+            renderDashboard([]);
             return;
         }
 
@@ -451,6 +527,79 @@
         ];
 
         buildTabulatorTable(formattedRawData);
+        renderDashboard(processedDataArray);
+    }
+
+    function renderDashboard(dataArray) {
+        let totalQty = 0;
+        let totalAmount = 0;
+        let brandQtyMap = {};
+        let typeAmountMap = {};
+
+        dataArray.forEach(item => {
+            let qty = parseFloat(item[3]) || 0;
+            let amt = parseFloat(item[4]) || 0;
+            let brand = item[1];
+            let type = item[2];
+
+            totalQty += qty;
+            totalAmount += amt;
+
+            brandQtyMap[brand] = (brandQtyMap[brand] || 0) + qty;
+            typeAmountMap[type] = (typeAmountMap[type] || 0) + amt;
+        });
+
+        document.getElementById('statTotalQty').innerText = totalQty.toLocaleString('vi-VN');
+        document.getElementById('statTotalAmount').innerText = totalAmount.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('statTotalRecords').innerText = dataArray.length;
+
+        // Vẽ biểu đồ Cột (Số lượng theo hãng)
+        let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
+        if (barChartInstance) barChartInstance.destroy();
+        
+        barChartInstance = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(brandQtyMap),
+                datasets: [{
+                    label: 'Tổng Số Lượng Nhập',
+                    data: Object.values(brandQtyMap),
+                    backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng', font: { size: 14, weight: 'bold' } },
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Vẽ biểu đồ Tròn (Giá trị theo loại sản phẩm)
+        let ctxDoughnut = document.getElementById('doughnutChartType').getContext('2d');
+        if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+        doughnutChartInstance = new Chart(ctxDoughnut, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(typeAmountMap),
+                datasets: [{
+                    data: Object.values(typeAmountMap),
+                    backgroundColor: ['#0dcaf0', '#6f42c1', '#fd7e14', '#20c997']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại', font: { size: 14, weight: 'bold' } },
+                    legend: { position: 'bottom', labels: { boxWidth: 12 } }
+                }
+            }
+        });
     }
 
     function buildTabulatorTable(rawData) {
@@ -539,7 +688,6 @@
                 editor: "input",
                 editable: function(cell) {
                     if (currentMode === 'THONG_KE_QUY') return false;
-                    // Cột CHECK GIÁ BÁN là cột tự tính nên không cho phép gõ trực tiếp
                     if (currentMode === 'LAPTOP' && col.label.trim().toUpperCase() === 'CHECK GIÁ BÁN') return false;
                     let rowData = cell.getRow().getData();
                     return rowData._isEditing === true;
@@ -595,7 +743,6 @@
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
 
-            // Tự động tính toán giá trị ban đầu cho cột CHECK GIÁ BÁN
             if (currentMode === 'LAPTOP') {
                 let idxGiaBanTienMat = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
                 let idxGiaNhapMoi = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI');
@@ -628,7 +775,6 @@
             columnDefaults: {
                 resizable: true,
             },
-            // Tự động tính toán lại cột check giá và cập nhật màu toàn bộ hàng khi sửa
             cellEdited: function(cell) {
                 if (currentMode === 'LAPTOP') {
                     let row = cell.getRow();
@@ -648,7 +794,6 @@
                     }
                 }
             },
-            // Tô màu đỏ nhạt cho CẢ HÀNG nếu cột CHECK GIÁ BÁN < 0
             rowFormatter: function(row) {
                 if (currentMode === 'LAPTOP') {
                     let data = row.getData();
@@ -659,9 +804,9 @@
                         let checkVal = parseFloat(String(data["col_" + idxCheckGia]).replace(/[,.]/g, '')) || 0;
                         let rowEl = row.getElement();
                         if (checkVal < 0) {
-                            rowEl.style.backgroundColor = "#ffdddd"; // Màu đỏ nhạt cho cả hàng
+                            rowEl.style.backgroundColor = "#ffdddd";
                         } else {
-                            rowEl.style.backgroundColor = ""; // Trả về mặc định
+                            rowEl.style.backgroundColor = "";
                         }
                     }
                 }
@@ -731,9 +876,7 @@
             mode: "no-cors",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: formData.toString()
-        }).catch(err => {
-            console.error(err);
-        });
+        }).catch(err => {});
 
         setTimeout(() => {
             showLoading(false);
