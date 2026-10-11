@@ -198,22 +198,7 @@
         </div>
 
         <!-- KHUNG CHỨA BẢNG TABULATOR -->
-        
-        <!-- KHUNG CHỨA 2 BẢNG SONG SONG (dành riêng cho tab THONG_KE_QUY) -->
-        <div id="dualTableContainer" class="row g-2 h-100" style="display: none; flex: 1; margin: 0; min-height: 0;">
-            <div class="col-md-6 h-100 d-flex flex-column p-0 pe-2">
-                <div class="bg-light border px-2 py-1 rounded-top fw-bold text-primary small">
-                    <i class="fa-solid fa-bullseye me-1"></i> Bảng Mục Tiêu (Sheet: MUC_TIEU_QUY)
-                </div>
-                <div id="table-muc-tieu" class="flex-grow-1 border rounded-bottom bg-white"></div>
-            </div>
-            <div class="col-md-6 h-100 d-flex flex-column p-0 ps-2">
-                <div class="bg-light border px-2 py-1 rounded-top fw-bold text-success small">
-                    <i class="fa-solid fa-chart-line me-1"></i> Bảng Thống Kê Thực Tế (Từ NHAP_KHO)
-                </div>
-                <div id="table-thong-ke" class="flex-grow-1 border rounded-bottom bg-white"></div>
-            </div>
-        </div>
+        <div id="example-table"></div>
     </div>
 </div>
 
@@ -296,15 +281,11 @@
             { label: 'Đơn vị tính', numeric: true }
         ],
         'THONG_KE_QUY': [
-            { label: 'Quý / Thời gian', width: 130 },
-            { label: 'Hãng (Brand)', width: 110 },
-            { label: 'Loại Sản Phẩm', width: 180 },
-            { label: 'Tổng Số Lượng Nhập', numeric: true, width: 130 },
-            { label: 'Mục Tiêu Số Lượng', numeric: true, width: 130 },
-            { label: '% Hoàn Thành SL', numeric: true, percent: true, width: 110 },
-            { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 170 },
-            { label: 'Mục Tiêu Giá Trị (VNĐ)', numeric: true, width: 170 },
-            { label: '% Hoàn Thành Giá Trị', numeric: true, percent: true, width: 130 }
+            { label: 'Quý / Thời gian', width: 140 },
+            { label: 'Hãng (Brand)', width: 130 },
+            { label: 'Loại Sản Phẩm', width: 220 },
+            { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 },
+            { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
         ],
         'BANG_GIA_DELL': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
@@ -332,7 +313,7 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-           btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
         });
         
         let btnObj = {
@@ -372,27 +353,16 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-let tableMucTieu = null;
-    let tableThongKe = null;
-
     function loadDataFromSheet() {
-        let targetSheet = currentMode;
+        let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
         showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${targetSheet}`)
             .then(res => res.json())
             .then(data => {
                 if (currentMode === 'THONG_KE_QUY') {
-                    // Ẩn bảng đơn, hiện khung 2 bảng song song
-                    document.getElementById('example-table').style.display = 'none';
-                    document.getElementById('dualTableContainer').style.display = 'flex';
-                    
-                    buildDualTables(data.targets, data.actuals);
+                    processThongKeQuyData(data);
                 } else {
-                    // Hiện bảng đơn bình thường, ẩn khung song song
-                    document.getElementById('example-table').style.display = 'block';
-                    document.getElementById('dualTableContainer').style.display = 'none';
-
                     buildTabulatorTable(data);
                 }
                 showLoading(false);
@@ -403,54 +373,82 @@ let tableMucTieu = null;
             });
     }
 
-    function buildDualTables(targetRaw, actualRaw) {
-        // 1. Khởi tạo Bảng Mục Tiêu (Bên trái)
-        let targetCols = [
-            { formatter: "rownum", hozAlign: "center", width: 50, headerSort: false, title: "STT" },
-            { title: "Quý / Thời gian", field: "col_0", width: 110 },
-            { title: "Hãng (Brand)", field: "col_1", width: 90 },
-            { title: "Loại Sản Phẩm", field: "col_2", width: 140 },
-            { title: "Mục Tiêu SL", field: "col_3", hozAlign: "right", width: 100, formatter: function(cell) { let n = parseFloat(String(cell.getValue()).replace(/[,.]/g, '')); return isNaN(n) ? cell.getValue() : n.toLocaleString('vi-VN'); } },
-            { title: "Mục Tiêu Giá Trị", field: "col_4", hozAlign: "right", width: 130, formatter: function(cell) { let n = parseFloat(String(cell.getValue()).replace(/[,.]/g, '')); return isNaN(n) ? cell.getValue() : n.toLocaleString('vi-VN'); } }
-        ];
+    function processThongKeQuyData(rawData) {
+        if (!rawData || rawData.length <= 1) {
+            buildTabulatorTable([]);
+            return;
+        }
 
-        let targetRows = targetRaw.length > 1 ? targetRaw.slice(1) : [];
-        let targetTableData = targetRows.map((row) => ({
-            col_0: row[0] || '', col_1: row[1] || '', col_2: row[2] || '', col_3: row[3] || '', col_4: row[4] || ''
-        }));
+        let rows = rawData.slice(1);
+        let aggregatedMap = {};
 
-        if (tableMucTieu) tableMucTieu.destroy();
-        tableMucTieu = new Tabulator("#table-muc-tieu", {
-            data: targetTableData,
-            layout: "fitColumns",
-            height: "100%",
-            columns: targetCols,
+        rows.forEach(r => {
+            let ngayStr = r[0] || ''; 
+            let tenHang = String(r[7] || '').toLowerCase(); 
+            let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
+            let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; 
+
+            if (!ngayStr) return;
+
+            let d = new Date(ngayStr);
+            if (isNaN(d.getTime())) return;
+            let month = d.getMonth() + 1;
+            let year = d.getFullYear();
+            let quarter = '';
+            if (month >= 1 && month <= 3) quarter = `Quý 1 / ${year}`;
+            else if (month >= 4 && month <= 6) quarter = `Quý 2 / ${year}`;
+            else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
+            else quarter = `Quý 4 / ${year}`;
+
+            let brand = 'Khác';
+            if (tenHang.includes('dell')) brand = 'Dell';
+            else if (tenHang.includes('hp') || tenHang.includes('hewlett')) brand = 'HP';
+            else if (tenHang.includes('lenovo')) brand = 'Lenovo';
+            else return; 
+
+            let productType = 'Khác';
+            if (tenHang.includes('laptop') || tenHang.includes('xách tay') || tenHang.includes('notebook')) {
+                productType = 'Máy tính xách tay';
+            } else if (tenHang.includes('thinkcentre') || tenHang.includes('desktop') || tenHang.includes('máy tính để bàn') || tenHang.includes('pc') || tenHang.includes('pro tower') || tenHang.includes('m70s')) {
+                productType = 'Máy tính để bàn';
+            } else if (tenHang.includes('lcd') || tenHang.includes('màn hình') || tenHang.includes('monitor') || tenHang.includes('se2225h')) {
+                productType = 'Màn hình';
+            } else {
+                return; 
+            }
+
+            let key = `${quarter}_${brand}_${productType}`;
+            if (!aggregatedMap[key]) {
+                aggregatedMap[key] = {
+                    quarter: quarter,
+                    brand: brand,
+                    productType: productType,
+                    totalQty: 0,
+                    totalAmount: 0
+                };
+            }
+            aggregatedMap[key].totalQty += soLuong;
+            aggregatedMap[key].totalAmount += thanhTien;
         });
 
-        // 2. Khởi tạo Bảng Thống Kê Thực Tế (Bên phải)
-        let actualCols = [
-            { formatter: "rownum", hozAlign: "center", width: 50, headerSort: false, title: "STT" },
-            { title: "Quý / Thời gian", field: "col_0", width: 110 },
-            { title: "Hãng (Brand)", field: "col_1", width: 90 },
-            { title: "Loại Sản Phẩm", field: "col_2", width: 140 },
-            { title: "Tổng SL Nhập", field: "col_3", hozAlign: "right", width: 100, formatter: function(cell) { let n = parseFloat(String(cell.getValue()).replace(/[,.]/g, '')); return isNaN(n) ? cell.getValue() : n.toLocaleString('vi-VN'); } },
-            { title: "Tổng Giá Trị Nhập", field: "col_4", hozAlign: "right", width: 130, formatter: function(cell) { let n = parseFloat(String(cell.getValue()).replace(/[,.]/g, '')); return isNaN(n) ? cell.getValue() : n.toLocaleString('vi-VN'); } }
+        let processedDataArray = [];
+        for (let key in aggregatedMap) {
+            let item = aggregatedMap[key];
+            processedDataArray.push([
+                item.quarter,
+                item.brand,
+                item.productType,
+                item.totalQty,
+                item.totalAmount
+            ]);
+        }
+
+        let formattedRawData = [
+            ['Quý / Thời gian', 'Hãng (Brand)', 'Loại Sản Phẩm', 'Tổng Số Lượng Nhập', 'Tổng Giá Trị Nhập (VNĐ)'],
+            ...processedDataArray
         ];
 
-        let actualRows = actualRaw.length > 1 ? actualRaw.slice(1) : [];
-        let actualTableData = actualRows.map((row) => ({
-            col_0: row[0] || '', col_1: row[1] || '', col_2: row[2] || '', col_3: row[3] || '', col_4: row[4] || ''
-        }));
-
-        if (tableThongKe) tableThongKe.destroy();
-        tableThongKe = new Tabulator("#table-thong-ke", {
-            data: actualTableData,
-            layout: "fitColumns",
-            height: "100%",
-            columns: actualCols,
-        });
-
-        document.getElementById('rowCountBadge').innerText = `Mục tiêu: ${targetTableData.length} dòng | Thực tế: ${actualTableData.length} dòng`;
+        buildTabulatorTable(formattedRawData);
     }
 
     function buildTabulatorTable(rawData) {
@@ -472,7 +470,8 @@ let tableMucTieu = null;
             }
         ];
 
-        // Cột Thao tác sửa/lưu dữ liệu
+        // Cột Thao tác: Bấm [ Sửa ] -> Mở khóa dòng, nút chuyển thành [ Lưu ] (màu đỏ). 
+        // Khi chỉnh sửa xong, bấm [ Lưu ] lần nữa -> Ghi dữ liệu lên Google Sheets và khóa dòng lại.
         if (currentMode !== 'THONG_KE_QUY') {
             columnsConfig.push({
                 title: "Thao tác",
@@ -498,11 +497,16 @@ let tableMucTieu = null;
                     let btn = cellEl.querySelector('button');
 
                     if (!rowData._isEditing) {
+                        // Bước 1: Mở khóa chỉnh sửa dòng
                         rowData._isEditing = true;
                         btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
                         btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
+                        btn.title = "Bấm để lưu và khóa dòng này";
+                        
+                        // Cập nhật lại row trong table để bật quyền editable
                         row.update(rowData);
 
+                        // Focus vào ô dữ liệu đầu tiên để gõ luôn
                         let cells = row.getCells();
                         for (let c of cells) {
                             if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
@@ -511,16 +515,22 @@ let tableMucTieu = null;
                             }
                         }
                     } else {
+                        // Bước 2: Bấm Lưu -> Ghi dữ liệu lên Google Sheets và Khóa lại
                         let fullRowData = [];
                         for(let i = 0; i < activeCols.length; i++) {
                             fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                         }
 
+                        // Gọi hàm lưu
                         saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
+                        // Đổi trạng thái về Khóa
                         rowData._isEditing = false;
                         btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
                         btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
+                        btn.title = "Bấm để mở khóa sửa dòng này";
+                        
+                        // Cập nhật lại row để vô hiệu hóa editor các ô
                         row.update(rowData);
                     }
                 }
@@ -532,7 +542,7 @@ let tableMucTieu = null;
                 title: col.label,
                 field: "col_" + index,
                 width: col.width || undefined, 
-                minWidth: 90, 
+                minWidth: 80, 
                 editor: "input",
                 editable: function(cell) {
                     if (currentMode === 'THONG_KE_QUY') return false;
@@ -598,7 +608,7 @@ let tableMucTieu = null;
 
         table = new Tabulator("#example-table", {
             data: tableData,
-            layout: "fitColumns", // Tự động co giãn cột lấp đầy màn hình, không bị khoảng trống
+            layout: "fitData",
             responsiveLayout: false,
             height: "100%",
             columns: columnsConfig,
@@ -618,6 +628,8 @@ let tableMucTieu = null;
         table.on("tableBuilt", function() {
             document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} / ${tableData.length} dòng`;
         });
+
+        // Đã bỏ sự kiện tự động cellEdited theo từng ô để nhường quyền lưu chính xác cho nút [ Lưu ]
     }
 
     function applyGlobalSearch() {
