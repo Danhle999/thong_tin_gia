@@ -884,13 +884,12 @@
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
-    function buildTabulatorTable(responseObj) {
-        if (!responseObj || !responseObj.rows) {
+    function buildTabulatorTable(rawData) {
+        if (!rawData || rawData.length === 0) {
             if (table) table.clearData();
             return;
         }
 
-        let rawRows = responseObj.rows; 
         let activeCols = getActiveColumns();
         let columnsConfig = [
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
@@ -960,6 +959,7 @@
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
 
+                    // Danh sách các cột được phép sửa (Giá + các cột Sell in/out, chiết khấu đã có sẵn trong Sheet)
                     let allowedColumns = [
                         'COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB',
                         'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT'
@@ -1005,11 +1005,15 @@
             columnsConfig.push(colDef);
         });
 
-        let tableData = rawRows.map((item) => {
-            let obj = { sheetRowIndex: item.realRowIndex, _isEditing: false }; 
-            let rowVals = item.values || [];
+        let rowsToProcess = rawData;
+        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
+            rowsToProcess = rawData.slice(1);
+        }
+
+        let tableData = rowsToProcess.map((row, rowIndex) => {
+            let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
             activeCols.forEach((col, index) => {
-                obj["col_" + index] = rowVals[index] !== undefined && rowVals[index] !== null ? rowVals[index] : '';
+                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
             return obj;
         });
@@ -1093,34 +1097,23 @@
     }
 
     function saveRowToSheet(sheetRowIndex, fullRowData) {
-        showLoading(true, `Đang ghi đè dữ liệu vào Sheet '${currentMode}'...`);
-        
-        let uniqueKeyValue = fullRowData[0] || ''; 
-
-        let payloadData = {
+        showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
+        var formData = new URLSearchParams();
+        formData.append("payload", JSON.stringify({
             action: "updateRow",
             sheetName: currentMode,
             rowIndex: sheetRowIndex,
-            uniqueKey: uniqueKeyValue,
-            colIndex: 0,
             rowData: fullRowData
-        };
+        }));
 
-        // Gửi qua text/plain để tránh giới hạn kích thước truyền tham số URL của Google Apps Script
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(payloadData)
-        }).then(() => {
-            setTimeout(() => { 
-                showLoading(false);
-                loadDataFromSheet(); 
-            }, 1000);
-        }).catch(err => {
-            showLoading(false);
-            alert("Lỗi khi kết nối!");
-        });
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+        }).catch(err => {});
+
+        setTimeout(() => { showLoading(false); }, 900);
     }
 
     function addRow() {
@@ -1129,17 +1122,18 @@
 
         showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
 
-        var payloadData = {
+        var formData = new URLSearchParams();
+        formData.append("payload", JSON.stringify({
             action: "appendRows",
             sheetName: currentMode,
             rows: [emptyRow]
-        };
+        }));
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(payloadData)
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
         }).catch(err => {});
 
         setTimeout(() => {
@@ -1177,18 +1171,19 @@
 
             showLoading(true, `Đang đẩy ${formattedRows.length} dòng vào Sheet '${currentMode}'...`);
             
-            var payloadData = {
+            var formData = new URLSearchParams();
+            formData.append("payload", JSON.stringify({
                 action: "appendRows",
                 sheetName: currentMode,
                 rows: formattedRows
-            };
+            }));
 
             try {
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: "POST",
                     mode: "no-cors",
-                    headers: { "Content-Type": "text/plain" },
-                    body: JSON.stringify(payloadData)
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: formData.toString()
                 });
             } catch (err) {}
 
