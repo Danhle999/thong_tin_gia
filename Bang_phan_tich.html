@@ -937,7 +937,7 @@
                         fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                     }
 
-                    // Gọi hàm cập nhật đúng dòng cũ trên Google Sheets
+                    // Gọi hàm cập nhật đúng dòng cũ trên Google Sheets dựa theo sheetRowIndex chính xác
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
                     rowData._isEditing = false;
@@ -959,7 +959,6 @@
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
 
-                    // Danh sách các cột được phép sửa (Giá + các cột Sell in/out, chiết khấu đã có sẵn trong Sheet)
                     let allowedColumns = [
                         'COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB',
                         'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT'
@@ -1010,6 +1009,7 @@
             rowsToProcess = rawData.slice(1);
         }
 
+        // Đảm bảo map đúng sheetRowIndex bắt đầu từ dòng 2 (vì dòng 1 là Header)
         let tableData = rowsToProcess.map((row, rowIndex) => {
             let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
             activeCols.forEach((col, index) => {
@@ -1111,9 +1111,11 @@
             mode: "no-cors",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: formData.toString()
-        }).catch(err => {});
-
-        setTimeout(() => { showLoading(false); }, 900);
+        }).then(() => {
+            setTimeout(() => { showLoading(false); }, 800);
+        }).catch(err => {
+            showLoading(false);
+        });
     }
 
     function addRow() {
