@@ -959,7 +959,9 @@
                     if (!rowData._isEditing) return false;
 
                     // Chỉ cho phép sửa các cột: GIÁ COST, COST_KTB, GIÁ BÁN TIỀN MẶT, GIÁ BÁN CÔNG NỢ, GIÁ BÁN KTB
-                    let allowedColumns = ['Giá cost', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB'];
+                    let allowedColumns = ['Giá cost', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB', 
+                                         'Sell in Hãng', 'Sell out Hãng', 'Chiết khấu',  'Sell in NPP','Sell out NPP', 'SL Sell OUT Hãng Support'
+                                         ];
                     let colLabel = col.label.trim().toUpperCase();
                     return allowedColumns.includes(colLabel);
                 },
