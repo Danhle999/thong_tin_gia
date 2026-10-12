@@ -373,7 +373,8 @@
             { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP', numeric: true },
             { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 80 }, { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 80 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 },
-            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'LCD': [
             { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand' },
@@ -386,7 +387,8 @@
             { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'SL NHAP TONG', numeric: true },
             { label: 'KHO KTB', numeric: true }, { label: 'SL bán ra từ ngày', numeric: true },
             { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true }, { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true },
-            { label: 'Tên Hàng Hóa' }
+            { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'AIO': [
             { label: 'NCC' }, { label: 'Mã Sản Phẩm (SKU) NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' }, 
@@ -398,7 +400,8 @@
             { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true }, 
             { label: '% Loi Nhuan Tiền Mặt', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, 
             { label: 'GIÁ BÁN CÔNG NỢ', numeric: true ,width: 120 }, { label: 'GIÁ EU', numeric: true }, 
-            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'SCAN_MAY_IN': [
             { label: 'NCC' },
@@ -424,7 +427,8 @@
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 },
             { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 },
             { label: 'NGÀY NHẬP CŨ', date: true },
-            { label: 'NGÀY NHẬP MỚI', date: true }
+            { label: 'NGÀY NHẬP MỚI', date: true },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'BAN_HANG': [
             { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
@@ -879,6 +883,33 @@
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
+    // Hàm tính toán giá trị CHECK GIÁ BÁN tùy theo Mode
+    function calculateCheckGia(data, activeCols) {
+        let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
+        if (idxCheckGia === -1) return;
+
+        let valBan = 0, valNhap = 0;
+
+        if (currentMode === 'LAPTOP' || currentMode === 'AIO' || currentMode === 'SCAN_MAY_IN') {
+            let idxBan = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
+            let idxNhap = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI');
+            valBan = parseFloat(String(data["col_" + idxBan]).replace(/[,.]/g, '')) || 0;
+            valNhap = parseFloat(String(data["col_" + idxNhap]).replace(/[,.]/g, '')) || 0;
+        } else if (currentMode === 'PC') {
+            let idxBan = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
+            let idxNhap = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP');
+            valBan = parseFloat(String(data["col_" + idxBan]).replace(/[,.]/g, '')) || 0;
+            valNhap = parseFloat(String(data["col_" + idxNhap]).replace(/[,.]/g, '')) || 0;
+        } else if (currentMode === 'LCD') {
+            let idxBan = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN KTB');
+            let idxNhap = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP');
+            valBan = parseFloat(String(data["col_" + idxBan]).replace(/[,.]/g, '')) || 0;
+            valNhap = parseFloat(String(data["col_" + idxNhap]).replace(/[,.]/g, '')) || 0;
+        }
+
+        data["col_" + idxCheckGia] = valBan - valNhap;
+    }
+
     function buildTabulatorTable(rawData) {
         if (!rawData || rawData.length === 0) {
             if (table) table.clearData();
@@ -950,6 +981,7 @@
                 minWidth: 80, 
                 editor: "input",
                 editable: function(cell) {
+                    if (col.label.trim().toUpperCase() === 'CHECK GIÁ BÁN') return false;
                     let rowData = cell.getRow().getData();
                     return rowData._isEditing === true;
                 },
@@ -1001,6 +1033,10 @@
             activeCols.forEach((col, index) => {
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
+
+            // Tính toán CHECK GIÁ BÁN
+            calculateCheckGia(obj, activeCols);
+
             return obj;
         });
 
@@ -1016,7 +1052,30 @@
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { resizable: true }
+            columnDefaults: { resizable: true },
+            cellEdited: function(cell) {
+                let row = cell.getRow();
+                let data = row.getData();
+                let activeCols = getActiveColumns();
+                
+                calculateCheckGia(data, activeCols);
+                row.update(data);
+            },
+            rowFormatter: function(row) {
+                let data = row.getData();
+                let activeCols = getActiveColumns();
+                let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
+                
+                if (idxCheckGia !== -1) {
+                    let checkVal = parseFloat(String(data["col_" + idxCheckGia]).replace(/[,.]/g, '')) || 0;
+                    let rowEl = row.getElement();
+                    if (checkVal < 0) {
+                        rowEl.style.backgroundColor = "#ffdddd";
+                    } else {
+                        rowEl.style.backgroundColor = "";
+                    }
+                }
+            }
         });
 
         table.on("dataFiltered", function(filters, rows){
