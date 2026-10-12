@@ -884,12 +884,13 @@
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
-    function buildTabulatorTable(rawData) {
-        if (!rawData || rawData.length === 0) {
+    function buildTabulatorTable(responseObj) {
+        if (!responseObj || !responseObj.rows) {
             if (table) table.clearData();
             return;
         }
 
+        let rawRows = responseObj.rows; 
         let activeCols = getActiveColumns();
         let columnsConfig = [
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
@@ -937,7 +938,7 @@
                         fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                     }
 
-                    // Gọi hàm cập nhật đúng dòng cũ trên Google Sheets dựa theo sheetRowIndex chính xác
+                    // Gọi hàm cập nhật đúng dòng cũ trên Google Sheets
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
                     rowData._isEditing = false;
@@ -1004,16 +1005,11 @@
             columnsConfig.push(colDef);
         });
 
-        let rowsToProcess = rawData;
-        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
-            rowsToProcess = rawData.slice(1);
-        }
-
-        // Đảm bảo map đúng sheetRowIndex bắt đầu từ dòng 2 (vì dòng 1 là Header)
-        let tableData = rowsToProcess.map((row, rowIndex) => {
-            let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
+        let tableData = rawRows.map((item) => {
+            let obj = { sheetRowIndex: item.realRowIndex, _isEditing: false }; 
+            let rowVals = item.values || [];
             activeCols.forEach((col, index) => {
-                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
+                obj["col_" + index] = rowVals[index] !== undefined && rowVals[index] !== null ? rowVals[index] : '';
             });
             return obj;
         });
@@ -1096,34 +1092,34 @@
         }
     }
 
-function saveRowToSheet(sheetRowIndex, fullRowData) {
+    function saveRowToSheet(sheetRowIndex, fullRowData) {
         showLoading(true, `Đang ghi đè dữ liệu vào Sheet '${currentMode}'...`);
         
-        // Lấy giá trị của cột đầu tiên làm khóa định danh chống lệch dòng
-        var uniqueKeyValue = fullRowData[0] || ''; 
+        let uniqueKeyValue = fullRowData[0] || ''; 
 
-        var formData = new URLSearchParams();
-        formData.append("payload", JSON.stringify({
+        let payloadData = {
             action: "updateRow",
             sheetName: currentMode,
             rowIndex: sheetRowIndex,
             uniqueKey: uniqueKeyValue,
-            colIndex: 0, // Cột định danh là cột đầu tiên (index 0)
+            colIndex: 0,
             rowData: fullRowData
-        }));
+        };
 
+        // Gửi qua text/plain để tránh giới hạn kích thước truyền tham số URL của Google Apps Script
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payloadData)
         }).then(() => {
             setTimeout(() => { 
                 showLoading(false);
-                loadDataFromSheet(); // Tải lại bảng sạch sẽ từ sheet
+                loadDataFromSheet(); 
             }, 1000);
         }).catch(err => {
             showLoading(false);
+            alert("Lỗi khi kết nối!");
         });
     }
 
@@ -1133,18 +1129,17 @@ function saveRowToSheet(sheetRowIndex, fullRowData) {
 
         showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
 
-        var formData = new URLSearchParams();
-        formData.append("payload", JSON.stringify({
+        var payloadData = {
             action: "appendRows",
             sheetName: currentMode,
             rows: [emptyRow]
-        }));
+        };
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payloadData)
         }).catch(err => {});
 
         setTimeout(() => {
@@ -1182,19 +1177,18 @@ function saveRowToSheet(sheetRowIndex, fullRowData) {
 
             showLoading(true, `Đang đẩy ${formattedRows.length} dòng vào Sheet '${currentMode}'...`);
             
-            var formData = new URLSearchParams();
-            formData.append("payload", JSON.stringify({
+            var payloadData = {
                 action: "appendRows",
                 sheetName: currentMode,
                 rows: formattedRows
-            }));
+            };
 
             try {
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: "POST",
                     mode: "no-cors",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: formData.toString()
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(payloadData)
                 });
             } catch (err) {}
 
