@@ -551,16 +551,17 @@
             });
     }
 
-    function processThongKeQuyData(rawData) {
-        if (!rawData || rawData.length <= 1) {
+    function processThongKeQuyData(dataResponse) {
+        let rowsWrapper = dataResponse && dataResponse.rows ? dataResponse.rows : [];
+        if (!rowsWrapper || rowsWrapper.length === 0) {
             renderDashboardAndTables([]);
             return;
         }
 
-        let rows = rawData.slice(1);
         let aggregatedMap = {};
 
-        rows.forEach(r => {
+        rowsWrapper.forEach(item => {
+            let r = item.values || [];
             let ngayStr = r[0] || ''; 
             let tenHang = String(r[7] || '').toLowerCase(); 
             let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
@@ -884,8 +885,9 @@
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
-    function buildTabulatorTable(rawData) {
-        if (!rawData || rawData.length === 0) {
+    function buildTabulatorTable(dataResponse) {
+        let rowsToProcess = dataResponse && dataResponse.rows ? dataResponse.rows : [];
+        if (!rowsToProcess || rowsToProcess.length === 0) {
             if (table) table.clearData();
             return;
         }
@@ -937,7 +939,7 @@
                         fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                     }
 
-                    // Gọi hàm cập nhật đúng dòng cũ trên Google Sheets
+                    // Gọi hàm cập nhật đúng dòng thực tế trên Google Sheets
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
                     rowData._isEditing = false;
@@ -959,7 +961,6 @@
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
 
-                    // Danh sách các cột được phép sửa (Giá + các cột Sell in/out, chiết khấu đã có sẵn trong Sheet)
                     let allowedColumns = [
                         'COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB',
                         'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT'
@@ -1005,15 +1006,12 @@
             columnsConfig.push(colDef);
         });
 
-        let rowsToProcess = rawData;
-        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
-            rowsToProcess = rawData.slice(1);
-        }
-
-        let tableData = rowsToProcess.map((row, rowIndex) => {
-            let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
+        let tableData = rowsToProcess.map((item) => {
+            let realRowIdx = item.realRowIndex || 2;
+            let rowValues = item.values || [];
+            let obj = { sheetRowIndex: realRowIdx, _isEditing: false }; 
             activeCols.forEach((col, index) => {
-                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
+                obj["col_" + index] = rowValues[index] !== undefined && rowValues[index] !== null ? rowValues[index] : '';
             });
             return obj;
         });
