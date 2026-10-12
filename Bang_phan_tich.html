@@ -356,12 +356,15 @@
             { label: 'SL Bán Ra', numeric: true }, 
             { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 100 }, 
             { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 100 },
-            { label: 'Hàng gửi NPP', width: 80 }, { label: 'Giá cost', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
+            { label: 'Hàng gửi NPP', width: 80 }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
             { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true, width: 80 }, 
             { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 }, { label: 'NGÀY NHẬP CŨ', date: true },
             { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa' },
-            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 },
+            { label: 'Sell in Hãng', numeric: true }, { label: 'Sell out Hãng', numeric: true },
+            { label: 'Chiết khấu', numeric: true }, { label: 'Sell in NPP', numeric: true },
+            { label: 'Sell out NPP', numeric: true }, { label: 'SL Sell OUT Hãng Support', numeric: true }
         ],
         'PC': [
             { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' },
@@ -369,12 +372,15 @@
             { label: 'Bảo Hành' }, { label: 'Office' },
             { label: 'SL Nhập Tổng', numeric: true }, { label: 'SL Tồn', numeric: true },
             { label: 'SL Bán Từ Ngày', numeric: true }, { label: 'Hàng gửi NPP' },
-            { label: 'Giá cost', numeric: true }, { label: 'GIÁ NHẬP TRƯỚC', numeric: true },
+            { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP TRƯỚC', numeric: true },
             { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP', numeric: true },
             { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 80 }, { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 80 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 },
             { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' },
-            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 },
+            { label: 'Sell in Hãng', numeric: true }, { label: 'Sell out Hãng', numeric: true },
+            { label: 'Chiết khấu', numeric: true }, { label: 'Sell in NPP', numeric: true },
+            { label: 'Sell out NPP', numeric: true }, { label: 'SL Sell OUT Hãng Support', numeric: true }
         ],
         'LCD': [
             { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand' },
@@ -382,13 +388,16 @@
             { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
             { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1' }, { label: 'Cổng Xuất Hình 2' },
             { label: 'Cổng Xuất Hình 3' }, { label: 'Cổng Khác' }, { label: 'LOA' },
-            { label: 'Giá cost', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true }, { label: 'GIÁ NHẬP MỚI', numeric: true },
+            { label: 'GIÁ COST', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true }, { label: 'GIÁ NHẬP MỚI', numeric: true },
             { label: 'GIÁ BÁN KTB', numeric: true }, { label: 'GIÁ ĐỀ XUẤT', numeric: true },
             { label: 'NGÀY NHẬP CŨ', date: true }, { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'SL NHAP TONG', numeric: true },
             { label: 'KHO KTB', numeric: true }, { label: 'SL bán ra từ ngày', numeric: true },
             { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true }, { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true },
             { label: 'Tên Hàng Hóa' },
-            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 },
+            { label: 'Sell in Hãng', numeric: true }, { label: 'Sell out Hãng', numeric: true },
+            { label: 'Chiết khấu', numeric: true }, { label: 'Sell in NPP', numeric: true },
+            { label: 'Sell out NPP', numeric: true }, { label: 'SL Sell OUT Hãng Support', numeric: true }
         ],
         'AIO': [
             { label: 'NCC' }, { label: 'Mã Sản Phẩm (SKU) NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' }, 
@@ -396,12 +405,15 @@
             { label: 'Bao_Hanh', width: 80 }, { label: 'office' }, { label: 'SL NHAP TONG', numeric: true, width: 80 }, 
             { label: 'SL TON', numeric: true ,width: 80 }, { label: 'SL BÁN TỪ NGÀY', numeric: true ,width: 80 }, 
             { label: '% Loi Nhuan Công Nợ', numeric: true, percent: true ,width: 80 }, { label: 'Hàng gửi NPP' ,width: 80 }, 
-            { label: 'Giá cost', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true }, 
+            { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true }, 
             { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true }, 
             { label: '% Loi Nhuan Tiền Mặt', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, 
             { label: 'GIÁ BÁN CÔNG NỢ', numeric: true ,width: 120 }, { label: 'GIÁ EU', numeric: true }, 
             { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' },
-            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 },
+            { label: 'Sell in Hãng', numeric: true }, { label: 'Sell out Hãng', numeric: true },
+            { label: 'Chiết khấu', numeric: true }, { label: 'Sell in NPP', numeric: true },
+            { label: 'Sell out NPP', numeric: true }, { label: 'SL Sell OUT Hãng Support', numeric: true }
         ],
         'SCAN_MAY_IN': [
             { label: 'NCC' },
@@ -420,7 +432,7 @@
             { label: 'So_Luong TON', numeric: true, width: 80 },
             { label: 'SL bán ra từ ngày', numeric: true, width: 80 },
             { label: 'Hàng gửi NPP', width: 80 },
-            { label: 'Giá cost', numeric: true },
+            { label: 'COST_KTB', numeric: true },
             { label: 'GIÁ NHẬP CŨ', numeric: true },
             { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true, width: 80 },
             { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
@@ -428,7 +440,10 @@
             { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 },
             { label: 'NGÀY NHẬP CŨ', date: true },
             { label: 'NGÀY NHẬP MỚI', date: true },
-            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 },
+            { label: 'Sell in Hãng', numeric: true }, { label: 'Sell out Hãng', numeric: true },
+            { label: 'Chiết khấu', numeric: true }, { label: 'Sell in NPP', numeric: true },
+            { label: 'Sell out NPP', numeric: true }, { label: 'SL Sell OUT Hãng Support', numeric: true }
         ],
         'BAN_HANG': [
             { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
@@ -442,9 +457,8 @@
             { label: 'Ngày HT', date: true }, { label: 'Ngày CT', date: true }, { label: 'Số CT' }, { label: 'Ngày Hóa Đơn', date: true },
             { label: 'Mã NCC', ncc: true }, { label: 'Tên NCC', ncc: true }, { label: 'Diễn Giải', code: true }, { label: 'Mã Hàng', code: true },
             { label: 'ĐVT' }, { label: 'Số Lượng', numeric: true }, { label: 'Đơn Giá', numeric: true }, { label: 'Thành Tiền', numeric: true },
-            { label: 'Giá cost', numeric: true }, { label: 'Sell in Hãng', numeric: true }, { label: 'Sell out Hãng', numeric: true },
-            { label: 'Chiết khấu', numeric: true }, { label: 'Tên nhóm VTHH', desc: true }, { label: 'Sell in NPP', numeric: true },
-            { label: 'Sell out NPP', numeric: true } , { label: 'SL Sell OUT Hãng Support', numeric: true }
+            { label: 'Giá cost', numeric: true }, { label: 'Chiết khấu', numeric: true }, { label: 'Sell out', numeric: true },
+            { label: 'Sell in', numeric: true }, { label: 'Tên nhóm VTHH', desc: true }
         ],
         'TON_KHO': [
             { label: 'Loại Hàng Hóa', code: true }, { label: 'Mã Hàng Hóa', desc: true, width: 350 }, { label: 'Tên Hàng Hóa' ,width: 750 },
@@ -937,6 +951,7 @@
                         fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                     }
 
+                    // Gọi hàm cập nhật đúng dòng cũ trên Google Sheets
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
                     rowData._isEditing = false;
@@ -958,10 +973,8 @@
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
 
-                    // Chỉ cho phép sửa các cột: GIÁ COST, COST_KTB, GIÁ BÁN TIỀN MẶT, GIÁ BÁN CÔNG NỢ, GIÁ BÁN KTB
-                    let allowedColumns = ['Giá cost', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB', 
-                                         'Sell in Hãng', 'Sell out Hãng', 'Chiết khấu',  'Sell in NPP','Sell out NPP', 'SL Sell OUT Hãng Support'
-                                         ];
+                    // Chỉ cho phép sửa 3 cột chỉ định, các cột khác khóa hoàn toàn
+                    let allowedColumns = ['COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB'];
                     let colLabel = col.label.trim().toUpperCase();
                     return allowedColumns.includes(colLabel);
                 },
