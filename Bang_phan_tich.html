@@ -187,6 +187,9 @@
                 <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">
                     <i class="fa-solid fa-computer me-1"></i> AIO
                 </button>
+                <button type="button" id="btnModeMayInScan" class="btn btn-outline-primary" onclick="switchTableMode('MAY_IN_SCAN')">
+                    <i class="fa-solid fa-print me-1"></i> MÁY IN / SCAN
+                </button>
                 <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">
                     <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
                 </button>
@@ -249,7 +252,6 @@
 
         <!-- KHUNG CHỨA DASHBOARD & 2 TABULATOR (Dành riêng cho THỐNG KÊ QUÝ) -->
         <div id="dashboardView" class="dashboard-container">
-            <!-- 3 Thẻ thống kê tổng quan -->
             <div class="row g-2">
                 <div class="col-md-4">
                     <div class="stat-card">
@@ -271,7 +273,6 @@
                 </div>
             </div>
 
-            <!-- 2 Biểu đồ trực quan -->
             <div class="row g-2">
                 <div class="col-md-7">
                     <div class="chart-box">
@@ -285,7 +286,6 @@
                 </div>
             </div>
 
-            <!-- BẢNG 1: Chi tiết theo Quý & Hãng (Kèm Bộ Lọc Đồng Thời Quý, Hãng, Loại SP) -->
             <div>
                 <div class="table-section-header">
                     <div class="table-section-title"><i class="fa-solid fa-table me-1"></i> 1. Chi Tiết Nhập Kho Theo Quý & Hãng</div>
@@ -313,7 +313,6 @@
                 <div id="table-quarter-detail" style="height: 420px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
 
-            <!-- BẢNG 2: Mục tiêu doanh số quý (Kèm Bộ Lọc Đồng Thời Quý, Hãng, Loại SP) -->
             <div>
                 <div class="table-section-header">
                     <div class="table-section-title"><i class="fa-solid fa-bullseye me-1"></i> 2. Theo Dõi Mục Tiêu Doanh Số Quý Cho Từng Brand</div>
@@ -401,6 +400,32 @@
             { label: 'GIÁ BÁN CÔNG NỢ', numeric: true ,width: 120 }, { label: 'GIÁ EU', numeric: true }, 
             { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }
         ],
+        'MAY_IN_SCAN': [
+            { label: 'NCC' },
+            { label: '(SKU) NPP, Hãng' },
+            { label: 'Mã KTB' },
+            { label: 'GHI CHÚ' },
+            { label: 'Độ phân giải DPI' },
+            { label: 'Bộ nhớ' },
+            { label: 'FIRST PAGE' },
+            { label: 'printing speed' },
+            { label: 'connect' },
+            { label: '(Auto-Duplex) Duplex / Manual Duplex' },
+            { label: '(All-in-One) Scan, Copy, Fax' },
+            { label: 'page/month', numeric: true },
+            { label: 'SL NHAP TONG', numeric: true, width: 80 },
+            { label: 'So_Luong TON', numeric: true, width: 80 },
+            { label: 'SL bán ra từ ngày', numeric: true, width: 80 },
+            { label: 'Hàng gửi NPP', width: 80 },
+            { label: 'COST_KTB', numeric: true },
+            { label: 'GIÁ NHẬP CŨ', numeric: true },
+            { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true, width: 80 },
+            { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
+            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 },
+            { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 },
+            { label: 'NGÀY NHẬP CŨ', date: true },
+            { label: 'NGÀY NHẬP MỚI', date: true }
+        ],
         'BAN_HANG': [
             { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
             { label: 'Số đề nghị trả lại' }, { label: 'Ngày đề nghị trả lại', date: true }, { label: 'Mã hàng hóa', code: true },
@@ -468,6 +493,7 @@
             'PC': { id: 'btnModePc', cls: 'btn-dark' },
             'LCD': { id: 'btnModeLcd', cls: 'btn-danger' },
             'AIO': { id: 'btnModeAio', cls: 'btn-secondary' },
+            'MAY_IN_SCAN': { id: 'btnModeMayInScan', cls: 'btn-primary' },
             'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
             'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
@@ -614,12 +640,10 @@
         document.getElementById('statTotalRecords').innerText = detailArray.length;
         document.getElementById('rowCountBadge').innerText = `Hiển thị: ${detailArray.length} mục`;
 
-        // Đổ dữ liệu vào các thẻ select lọc
         populateSelectOptions('filter1Quarter', 'filter2Quarter', quartersSet);
         populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
         populateSelectOptions('filter1Type', 'filter2Type', typesSet);
 
-        // Vẽ biểu đồ Cột
         let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
         if (barChartInstance) barChartInstance.destroy();
         
@@ -644,7 +668,6 @@
             }
         });
 
-        // Vẽ biểu đồ Tròn
         let ctxDoughnut = document.getElementById('doughnutChartType').getContext('2d');
         if (doughnutChartInstance) doughnutChartInstance.destroy();
 
@@ -667,7 +690,6 @@
             }
         });
 
-        // --- BẢNG TABULATOR 1 ---
         let detailTableData = detailArray.map((row, idx) => ({
             id: idx + 1,
             col_0: row[0],
@@ -694,7 +716,6 @@
             ]
         });
 
-        // --- BẢNG TABULATOR 2 ---
         let targetTableData = detailArray.map((row, idx) => ({
             id: idx + 1,
             quarter: row[0],
@@ -816,7 +837,6 @@
         });
     }
 
-    // Hàm lọc đồng thời cho Bảng 1
     function applyMultiFilterTable1() {
         if (!tableQuarterDetail) return;
         let qVal = document.getElementById('filter1Quarter').value;
@@ -838,7 +858,6 @@
         if (tableQuarterDetail && reapply) tableQuarterDetail.clearFilter();
     }
 
-    // Hàm lọc đồng thời cho Bảng 2
     function applyMultiFilterTable2() {
         if (!tableBrandSummary) return;
         let qVal = document.getElementById('filter2Quarter').value;
@@ -931,7 +950,6 @@
                 minWidth: 80, 
                 editor: "input",
                 editable: function(cell) {
-                    if (currentMode === 'LAPTOP' && col.label.trim().toUpperCase() === 'CHECK GIÁ BÁN') return false;
                     let rowData = cell.getRow().getData();
                     return rowData._isEditing === true;
                 },
@@ -983,19 +1001,6 @@
             activeCols.forEach((col, index) => {
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
-
-            if (currentMode === 'LAPTOP') {
-                let idxGiaBanTienMat = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                let idxGiaNhapMoi = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI');
-                let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
-
-                if (idxGiaBanTienMat !== -1 && idxGiaNhapMoi !== -1 && idxCheckGia !== -1) {
-                    let valBan = parseFloat(String(obj["col_" + idxGiaBanTienMat]).replace(/[,.]/g, '')) || 0;
-                    let valNhap = parseFloat(String(obj["col_" + idxGiaNhapMoi]).replace(/[,.]/g, '')) || 0;
-                    obj["col_" + idxCheckGia] = valBan - valNhap;
-                }
-            }
-
             return obj;
         });
 
@@ -1011,43 +1016,7 @@
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { resizable: true },
-            cellEdited: function(cell) {
-                if (currentMode === 'LAPTOP') {
-                    let row = cell.getRow();
-                    let data = row.getData();
-                    let activeCols = getActiveColumns();
-                    
-                    let idxGiaBanTienMat = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                    let idxGiaNhapMoi = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI');
-                    let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
-
-                    if (idxGiaBanTienMat !== -1 && idxGiaNhapMoi !== -1 && idxCheckGia !== -1) {
-                        let valBan = parseFloat(String(data["col_" + idxGiaBanTienMat]).replace(/[,.]/g, '')) || 0;
-                        let valNhap = parseFloat(String(data["col_" + idxGiaNhapMoi]).replace(/[,.]/g, '')) || 0;
-                        
-                        data["col_" + idxCheckGia] = valBan - valNhap;
-                        row.update(data);
-                    }
-                }
-            },
-            rowFormatter: function(row) {
-                if (currentMode === 'LAPTOP') {
-                    let data = row.getData();
-                    let activeCols = getActiveColumns();
-                    let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
-                    
-                    if (idxCheckGia !== -1) {
-                        let checkVal = parseFloat(String(data["col_" + idxCheckGia]).replace(/[,.]/g, '')) || 0;
-                        let rowEl = row.getElement();
-                        if (checkVal < 0) {
-                            rowEl.style.backgroundColor = "#ffdddd";
-                        } else {
-                            rowEl.style.backgroundColor = "";
-                        }
-                    }
-                }
-            }
+            columnDefaults: { resizable: true }
         });
 
         table.on("dataFiltered", function(filters, rows){
