@@ -187,8 +187,8 @@
                 <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">
                     <i class="fa-solid fa-computer me-1"></i> AIO
                 </button>
-                <button type="button" id="btnModeMayInScan" class="btn btn-outline-primary" onclick="switchTableMode('MAY_IN_SCAN')">
-                    <i class="fa-solid fa-print me-1"></i> MÁY IN / SCAN
+                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN MÁY IN')">
+                    <i class="fa-solid fa-print me-1"></i> SCAN MÁY IN
                 </button>
                 <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">
                     <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
@@ -400,7 +400,7 @@
             { label: 'GIÁ BÁN CÔNG NỢ', numeric: true ,width: 120 }, { label: 'GIÁ EU', numeric: true }, 
             { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }
         ],
-        'MAY_IN_SCAN': [
+        'SCAN MÁY IN': [
             { label: 'NCC' },
             { label: '(SKU) NPP, Hãng' },
             { label: 'Mã KTB' },
@@ -493,7 +493,7 @@
             'PC': { id: 'btnModePc', cls: 'btn-dark' },
             'LCD': { id: 'btnModeLcd', cls: 'btn-danger' },
             'AIO': { id: 'btnModeAio', cls: 'btn-secondary' },
-            'MAY_IN_SCAN': { id: 'btnModeMayInScan', cls: 'btn-primary' },
+            'SCAN MÁY IN': { id: 'btnModeScanMayIn', cls: 'btn-primary' },
             'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
             'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
@@ -530,7 +530,7 @@
         let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
         showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
-        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${targetSheet}`)
+        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(targetSheet)}`)
             .then(res => res.json())
             .then(data => {
                 if (currentMode === 'THONG_KE_QUY') {
