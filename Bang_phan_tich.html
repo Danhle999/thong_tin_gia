@@ -1096,13 +1096,19 @@
         }
     }
 
-    function saveRowToSheet(sheetRowIndex, fullRowData) {
-        showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
+function saveRowToSheet(sheetRowIndex, fullRowData) {
+        showLoading(true, `Đang ghi đè dữ liệu vào Sheet '${currentMode}'...`);
+        
+        // Lấy giá trị của cột đầu tiên làm khóa định danh chống lệch dòng
+        var uniqueKeyValue = fullRowData[0] || ''; 
+
         var formData = new URLSearchParams();
         formData.append("payload", JSON.stringify({
             action: "updateRow",
             sheetName: currentMode,
             rowIndex: sheetRowIndex,
+            uniqueKey: uniqueKeyValue,
+            colIndex: 0, // Cột định danh là cột đầu tiên (index 0)
             rowData: fullRowData
         }));
 
@@ -1112,7 +1118,10 @@
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: formData.toString()
         }).then(() => {
-            setTimeout(() => { showLoading(false); }, 800);
+            setTimeout(() => { 
+                showLoading(false);
+                loadDataFromSheet(); // Tải lại bảng sạch sẽ từ sheet
+            }, 1000);
         }).catch(err => {
             showLoading(false);
         });
