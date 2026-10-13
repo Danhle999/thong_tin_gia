@@ -27,6 +27,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 15px;
         }
+
         .table-container {
             background: #ffffff;
             border-radius: 8px;
@@ -37,12 +38,14 @@
             flex-direction: column;
             box-sizing: border-box;
         }
+
         #example-table {
             flex: 1 1 auto;
             border: 1px solid #dee2e6;
             border-radius: 4px;
             margin-bottom: 10px;
         }
+
         #loadingSpinner { 
             display: none; 
             position: fixed; 
@@ -55,6 +58,7 @@
             justify-content: center; 
             align-items: center; 
         }
+
         .filter-card { 
             background: #eef2f7; 
             border-radius: 6px; 
@@ -63,9 +67,41 @@
             border: 1px solid #cbd5e1;
             flex-shrink: 0;
         }
+
         .view-mode-btn-group .btn { font-weight: 600; font-size: 0.95rem; }
         .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
+        
         .tabulator { font-size: 0.95rem; }
+
+        .btn-edit-action { transition: all 0.2s ease-in-out; cursor: pointer; }
+        .btn-edit-action:hover { transform: scale(1.05); }
+
+        .tabulator .tabulator-header .tabulator-col {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            vertical-align: middle !important;
+        }
+        
+        .tabulator .tabulator-header .tabulator-col-content { padding: 4px !important; }
+
+        .tabulator .tabulator-header .tabulator-col-title {
+            white-space: normal !important;
+            text-overflow: clip !important;
+            line-height: 1.25;
+        }
+
+        .tabulator .tabulator-row .tabulator-cell {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            max-height: 48px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.4 !important;
+            padding-top: 3px !important;
+            padding-bottom: 3px !important;
+        }
+
+        /* Dashboard Styles */
         .dashboard-container {
             display: none;
             flex-direction: column;
@@ -80,7 +116,9 @@
             border-radius: 6px;
             padding: 8px 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border: 1px solid #e9ecef;
+            border-top: 1px solid #e9ecef;
+            border-right: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
         }
         .chart-box {
             background: #ffffff;
@@ -242,7 +280,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdTi3jngJppQvPzAG_1dskyZdc-119BygfyMI1DcZpNDuZQXTcX79gITnVgsUDOh2M/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvzsuCxZD5ZtfEEnMTvrOX9umoH2WJlJ2VxPgxs0xcTSBtrGoYXEUbM5CUh5ll2h7Q/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -378,11 +416,11 @@
 
         if (btnObj) {
             let targetBtn = document.getElementById(btnObj.id);
-            if (targetBtn) targetBtn.className = 'btn ' + btnObj.cls + ' active';
+            if (targetBtn) targetBtn.className = `btn ${btnObj.cls} active`;
         }
         
         let cols = getActiveColumns();
-        document.getElementById('modeDescription').innerText = 'Đang hiển thị Trang tính: ' + mode + ' (' + cols.length + ' Cột)';
+        document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${mode} (${cols.length} Cột)`;
         
         let isThongKe = (mode === 'THONG_KE_QUY');
         document.getElementById('actionButtonsRow').style.display = isThongKe ? 'none' : 'flex';
@@ -401,9 +439,9 @@
 
     function loadDataFromSheet() {
         let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
-        showLoading(true, 'Đang tải dữ liệu Sheet ' + targetSheet + '...');
+        showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
-        fetch(GOOGLE_SCRIPT_URL + '?action=getData&sheetName=' + encodeURIComponent(targetSheet))
+        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(targetSheet)}`)
             .then(res => res.json())
             .then(data => {
                 if (currentMode === 'THONG_KE_QUY') {
@@ -440,10 +478,10 @@
             let month = d.getMonth() + 1;
             let year = d.getFullYear();
             let quarter = '';
-            if (month >= 1 && month <= 3) quarter = 'Quý 1 / ' + year;
-            else if (month >= 4 && month <= 6) quarter = 'Quý 2 / ' + year;
-            else if (month >= 7 && month <= 9) quarter = 'Quý 3 / ' + year;
-            else quarter = 'Quý 4 / ' + year;
+            if (month >= 1 && month <= 3) quarter = `Quý 1 / ${year}`;
+            else if (month >= 4 && month <= 6) quarter = `Quý 2 / ${year}`;
+            else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
+            else quarter = `Quý 4 / ${year}`;
 
             let brand = 'Khác';
             if (tenHang.includes('dell')) brand = 'Dell';
@@ -462,9 +500,9 @@
                 return; 
             }
 
-            let key = quarter + '_' + brand + '_' + productType;
+            let key = `${quarter}_${brand}_${productType}`;
             if (!aggregatedMap[key]) {
-                aggregatedMap[key] = { quarter: quarter, brand: brand, productType: productType, totalQty: 0, totalAmount: 0 };
+                aggregatedMap[key] = { quarter, brand, productType, totalQty: 0, totalAmount: 0 };
             }
             aggregatedMap[key].totalQty += soLuong;
             aggregatedMap[key].totalAmount += thanhTien;
@@ -509,7 +547,7 @@
         document.getElementById('statTotalQty').innerText = totalQty.toLocaleString('vi-VN');
         document.getElementById('statTotalAmount').innerText = totalAmount.toLocaleString('vi-VN') + ' VNĐ';
         document.getElementById('statTotalRecords').innerText = detailArray.length;
-        document.getElementById('rowCountBadge').innerText = 'Hiển thị: ' + detailArray.length + ' mục';
+        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${detailArray.length} mục`;
 
         populateSelectOptions('filter1Quarter', 'filter2Quarter', quartersSet);
         populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
@@ -581,7 +619,7 @@
             },
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
-                { title: "Quý / Brand", field: "quarter", width: 110, formatter: function(cell){ return '<b>' + cell.getRow().getData().quarter + '</b><br><small class="text-primary">' + cell.getRow().getData().brand + ' - ' + cell.getRow().getData().productType + '</small>'; }},
+                { title: "Quý / Brand", field: "quarter", width: 110, formatter: function(cell){ return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} -${cell.getRow().getData().productType}</small>`; }},
                 { title: "Mục tiêu doanh số", field: "targetAmount", hozAlign: "right", editor: "number", cssClass: "bg-light text-primary fw-bold", formatter: function(cell) { let v = parseFloat(cell.getValue()) || 0; return v > 0 ? v.toLocaleString('vi-VN') : "-"; }},
                 { title: "Đã thực hiện", field: "actualAmount", hozAlign: "right", formatter: function(cell) { let v = parseFloat(cell.getValue()) || 0; return v > 0 ? v.toLocaleString('vi-VN') : "-"; }},
                 { title: "% Đã thực hiện", field: "pctActual", hozAlign: "right", formatter: function(cell) { let v = parseFloat(cell.getValue()) || 0; return v > 0 ? v.toFixed(2) + "%" : "-"; }},
@@ -598,8 +636,8 @@
         let sel1 = document.getElementById(selectId1);
         let sel2 = document.getElementById(selectId2);
         let t1 = sel1.options[0].text, t2 = sel2.options[0].text;
-        sel1.innerHTML = '<option value="">' + t1 + '</option>';
-        sel2.innerHTML = '<option value="">' + t2 + '</option>';
+        sel1.innerHTML = `<option value="">${t1}</option>`;
+        sel2.innerHTML = `<option value="">${t2}</option>`;
         Array.from(setValues).sort().forEach(val => {
             let opt1 = document.createElement('option'); opt1.value = val; opt1.text = val; sel1.appendChild(opt1);
             let opt2 = document.createElement('option'); opt2.value = val; opt2.text = val; sel2.appendChild(opt2);
@@ -625,40 +663,6 @@
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
-    // Hàm gọi cập nhật dòng dữ liệu lên Google Sheets khi sửa trực tiếp trên bảng Tabulator
-    function sendUpdateToServer(rowDataArray, realRowIndex, sheetName) {
-        showLoading(true, "Đang lưu thay đổi lên Google Sheets...");
-        let payload = {
-            action: "updateRow",
-            sheetName: sheetName,
-            rowIndex: realRowIndex,
-            rowData: rowDataArray
-        };
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(res => {
-            showLoading(false);
-            if(res.status === 'success') {
-                console.log("Đã lưu thành công dòng số: " + res.updatedRow);
-            } else {
-                alert("Lỗi khi lưu: " + res.message);
-            }
-        })
-        .catch(err => {
-            showLoading(false);
-            console.error(err);
-            // Vẫn hiển thị thông báo thành công nếu dùng no-cors/cross-origin redirect từ GAS
-            console.log("Đã gửi yêu cầu cập nhật lên hệ thống.");
-        });
-    }
-
     function buildTabulatorTable(rawData) {
         let rows = rawData.rows || [];
         let activeCols = getActiveColumns();
@@ -666,87 +670,173 @@
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
         ];
 
-        activeCols.forEach((colDef, index) => {
-            let fieldName = 'col_' + index;
-            let columnObj = {
-                title: colDef.label,
-                field: fieldName,
-                editor: "input", // Cho phép click vào để sửa trực tiếp trên ô
-                width: colDef.width || 150,
-                headerFilter: "input"
-            };
-
-            if (colDef.numeric) {
-                columnObj.hozAlign = "right";
-                columnObj.formatter = function(cell) {
-                    let val = parseFloat(cell.getValue());
-                    if (isNaN(val)) return cell.getValue() || "";
-                    return colDef.percent ? val.toFixed(2) + "%" : val.toLocaleString('vi-VN');
-                };
-            } else if (colDef.date) {
-                columnObj.hozAlign = "center";
+        columnsConfig.push({
+            title: "Thao tác",
+            field: "_actionCol",
+            width: 100,
+            hozAlign: "center",
+            headerSort: false,
+            frozen: true,
+            formatter: function(cell) {
+                let rowData = cell.getRow().getData();
+                if (rowData._isEditing) {
+                    return `<button class="btn btn-sm btn-danger fw-bold px-2 py-1 rounded shadow btn-edit-action" onclick="saveRowEdit(${cell.getRow().getData().realRowIndex})"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
+                } else {
+                    return `<button class="btn btn-sm btn-outline-primary px-2 py-1 rounded btn-edit-action" onclick="toggleRowEdit(${cell.getRow().getData().realRowIndex})"><i class="fa-solid fa-pen"></i></button>`;
+                }
             }
-
-            columnsConfig.push(columnObj);
         });
 
-        let tableData = rows.map((r, idx) => {
-            let rowObj = { _id: idx + 1, _realRowIndex: r.realRowIndex };
-            activeCols.forEach((colDef, cIdx) => {
-                rowObj['col_' + cIdx] = r.values[cIdx] !== undefined ? r.values[cIdx] : "";
+        activeCols.forEach((col, index) => {
+            let colDef = {
+                title: col.label,
+                field: "col_" + index,
+                editor: false, // Ban đầu không cho edit trực tiếp cell trừ khi bật nút Sửa
+                width: col.width || 150
+            };
+            if (col.numeric) {
+                colDef.hozAlign = "right";
+                colDef.formatter = "money";
+                colDef.formatterParams = { precision: col.percent ? 2 : 0, thousand: ".", symbol: col.percent ? " %" : "" };
+            }
+            columnsConfig.push(colDef);
+        });
+
+        let tableData = rows.map(r => {
+            let item = {
+                realRowIndex: r.realRowIndex,
+                _isEditing: false
+            };
+            activeCols.forEach((col, idx) => {
+                item["col_" + idx] = r.values[idx] !== undefined ? r.values[idx] : "";
             });
-            return rowObj;
+            return item;
         });
 
-        document.getElementById('rowCountBadge').innerText = 'Hiển thị: ' + tableData.length + ' dòng';
+        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} dòng`;
 
         if (table) table.destroy();
         table = new Tabulator("#example-table", {
             data: tableData,
             layout: "fitData",
             responsiveLayout: "collapse",
+            height: "100%",
             pagination: "local",
-            paginationSize: 25,
-            paginationSizeSelector: [25, 50, 100, 200],
-            movableColumns: true,
-            columnDefaults: {
-                resizable: true,
-            },
-            // Bắt sự kiện khi người dùng sửa xong một ô bất kỳ trên bảng để lưu thẳng lên Google Sheets
-            cellEdited: function(cell) {
-                let rowData = cell.getRow().getData();
-                let realRowIndex = rowData._realRowIndex;
-                
-                // Gom dữ liệu của tất cả các cột thành mảng theo đúng cấu hình cột hiện tại
-                let updatedRowArray = [];
-                activeCols.forEach((colDef, cIdx) => {
-                    let val = rowData['col_' + cIdx];
-                    updatedRowArray.push(val !== undefined ? val : "");
-                });
+            paginationSize: 50,
+            columns: columnsConfig
+        });
+    }
 
-                // Gửi request cập nhật lên Google Sheets
-                sendUpdateToServer(updatedRowArray, realRowIndex, currentMode);
-            },
+    // Toggle chế độ sửa dòng khi bấm nút cây bút để tránh bị nhân bản bản ghi
+    function toggleRowEdit(realRowIndex) {
+        let row = table.getRow(function(data){
+            return data.realRowIndex === realRowIndex;
+        });
+        if (!row) return;
+
+        let data = row.getData();
+        data._isEditing = !data._isEditing;
+
+        let activeCols = getActiveColumns();
+        
+        // Cập nhật lại cấu hình cột cho phép edit hoặc khóa lại
+        let colsConfig = table.getColumnDefinitions();
+        colsConfig.forEach(col => {
+            if (col.field && col.field.startsWith("col_")) {
+                col.editor = data._isEditing ? "input" : false;
+                if(data._isEditing) {
+                    col.cssClass = "bg-light border-primary";
+                } else {
+                    col.cssClass = "";
+                }
+            }
+        });
+
+        table.setColumns(colsConfig);
+        row.update(data);
+    }
+
+    // Lưu dòng đã chỉnh sửa gửi về Google Apps Script mà không tạo dòng copy mới
+    function saveRowEdit(realRowIndex) {
+        let row = table.getRow(function(data){
+            return data.realRowIndex === realRowIndex;
+        });
+        if (!row) return;
+
+        let data = row.getData();
+        let activeCols = getActiveColumns();
+        let rowDataArray = [];
+
+        for (let i = 0; i < activeCols.length; i++) {
+            rowDataArray.push(data["col_" + i] !== undefined ? data["col_" + i] : "");
+        }
+
+        showLoading(true, "Đang lưu thay đổi lên Google Sheets...");
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'updateRow',
+                sheetName: currentMode,
+                rowIndex: realRowIndex,
+                rowData: rowDataArray
+            })
+        })
+        .then(res => res.json())
+        .then(res => {
+            showLoading(false);
+            if (res.status === 'success') {
+                alert("Cập nhật dữ liệu thành công!");
+                data._isEditing = false;
+                
+                // Khóa lại các cột sau khi lưu xong
+                let colsConfig = table.getColumnDefinitions();
+                colsConfig.forEach(col => {
+                    if (col.field && col.field.startsWith("col_")) {
+                        col.editor = false;
+                        col.cssClass = "";
+                    }
+                });
+                table.setColumns(colsConfig);
+                row.update(data);
+                loadDataFromSheet(); // Tải lại dữ liệu mới nhất sạch cache
+            } else {
+                alert("Lỗi: " + res.message);
+            }
+        })
+        .catch(err => {
+            showLoading(false);
+            alert("Lỗi kết nối khi cập nhật dòng!");
         });
     }
 
     function applyGlobalSearch() {
-        if (!table) return;
         let keyword = document.getElementById('globalSearchInput').value.toLowerCase();
         let customerKeyword = document.getElementById('customerFilterInput').value.toLowerCase();
 
-        table.setFilter(data => {
-            let matchGlobal = !keyword;
-            let matchCustomer = !customerKeyword;
+        table.setFilter(function(data) {
+            let matchGlobal = false;
+            let matchCustomer = false;
 
             for (let key in data) {
-                if (key.startsWith('col_')) {
-                    let val = String(data[key] || '').toLowerCase();
-                    if (keyword && val.includes(keyword)) matchGlobal = true;
-                    if (customerKeyword && val.includes(customerKeyword)) matchCustomer = true;
+                if (key.startsWith("col_") && String(data[key]).toLowerCase().includes(keyword)) {
+                    matchGlobal = true;
+                    break;
                 }
             }
-            return matchGlobal && matchCustomer;
+
+            if (!customerKeyword) {
+                matchCustomer = true;
+            } else {
+                let activeCols = getActiveColumns();
+                activeCols.forEach((col, idx) => {
+                    if ((col.customer || col.ncc || col.code || col.desc) && String(data["col_" + idx]).toLowerCase().includes(customerKeyword)) {
+                        matchCustomer = true;
+                    }
+                });
+            }
+
+            return (!keyword || matchGlobal) && matchCustomer;
         });
     }
 
@@ -754,18 +844,35 @@
         document.getElementById('globalSearchInput').value = "";
         document.getElementById('customerFilterInput').value = "";
         if (table) table.clearFilter();
-        if (reload && currentMode !== 'THONG_KE_QUY') loadDataFromSheet();
+        if (reload) loadDataFromSheet();
     }
 
     function addRow() {
-        if (!table) return;
         let activeCols = getActiveColumns();
-        let emptyRow = { _realRowIndex: -1 }; // Dòng mới chưa có index thực tế sẽ được thêm
-        activeCols.forEach((col, idx) => {
-            emptyRow['col_' + idx] = "";
-        });
-        table.addRow(emptyRow, true).then(function(row){
-            alert("Đã thêm dòng tạm trên giao diện. Bạn có thể nhập dữ liệu trực tiếp vào các ô.");
+        let newRowData = new Array(activeCols.length).fill("");
+        
+        showLoading(true, "Đang thêm dòng mới vào Google Sheets...");
+        
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'appendRows',
+                sheetName: currentMode,
+                rows: [newRowData]
+            })
+        })
+        .then(res => res.json())
+        .then(res => {
+            showLoading(false);
+            if (res.status === 'success') {
+                loadDataFromSheet();
+            } else {
+                alert("Lỗi: " + res.message);
+            }
+        })
+        .catch(err => {
+            showLoading(false);
+            alert("Lỗi kết nối khi thêm dòng!");
         });
     }
 
@@ -779,41 +886,42 @@
             let workbook = XLSX.read(data, { type: 'array' });
             let firstSheetName = workbook.SheetNames[0];
             let worksheet = workbook.Sheets[firstSheetName];
-            let jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            let json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-            if (jsonRows.length <= 1) {
+            if (json.length <= 1) {
                 alert("File Excel không có dữ liệu!");
                 return;
             }
 
-            let dataRowsToAppend = jsonRows.slice(1); // Bỏ qua dòng tiêu đề
-            showLoading(true, "Đang đẩy dữ liệu từ Excel lên Google Sheets...");
+            let rowsToAppend = json.slice(1); // Bỏ qua header
+            showLoading(true, `Đang tải ${rowsToAppend.length} dòng lên Google Sheets...`);
 
             fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8"
-                },
+                method: 'POST',
                 body: JSON.stringify({
-                    action: "appendRows",
+                    action: 'appendRows',
                     sheetName: currentMode,
-                    rows: dataRowsToAppend
+                    rows: rowsToAppend
                 })
             })
-            .then(() => {
+            .then(res => res.json())
+            .then(res => {
                 showLoading(false);
-                alert("Đã nhập dữ liệu từ Excel vào Google Sheets thành công!");
-                loadDataFromSheet();
+                if (res.status === 'success') {
+                    alert("Nhập Excel thành công!");
+                    loadDataFromSheet();
+                } else {
+                    alert("Lỗi: " + res.message);
+                }
             })
             .catch(err => {
                 showLoading(false);
-                alert("Lỗi khi tải dữ liệu Excel lên!");
+                alert("Lỗi kết nối khi nhập Excel!");
             });
         };
         reader.readAsArrayBuffer(file);
     }
 
-    // Khởi động chạy mặc định tải dữ liệu trang LAPTOP
     window.onload = function() {
         switchTableMode('LAPTOP');
     };
