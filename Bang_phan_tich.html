@@ -483,7 +483,6 @@
     let tableBrandSummary = null;
     let barChartInstance = null;
     let doughnutChartInstance = null;
-    let currentRawDataLength = 0; // Biến lưu tổng số dòng thực tế để tính Offset
 
     function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
 
@@ -939,11 +938,23 @@
                     }
                 } else {
                     let fullRowData = [];
-                    for(let i = 0; i < activeCols.length; i++) {
-                        fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
-                    }
+                    activeCols.forEach((col, i) => {
+                        let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
+                        
+                        // Định dạng cột Ngày tháng về dạng YYYY-MM-DD chuẩn trước khi lưu
+                        if (col.date && val) {
+                            let d = new Date(val);
+                            if (!isNaN(d.getTime())) {
+                                let yyyy = d.getFullYear();
+                                let mm = String(d.getMonth() + 1).padStart(2, '0');
+                                let dd = String(d.getDate()).padStart(2, '0');
+                                val = `${yyyy}-${mm}-${dd}`;
+                            }
+                        }
+                        fullRowData.push(val);
+                    });
 
-                    // Lưu dữ liệu vào dòng cũ
+                    // Lưu dữ liệu dòng về Google Sheet
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
                     rowData._isEditing = false;
@@ -1015,7 +1026,6 @@
             rowsToProcess = rawData.slice(1);
         }
 
-        // TÍNH TOÁN OFFSET ĐỂ LẤY ĐÚNG SỐ DÒNG THỰC BÊN GOOGLE SHEETS
         let startRowOffset = 2; 
         if (rowsToProcess.length >= 500 && currentMode === 'NHAP_KHO') {
             startRowOffset = rawData.length - rowsToProcess.length + 1;
