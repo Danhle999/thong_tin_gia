@@ -884,13 +884,11 @@
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
-    function buildTabulatorTable(rawData) {
-        if (!rawData || rawData.length === 0) {
-            if (table) table.clearData();
-            return;
-        }
-
+function buildTabulatorTable(rawData) {
+        let rows = rawData.rows || [];
+        let headers = rawData.headers || [];
         let activeCols = getActiveColumns();
+
         let columnsConfig = [
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
         ];
@@ -937,8 +935,8 @@
                         fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                     }
 
-                    // Gọi hàm cập nhật đúng dòng cũ trên Google Sheets
-                    saveRowToSheet(rowData.sheetRowIndex, fullRowData);
+                    // Gửi chính xác realRowIndex chuẩn từ Google Sheets lên để backend tìm SKU / dòng cũ
+                    saveRowToSheet(rowData.realRowIndex, fullRowData);
 
                     rowData._isEditing = false;
                     btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
@@ -959,7 +957,6 @@
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
 
-                    // Danh sách các cột được phép sửa (Giá + các cột Sell in/out, chiết khấu đã có sẵn trong Sheet)
                     let allowedColumns = [
                         'COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB',
                         'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT'
@@ -1005,15 +1002,11 @@
             columnsConfig.push(colDef);
         });
 
-        let rowsToProcess = rawData;
-        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
-            rowsToProcess = rawData.slice(1);
-        }
-
-        let tableData = rowsToProcess.map((row, rowIndex) => {
-            let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
+        // Đọc chuẩn cấu trúc dữ liệu từ Backend ({ headers, rows })
+        let tableData = rows.map(r => {
+            let obj = { realRowIndex: r.realRowIndex, _isEditing: false }; 
             activeCols.forEach((col, index) => {
-                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
+                obj["col_" + index] = r.values[index] !== undefined && r.values[index] !== null ? r.values[index] : '';
             });
             return obj;
         });
