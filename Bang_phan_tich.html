@@ -770,17 +770,29 @@
                 { title: "Quý / Brand", field: "quarter", width: 110, formatter: function(cell){
                     return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} - ${cell.getRow().getData().productType}</small>`;
                 }},
-                { 
-                    title: "Mục tiêu doanh số", 
-                    field: "targetAmount", 
-                    hozAlign: "right", 
-                    editor: "number",
-                    cssClass: "bg-light text-primary fw-bold",
-                    formatter: function(cell) {
-                        let v = parseFloat(cell.getValue()) || 0;
-                        return v > 0 ? v.toLocaleString('vi-VN') : "-";
-                    }
-                },
+{ 
+    title: "Mục tiêu doanh số", 
+    field: "targetAmount", 
+    hozAlign: "right", 
+    editor: "number",
+    editorParams: {
+        min: 0,
+        step: "any" // Cho phép nhập số lớn tùy ý không bị giới hạn
+    },
+    cssClass: "bg-light text-primary fw-bold",
+    formatter: function(cell) {
+        let val = cell.getValue();
+        if (val === null || val === undefined || val === '') return "-";
+        
+        // Làm sạch chuỗi nếu dữ liệu đầu vào có chứa dấu chấm/phẩy phân cách hàng nghìn
+        let cleanNum = parseFloat(String(val).replace(/[,.]/g, ''));
+        
+        if (isNaN(cleanNum) || cleanNum <= 0) return "-";
+        
+        // Định dạng hiển thị chuẩn Tiếng Việt (Ví dụ: 1.500.000.000)
+        return cleanNum.toLocaleString('vi-VN');
+    }
+},
                 { 
                     title: "Đã thực hiện", 
                     field: "actualAmount", 
