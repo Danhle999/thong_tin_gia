@@ -71,10 +71,16 @@
         .view-mode-btn-group .btn { font-weight: 600; font-size: 0.95rem; }
         .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
         
-        .tabulator { font-size: 0.95rem; }
+        .tabulator {
+            font-size: 0.95rem;
+        }
 
-        .btn-edit-action { transition: all 0.2s ease-in-out; cursor: pointer; }
-        .btn-edit-action:hover { transform: scale(1.05); }
+        .btn-edit-action {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-edit-action:hover {
+            transform: scale(1.05);
+        }
 
         .tabulator .tabulator-header .tabulator-col {
             white-space: normal !important;
@@ -82,7 +88,9 @@
             vertical-align: middle !important;
         }
         
-        .tabulator .tabulator-header .tabulator-col-content { padding: 4px !important; }
+        .tabulator .tabulator-header .tabulator-col-content {
+            padding: 4px !important;
+        }
 
         .tabulator .tabulator-header .tabulator-col-title {
             white-space: normal !important;
@@ -167,24 +175,48 @@
             </div>
             
             <div class="btn-group view-mode-btn-group flex-wrap gap-1" role="group">
-                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')"><i class="fa-solid fa-laptop me-1"></i> LAPTOP</button>
-                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')"><i class="fa-solid fa-desktop me-1"></i> PC</button>
-                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')"><i class="fa-solid fa-tv me-1"></i> LCD</button>
-                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')"><i class="fa-solid fa-computer me-1"></i> AIO</button>
-                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')"><i class="fa-solid fa-print me-1"></i> MÁY IN / SCAN</button>
-                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')"><i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG</button>
-                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')"><i class="fa-solid fa-file-import me-1"></i> NHẬP KHO</button>
-                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')"><i class="fa-solid fa-warehouse me-1"></i> TỒN KHO</button>
-                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')"><i class="fa-solid fa-chart-pie me-1"></i> THỐNG KÊ QUÝ</button>
-                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')"><i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ DELL</button>
-                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')"><i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ HP</button>
-                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')"><i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ LENOVO</button>
+                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">
+                    <i class="fa-solid fa-laptop me-1"></i> LAPTOP
+                </button>
+                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">
+                    <i class="fa-solid fa-desktop me-1"></i> PC
+                </button>
+                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">
+                    <i class="fa-solid fa-tv me-1"></i> LCD
+                </button>
+                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">
+                    <i class="fa-solid fa-computer me-1"></i> AIO
+                </button>
+                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">
+                    <i class="fa-solid fa-print me-1"></i> MÁY IN / SCAN
+                </button>
+                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">
+                    <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
+                </button>
+                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">
+                    <i class="fa-solid fa-file-import me-1"></i> NHẬP KHO
+                </button>
+                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
+                    <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO
+                </button>
+                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">
+                    <i class="fa-solid fa-chart-pie me-1"></i> THỐNG KÊ QUÝ
+                </button>
+                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ DELL
+                </button>
+                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ HP
+                </button>
+                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ LENOVO
+                </button>
             </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BỘ LỌC TOÀN CỤC -->
+        <!-- BỘ LỌC TOÀN CỤC PHÍA TRÊN -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -218,7 +250,7 @@
         <!-- KHUNG CHỨA BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
-        <!-- KHUNG CHỨA DASHBOARD & 2 TABULATOR (THỐNG KÊ QUÝ) -->
+        <!-- KHUNG CHỨA DASHBOARD & 2 TABULATOR (Dành riêng cho THỐNG KÊ QUÝ) -->
         <div id="dashboardView" class="dashboard-container">
             <div class="row g-2">
                 <div class="col-md-4">
@@ -243,10 +275,14 @@
 
             <div class="row g-2">
                 <div class="col-md-7">
-                    <div class="chart-box"><canvas id="barChartBrandQty"></canvas></div>
+                    <div class="chart-box">
+                        <canvas id="barChartBrandQty"></canvas>
+                    </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="chart-box"><canvas id="doughnutChartType"></canvas></div>
+                    <div class="chart-box">
+                        <canvas id="doughnutChartType"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -255,10 +291,24 @@
                     <div class="table-section-title"><i class="fa-solid fa-table me-1"></i> 1. Chi Tiết Nhập Kho Theo Quý & Hãng</div>
                 </div>
                 <div class="row g-2 mb-1 p-2 bg-light border rounded">
-                    <div class="col-md-3"><select id="filter1Quarter" class="form-select form-select-sm" onchange="applyMultiFilterTable1()"><option value="">-- Lọc tất cả Quý --</option></select></div>
-                    <div class="col-md-3"><select id="filter1Brand" class="form-select form-select-sm" onchange="applyMultiFilterTable1()"><option value="">-- Lọc tất cả Hãng --</option></select></div>
-                    <div class="col-md-4"><select id="filter1Type" class="form-select form-select-sm" onchange="applyMultiFilterTable1()"><option value="">-- Lọc tất cả Loại sản phẩm --</option></select></div>
-                    <div class="col-md-2"><button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilterTable1()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button></div>
+                    <div class="col-md-3">
+                        <select id="filter1Quarter" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Quý --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filter1Brand" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Hãng --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filter1Type" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Loại sản phẩm --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilterTable1()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
+                    </div>
                 </div>
                 <div id="table-quarter-detail" style="height: 420px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
@@ -268,10 +318,24 @@
                     <div class="table-section-title"><i class="fa-solid fa-bullseye me-1"></i> 2. Theo Dõi Mục Tiêu Doanh Số Quý Cho Từng Brand</div>
                 </div>
                 <div class="row g-2 mb-1 p-2 bg-light border rounded">
-                    <div class="col-md-3"><select id="filter2Quarter" class="form-select form-select-sm" onchange="applyMultiFilterTable2()"><option value="">-- Lọc tất cả Quý --</option></select></div>
-                    <div class="col-md-3"><select id="filter2Brand" class="form-select form-select-sm" onchange="applyMultiFilterTable2()"><option value="">-- Lọc tất cả Hãng --</option></select></div>
-                    <div class="col-md-4"><select id="filter2Type" class="form-select form-select-sm" onchange="applyMultiFilterTable2()"><option value="">-- Lọc tất cả Loại sản phẩm --</option></select></div>
-                    <div class="col-md-2"><button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilterTable2()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button></div>
+                    <div class="col-md-3">
+                        <select id="filter2Quarter" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Quý --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filter2Brand" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Hãng --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filter2Type" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Loại sản phẩm --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilterTable2()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
+                    </div>
                 </div>
                 <div id="table-brand-summary" style="height: 420px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
@@ -280,41 +344,51 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw85hp6S09mggmBUpt2756DTkRxmCvB7A2LKB58giBEL21Zw3_4b0xA12l9wDvl1x-4/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxy-k8aQWyknyTnDVLm9CrKO9C85viGIAJ3VhhFt_Gk35kIXBIN-kUeXycd8Bs-VM/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
-            { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' }, 
-            { label: 'Màn hình', width: 80 }, { label: 'Chip' }, { label: 'RAM', width: 80}, { label: 'SSD', width: 80 }, 
-            { label: 'Win', width: 80 }, { label: 'Office', width: 80 }, { label: 'Bảo Hành', width: 80 }, { label: 'FP', width: 80 }, 
-            { label: 'PIN Adapter', width: 80 }, { label: 'LED KB BK', width: 80 }, { label: 'Alu', width: 80 }, { label: 'MX RTX', width: 80 }, 
-            { label: 'SL Nhập Tổng', numeric: true, width: 80 }, { label: 'SL Tồn', numeric: true , width: 80}, { label: 'SL Bán Ra', numeric: true }, 
-            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 100 }, { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 100 },
+            { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' },
+            { label: 'Brand' }, { label: 'Màn hình', width: 80 }, { label: 'Chip' }, { label: 'RAM', width: 80},
+            { label: 'SSD', width: 80 }, { label: 'Win', width: 80 }, { label: 'Office', width: 80 }, { label: 'Bảo Hành', width: 80 },
+            { label: 'FP', width: 80 }, { label: 'PIN Adapter', width: 80 }, { label: 'LED KB BK', width: 80 }, { label: 'Alu', width: 80 },
+            { label: 'MX RTX', width: 80 }, { label: 'SL Nhập Tổng', numeric: true, width: 80 }, { label: 'SL Tồn', numeric: true , width: 80},
+            { label: 'SL Bán Ra', numeric: true }, 
+            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 100 }, 
+            { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 100 },
             { label: 'Hàng gửi NPP', width: 80 }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
-            { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
+            { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true, width: 80 }, 
+            { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 }, { label: 'NGÀY NHẬP CŨ', date: true },
-            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa' }, { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'PC': [
             { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' },
-            { label: 'Chip' }, { label: 'RAM' }, { label: 'SSD' }, { label: 'Win' }, { label: 'Bảo Hành' }, { label: 'Office' },
-            { label: 'SL Nhập Tổng', numeric: true }, { label: 'SL Tồn', numeric: true }, { label: 'SL Bán Từ Ngày', numeric: true }, { label: 'Hàng gửi NPP' },
+            { label: 'Chip' }, { label: 'RAM' }, { label: 'SSD' }, { label: 'Win' },
+            { label: 'Bảo Hành' }, { label: 'Office' },
+            { label: 'SL Nhập Tổng', numeric: true }, { label: 'SL Tồn', numeric: true },
+            { label: 'SL Bán Từ Ngày', numeric: true }, { label: 'Hàng gửi NPP' },
             { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP TRƯỚC', numeric: true },
             { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP', numeric: true },
             { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 80 }, { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 80 },
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 },
-            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }, { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'LCD': [
             { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Sản Phẩm KTB' }, { label: 'Brand' },
-            { label: 'Kích Thước (inch)', numeric: true }, { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
-            { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1' }, { label: 'Cổng Xuất Hình 2' }, { label: 'Cổng Xuất Hình 3' }, 
-            { label: 'Cổng Khác' }, { label: 'LOA' }, { label: 'GIÁ COST', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true }, 
-            { label: 'GIÁ NHẬP MỚI', numeric: true }, { label: 'GIÁ BÁN KTB', numeric: true }, { label: 'GIÁ ĐỀ XUẤT', numeric: true },
+            { label: 'Kích Thước (inch)', numeric: true },
+            { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
+            { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1' }, { label: 'Cổng Xuất Hình 2' },
+            { label: 'Cổng Xuất Hình 3' }, { label: 'Cổng Khác' }, { label: 'LOA' },
+            { label: 'GIÁ COST', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true }, { label: 'GIÁ NHẬP MỚI', numeric: true },
+            { label: 'GIÁ BÁN KTB', numeric: true }, { label: 'GIÁ ĐỀ XUẤT', numeric: true },
             { label: 'NGÀY NHẬP CŨ', date: true }, { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'SL NHAP TONG', numeric: true },
             { label: 'KHO KTB', numeric: true }, { label: 'SL bán ra từ ngày', numeric: true },
             { label: '% Loi_Nhuan GIÁ NHẬP', numeric: true, percent: true }, { label: '% Loi_Nhuan GIÁ COST', numeric: true, percent: true },
-            { label: 'Tên Hàng Hóa' }, { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'AIO': [
             { label: 'NCC' }, { label: 'Mã Sản Phẩm (SKU) NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' }, 
@@ -326,17 +400,34 @@
             { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true }, 
             { label: '% Loi Nhuan Tiền Mặt', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, 
             { label: 'GIÁ BÁN CÔNG NỢ', numeric: true ,width: 120 }, { label: 'GIÁ EU', numeric: true }, 
-            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' }, { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'SCAN_MAY_IN': [
-            { label: 'NCC' }, { label: '(SKU) NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'GHI CHÚ' }, { label: 'Độ phân giải DPI' },
-            { label: 'Bộ nhớ' }, { label: 'FIRST PAGE' }, { label: 'printing speed' }, { label: 'connect' },
-            { label: '(Auto-Duplex) Duplex / Manual Duplex' }, { label: '(All-in-One) Scan, Copy, Fax' }, { label: 'page/month', numeric: true },
-            { label: 'SL NHAP TONG', numeric: true, width: 80 }, { label: 'So_Luong TON', numeric: true, width: 80 },
-            { label: 'SL bán ra từ ngày', numeric: true, width: 80 }, { label: 'Hàng gửi NPP', width: 80 }, { label: 'COST_KTB', numeric: true },
-            { label: 'GIÁ NHẬP CŨ', numeric: true }, { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true, width: 80 },
-            { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 }, { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 },
-            { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 }, { label: 'NGÀY NHẬP CŨ', date: true }, { label: 'NGÀY NHẬP MỚI', date: true },
+            { label: 'NCC' },
+            { label: '(SKU) NPP, Hãng' },
+            { label: 'Mã KTB' },
+            { label: 'GHI CHÚ' },
+            { label: 'Độ phân giải DPI' },
+            { label: 'Bộ nhớ' },
+            { label: 'FIRST PAGE' },
+            { label: 'printing speed' },
+            { label: 'connect' },
+            { label: '(Auto-Duplex) Duplex / Manual Duplex' },
+            { label: '(All-in-One) Scan, Copy, Fax' },
+            { label: 'page/month', numeric: true },
+            { label: 'SL NHAP TONG', numeric: true, width: 80 },
+            { label: 'So_Luong TON', numeric: true, width: 80 },
+            { label: 'SL bán ra từ ngày', numeric: true, width: 80 },
+            { label: 'Hàng gửi NPP', width: 80 },
+            { label: 'COST_KTB', numeric: true },
+            { label: 'GIÁ NHẬP CŨ', numeric: true },
+            { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true, width: 80 },
+            { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
+            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 },
+            { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 },
+            { label: 'NGÀY NHẬP CŨ', date: true },
+            { label: 'NGÀY NHẬP MỚI', date: true },
             { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'BAN_HANG': [
@@ -363,8 +454,11 @@
             { label: 'Đơn vị tính', numeric: true }
         ],
         'THONG_KE_QUY': [
-            { label: 'Quý / Thời gian', width: 140 }, { label: 'Hãng (Brand)', width: 130 }, { label: 'Loại Sản Phẩm', width: 220 },
-            { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 }, { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
+            { label: 'Quý / Thời gian', width: 140 },
+            { label: 'Hãng (Brand)', width: 130 },
+            { label: 'Loại Sản Phẩm', width: 220 },
+            { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 },
+            { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
         ],
         'BANG_GIA_DELL': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
@@ -458,12 +552,12 @@
     }
 
     function processThongKeQuyData(rawData) {
-        let rows = rawData.rows ? rawData.rows.map(r => r.values) : [];
-        if (rows.length === 0) {
+        if (!rawData || rawData.length <= 1) {
             renderDashboardAndTables([]);
             return;
         }
 
+        let rows = rawData.slice(1);
         let aggregatedMap = {};
 
         rows.forEach(r => {
@@ -473,6 +567,7 @@
             let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; 
 
             if (!ngayStr) return;
+
             let d = new Date(ngayStr);
             if (isNaN(d.getTime())) return;
             let month = d.getMonth() + 1;
@@ -522,6 +617,7 @@
         let totalAmount = 0;
         let brandQtyMap = {};
         let typeAmountMap = {};
+
         let quartersSet = new Set();
         let brandsSet = new Set();
         let typesSet = new Set();
@@ -555,28 +651,57 @@
 
         let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
         if (barChartInstance) barChartInstance.destroy();
+        
         barChartInstance = new Chart(ctxBar, {
             type: 'bar',
             data: {
                 labels: Object.keys(brandQtyMap),
-                datasets: [{ label: 'Tổng Số Lượng Nhập', data: Object.values(brandQtyMap), backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'], borderWidth: 1 }]
+                datasets: [{
+                    label: 'Tổng Số Lượng Nhập',
+                    data: Object.values(brandQtyMap),
+                    backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'],
+                    borderWidth: 1
+                }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng', font: { size: 12, weight: 'bold' } }, legend: { display: false } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng', font: { size: 12, weight: 'bold' } },
+                    legend: { display: false }
+                }
+            }
         });
 
         let ctxDoughnut = document.getElementById('doughnutChartType').getContext('2d');
         if (doughnutChartInstance) doughnutChartInstance.destroy();
+
         doughnutChartInstance = new Chart(ctxDoughnut, {
             type: 'doughnut',
             data: {
                 labels: Object.keys(typeAmountMap),
-                datasets: [{ data: Object.values(typeAmountMap), backgroundColor: ['#0dcaf0', '#6f42c1', '#fd7e14', '#20c997'] }]
+                datasets: [{
+                    data: Object.values(typeAmountMap),
+                    backgroundColor: ['#0dcaf0', '#6f42c1', '#fd7e14', '#20c997']
+                }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại', font: { size: 12, weight: 'bold' } }, legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại', font: { size: 12, weight: 'bold' } },
+                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                }
+            }
         });
 
         let detailTableData = detailArray.map((row, idx) => ({
-            id: idx + 1, col_0: row[0], col_1: row[1], col_2: row[2], col_3: row[3], col_4: row[4]
+            id: idx + 1,
+            col_0: row[0],
+            col_1: row[1],
+            col_2: row[2],
+            col_3: row[3],
+            col_4: row[4]
         }));
 
         if (tableQuarterDetail) tableQuarterDetail.destroy();
@@ -588,14 +713,24 @@
             paginationSize: 8,
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
-                { title: "Quý / Thời gian", field: "col_0" }, { title: "Hãng (Brand)", field: "col_1" }, { title: "Loại Sản Phẩm", field: "col_2" },
+                { title: "Quý / Thời gian", field: "col_0" },
+                { title: "Hãng (Brand)", field: "col_1" },
+                { title: "Loại Sản Phẩm", field: "col_2" },
                 { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } }
             ]
         });
 
         let targetTableData = detailArray.map((row, idx) => ({
-            id: idx + 1, quarter: row[0], brand: row[1], productType: row[2], targetAmount: 0, actualAmount: row[4] || 0, pctActual: 0, remainingAmount: 0, pctRemaining: 0
+            id: idx + 1,
+            quarter: row[0],
+            brand: row[1],
+            productType: row[2],
+            targetAmount: 0,
+            actualAmount: row[4] || 0,
+            pctActual: 0,
+            remainingAmount: 0,
+            pctRemaining: 0
         }));
 
         if (tableBrandSummary) tableBrandSummary.destroy();
@@ -611,20 +746,73 @@
                     let data = row.getData();
                     let target = parseFloat(data.targetAmount) || 0;
                     let actual = parseFloat(data.actualAmount) || 0;
-                    data.pctActual = target > 0 ? (actual / target) * 100 : 0;
-                    data.remainingAmount = target - actual;
-                    data.pctRemaining = target > 0 ? (data.remainingAmount / target) * 100 : 0;
+
+                    if (target > 0) {
+                        data.pctActual = (actual / target) * 100;
+                        data.remainingAmount = target - actual;
+                        data.pctRemaining = (data.remainingAmount / target) * 100;
+                    } else {
+                        data.pctActual = 0;
+                        data.remainingAmount = 0 - actual;
+                        data.pctRemaining = 0;
+                    }
                     row.update(data);
                 }
             },
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
-                { title: "Quý / Brand", field: "quarter", width: 110, formatter: function(cell){ return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} -${cell.getRow().getData().productType}</small>`; }},
-                { title: "Mục tiêu doanh số", field: "targetAmount", hozAlign: "right", editor: "number", cssClass: "bg-light text-primary fw-bold", formatter: function(cell) { let v = parseFloat(cell.getValue()) || 0; return v > 0 ? v.toLocaleString('vi-VN') : "-"; }},
-                { title: "Đã thực hiện", field: "actualAmount", hozAlign: "right", formatter: function(cell) { let v = parseFloat(cell.getValue()) || 0; return v > 0 ? v.toLocaleString('vi-VN') : "-"; }},
-                { title: "% Đã thực hiện", field: "pctActual", hozAlign: "right", formatter: function(cell) { let v = parseFloat(cell.getValue()) || 0; return v > 0 ? v.toFixed(2) + "%" : "-"; }},
-                { title: "Còn thực hiện", field: "remainingAmount", hozAlign: "right", formatter: function(cell) { let v = parseFloat(cell.getValue()) || 0; return (v === 0 && cell.getRow().getData().targetAmount === 0) ? "-" : v.toLocaleString('vi-VN'); }},
-                { title: "% Còn thực hiện", field: "pctRemaining", hozAlign: "right", formatter: function(cell) { let v = parseFloat(cell.getValue()) || 0; return (v === 0 && cell.getRow().getData().targetAmount === 0) ? "-" : v.toFixed(2) + "%"; }}
+                { title: "Quý / Brand", field: "quarter", width: 110, formatter: function(cell){
+                    return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} - ${cell.getRow().getData().productType}</small>`;
+                }},
+                { 
+                    title: "Mục tiêu doanh số", 
+                    field: "targetAmount", 
+                    hozAlign: "right", 
+                    editor: "number",
+                    cssClass: "bg-light text-primary fw-bold",
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toLocaleString('vi-VN') : "-";
+                    }
+                },
+                { 
+                    title: "Đã thực hiện", 
+                    field: "actualAmount", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toLocaleString('vi-VN') : "-";
+                    }
+                },
+                { 
+                    title: "% Đã thực hiện", 
+                    field: "pctActual", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toFixed(2) + "%" : "-";
+                    }
+                },
+                { 
+                    title: "Còn thực hiện", 
+                    field: "remainingAmount", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        if (v === 0 && cell.getRow().getData().targetAmount === 0) return "-";
+                        return v.toLocaleString('vi-VN');
+                    }
+                },
+                { 
+                    title: "% Còn thực hiện", 
+                    field: "pctRemaining", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        if (v === 0 && cell.getRow().getData().targetAmount === 0) return "-";
+                        return v.toFixed(2) + "%";
+                    }
+                }
             ]
         });
 
@@ -635,36 +823,73 @@
     function populateSelectOptions(selectId1, selectId2, setValues) {
         let sel1 = document.getElementById(selectId1);
         let sel2 = document.getElementById(selectId2);
-        let t1 = sel1.options[0].text, t2 = sel2.options[0].text;
-        sel1.innerHTML = `<option value="">${t1}</option>`;
-        sel2.innerHTML = `<option value="">${t2}</option>`;
+        let defaultText1 = sel1.options[0].text;
+        let defaultText2 = sel2.options[0].text;
+
+        sel1.innerHTML = `<option value="">${defaultText1}</option>`;
+        sel2.innerHTML = `<option value="">${defaultText2}</option>`;
+
         Array.from(setValues).sort().forEach(val => {
-            let opt1 = document.createElement('option'); opt1.value = val; opt1.text = val; sel1.appendChild(opt1);
-            let opt2 = document.createElement('option'); opt2.value = val; opt2.text = val; sel2.appendChild(opt2);
+            let opt1 = document.createElement('option');
+            opt1.value = val;
+            opt1.text = val;
+            sel1.appendChild(opt1);
+
+            let opt2 = document.createElement('option');
+            opt2.value = val;
+            opt2.text = val;
+            sel2.appendChild(opt2);
         });
     }
 
     function applyMultiFilterTable1() {
         if (!tableQuarterDetail) return;
-        let q = document.getElementById('filter1Quarter').value, b = document.getElementById('filter1Brand').value, t = document.getElementById('filter1Type').value;
-        tableQuarterDetail.setFilter(data => (!q || data.col_0 === q) && (!b || data.col_1 === b) && (!t || data.col_2 === t));
+        let qVal = document.getElementById('filter1Quarter').value;
+        let bVal = document.getElementById('filter1Brand').value;
+        let tVal = document.getElementById('filter1Type').value;
+
+        tableQuarterDetail.setFilter(function(data) {
+            let matchQ = !qVal || data.col_0 === qVal;
+            let matchB = !bVal || data.col_1 === bVal;
+            let matchT = !tVal || data.col_2 === tVal;
+            return matchQ && matchB && matchT;
+        });
     }
+
     function resetFilterTable1(reapply = true) {
-        document.getElementById('filter1Quarter').value = ""; document.getElementById('filter1Brand').value = ""; document.getElementById('filter1Type').value = "";
+        document.getElementById('filter1Quarter').value = "";
+        document.getElementById('filter1Brand').value = "";
+        document.getElementById('filter1Type').value = "";
         if (tableQuarterDetail && reapply) tableQuarterDetail.clearFilter();
     }
+
     function applyMultiFilterTable2() {
         if (!tableBrandSummary) return;
-        let q = document.getElementById('filter2Quarter').value, b = document.getElementById('filter2Brand').value, t = document.getElementById('filter2Type').value;
-        tableBrandSummary.setFilter(data => (!q || data.quarter === q) && (!b || data.brand === b) && (!t || data.productType === t));
+        let qVal = document.getElementById('filter2Quarter').value;
+        let bVal = document.getElementById('filter2Brand').value;
+        let tVal = document.getElementById('filter2Type').value;
+
+        tableBrandSummary.setFilter(function(data) {
+            let matchQ = !qVal || data.quarter === qVal;
+            let matchB = !bVal || data.brand === bVal;
+            let matchT = !tVal || data.productType === tVal;
+            return matchQ && matchB && matchT;
+        });
     }
+
     function resetFilterTable2(reapply = true) {
-        document.getElementById('filter2Quarter').value = ""; document.getElementById('filter2Brand').value = ""; document.getElementById('filter2Type').value = "";
+        document.getElementById('filter2Quarter').value = "";
+        document.getElementById('filter2Brand').value = "";
+        document.getElementById('filter2Type').value = "";
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
     function buildTabulatorTable(rawData) {
-        let rows = rawData.rows || [];
+        if (!rawData || rawData.length === 0) {
+            if (table) table.clearData();
+            return;
+        }
+
         let activeCols = getActiveColumns();
         let columnsConfig = [
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
@@ -673,16 +898,52 @@
         columnsConfig.push({
             title: "Thao tác",
             field: "_actionCol",
-            width: 100,
+            formatter: function(cell) {
+                let rowData = cell.getRow().getData();
+                let isEditing = rowData._isEditing || false;
+                if (isEditing) {
+                    return `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
+                } else {
+                    return `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
+                }
+            },
+            width: 95,
             hozAlign: "center",
             headerSort: false,
             frozen: true,
-            formatter: function(cell) {
-                let rowData = cell.getRow().getData();
-                if (rowData._isEditing) {
-                    return `<button class="btn btn-sm btn-danger fw-bold px-2 py-1 rounded shadow btn-edit-action" onclick="saveRowEdit(${cell.getRow().getData().realRowIndex})"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
+            cellClick: function(e, cell) {
+                let row = cell.getRow();
+                let rowData = row.getData();
+                let activeCols = getActiveColumns();
+                let cellEl = cell.getElement();
+                let btn = cellEl.querySelector('button');
+
+                if (!rowData._isEditing) {
+                    rowData._isEditing = true;
+                    btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
+                    btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
+                    row.update(rowData);
+
+                    let cells = row.getCells();
+                    for (let c of cells) {
+                        if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
+                            c.edit();
+                            break;
+                        }
+                    }
                 } else {
-                    return `<button class="btn btn-sm btn-outline-primary px-2 py-1 rounded btn-edit-action" onclick="toggleRowEdit(${cell.getRow().getData().realRowIndex})"><i class="fa-solid fa-pen"></i></button>`;
+                    let fullRowData = [];
+                    for(let i = 0; i < activeCols.length; i++) {
+                        fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
+                    }
+
+                    // Gọi hàm cập nhật đúng dòng cũ trên Google Sheets
+                    saveRowToSheet(rowData.sheetRowIndex, fullRowData);
+
+                    rowData._isEditing = false;
+                    btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
+                    btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
+                    row.update(rowData);
                 }
             }
         });
@@ -691,240 +952,257 @@
             let colDef = {
                 title: col.label,
                 field: "col_" + index,
-                editor: false, // Ban đầu không cho edit trực tiếp cell trừ khi bật nút Sửa
-                width: col.width || 150
+                width: col.width || undefined, 
+                minWidth: 80, 
+                editor: "input",
+                editable: function(cell) {
+                    let rowData = cell.getRow().getData();
+                    if (!rowData._isEditing) return false;
+
+                    // Danh sách các cột được phép sửa (Giá + các cột Sell in/out, chiết khấu đã có sẵn trong Sheet)
+                    let allowedColumns = [
+                        'COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB',
+                        'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT'
+                    ];
+                    let colLabel = col.label.trim().toUpperCase();
+                    return allowedColumns.includes(colLabel);
+                },
+                editorParams: { selectContents: true },
+                headerFilter: "input", 
+                headerFilterFunc: "like", 
+                headerFilterPlaceholder: "Lọc..."
             };
+
             if (col.numeric) {
                 colDef.hozAlign = "right";
-                colDef.formatter = "money";
-                colDef.formatterParams = { precision: col.percent ? 2 : 0, thousand: ".", symbol: col.percent ? " %" : "" };
+                colDef.formatter = function(cell) {
+                    let val = cell.getValue();
+                    if (val === null || val === undefined || val === '') return '';
+                    if (col.percent) {
+                        let cleanVal = String(val).replace('%', '').trim();
+                        let num = parseFloat(cleanVal);
+                        if (isNaN(num)) return val;
+                        return num > 1 ? num.toFixed(2) + '%' : (num * 100).toFixed(2) + '%';
+                    }
+                    let num = parseFloat(String(val).replace(/[,.]/g, ''));
+                    return isNaN(num) ? val : num.toLocaleString('vi-VN');
+                };
+            } else if (col.date) {
+                colDef.hozAlign = "center";
+                colDef.formatter = function(cell) {
+                    let val = cell.getValue();
+                    if (!val) return '';
+                    let d = new Date(val);
+                    if (typeof val === 'string' && val.includes('T')) {
+                        return !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
+                    } else if (!isNaN(d.getTime()) && isNaN(val)) {
+                        return d.toLocaleDateString('vi-VN');
+                    }
+                    return val;
+                };
             }
+
             columnsConfig.push(colDef);
         });
 
-        let tableData = rows.map(r => {
-            let item = {
-                realRowIndex: r.realRowIndex,
-                _isEditing: false
-            };
-            activeCols.forEach((col, idx) => {
-                item["col_" + idx] = r.values[idx] !== undefined ? r.values[idx] : "";
-            });
-            return item;
-        });
+        let rowsToProcess = rawData;
+        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
+            rowsToProcess = rawData.slice(1);
+        }
 
-        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} dòng`;
+        let tableData = rowsToProcess.map((row, rowIndex) => {
+            let obj = { sheetRowIndex: rowIndex + 2, _isEditing: false }; 
+            activeCols.forEach((col, index) => {
+                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
+            });
+            return obj;
+        });
 
         if (table) table.destroy();
+
         table = new Tabulator("#example-table", {
             data: tableData,
-            layout: "fitData",
-            responsiveLayout: "collapse",
+            layout: "fitColumns",
+            responsiveLayout: false,
             height: "100%",
+            columns: columnsConfig,
             pagination: "local",
             paginationSize: 50,
-            columns: columnsConfig
-        });
-    }
-
-    // Toggle chế độ sửa dòng khi bấm nút cây bút để tránh bị nhân bản bản ghi
-    function toggleRowEdit(realRowIndex) {
-        let row = table.getRow(function(data){
-            return data.realRowIndex === realRowIndex;
-        });
-        if (!row) return;
-
-        let data = row.getData();
-        data._isEditing = !data._isEditing;
-
-        let activeCols = getActiveColumns();
-        
-        // Cập nhật lại cấu hình cột cho phép edit hoặc khóa lại
-        let colsConfig = table.getColumnDefinitions();
-        colsConfig.forEach(col => {
-            if (col.field && col.field.startsWith("col_")) {
-                col.editor = data._isEditing ? "input" : false;
-                if(data._isEditing) {
-                    col.cssClass = "bg-light border-primary";
-                } else {
-                    col.cssClass = "";
+            paginationSizeSelector: [25, 50, 100, 200, 500],
+            movableColumns: true,
+            columnDefaults: { resizable: true },
+            rowFormatter: function(row) {
+                let data = row.getData();
+                let activeCols = getActiveColumns();
+                let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
+                
+                if (idxCheckGia !== -1) {
+                    let checkVal = parseFloat(String(data["col_" + idxCheckGia]).replace(/[,.]/g, '')) || 0;
+                    let rowEl = row.getElement();
+                    if (checkVal < 0) {
+                        rowEl.style.backgroundColor = "#ffdddd";
+                    } else {
+                        rowEl.style.backgroundColor = "";
+                    }
                 }
             }
         });
 
-        table.setColumns(colsConfig);
-        row.update(data);
-    }
-
-    // Lưu dòng đã chỉnh sửa gửi về Google Apps Script mà không tạo dòng copy mới
-    function saveRowEdit(realRowIndex) {
-        let row = table.getRow(function(data){
-            return data.realRowIndex === realRowIndex;
+        table.on("dataFiltered", function(filters, rows){
+            document.getElementById('rowCountBadge').innerText = `Hiển thị: ${rows.length} / ${tableData.length} dòng`;
         });
-        if (!row) return;
 
-        let data = row.getData();
-        let activeCols = getActiveColumns();
-        let rowDataArray = [];
-
-        for (let i = 0; i < activeCols.length; i++) {
-            rowDataArray.push(data["col_" + i] !== undefined ? data["col_" + i] : "");
-        }
-
-        showLoading(true, "Đang lưu thay đổi lên Google Sheets...");
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'updateRow',
-                sheetName: currentMode,
-                rowIndex: realRowIndex,
-                rowData: rowDataArray
-            })
-        })
-        .then(res => res.json())
-        .then(res => {
-            showLoading(false);
-            if (res.status === 'success') {
-                alert("Cập nhật dữ liệu thành công!");
-                data._isEditing = false;
-                
-                // Khóa lại các cột sau khi lưu xong
-                let colsConfig = table.getColumnDefinitions();
-                colsConfig.forEach(col => {
-                    if (col.field && col.field.startsWith("col_")) {
-                        col.editor = false;
-                        col.cssClass = "";
-                    }
-                });
-                table.setColumns(colsConfig);
-                row.update(data);
-                loadDataFromSheet(); // Tải lại dữ liệu mới nhất sạch cache
-            } else {
-                alert("Lỗi: " + res.message);
-            }
-        })
-        .catch(err => {
-            showLoading(false);
-            alert("Lỗi kết nối khi cập nhật dòng!");
+        table.on("tableBuilt", function() {
+            document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} / ${tableData.length} dòng`;
         });
     }
 
     function applyGlobalSearch() {
-        let keyword = document.getElementById('globalSearchInput').value.toLowerCase();
-        let customerKeyword = document.getElementById('customerFilterInput').value.toLowerCase();
+        if (!table) return;
+        let kw = document.getElementById('globalSearchInput').value.toLowerCase();
+        let kwCus = document.getElementById('customerFilterInput').value.toLowerCase();
 
-        table.setFilter(function(data) {
-            let matchGlobal = false;
-            let matchCustomer = false;
+        table.setFilter(function(data){
+            let matchGlobal = true;
+            let matchCus = true;
 
-            for (let key in data) {
-                if (key.startsWith("col_") && String(data[key]).toLowerCase().includes(keyword)) {
-                    matchGlobal = true;
-                    break;
-                }
+            if (kw) {
+                matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
             }
 
-            if (!customerKeyword) {
-                matchCustomer = true;
-            } else {
-                let activeCols = getActiveColumns();
-                activeCols.forEach((col, idx) => {
-                    if ((col.customer || col.ncc || col.code || col.desc) && String(data["col_" + idx]).toLowerCase().includes(customerKeyword)) {
-                        matchCustomer = true;
+            if (kwCus) {
+                matchCus = Object.entries(data).some(([key, val]) => {
+                    if (key.startsWith('col_')) {
+                        let idx = parseInt(key.replace('col_', ''));
+                        let col = getActiveColumns()[idx];
+                        if (col && (col.customer || col.ncc || col.code)) {
+                            return String(val).toLowerCase().includes(kwCus);
+                        }
                     }
+                    return false;
                 });
             }
 
-            return (!keyword || matchGlobal) && matchCustomer;
+            return matchGlobal && matchCus;
         });
     }
 
     function resetAllFilters(reload = true) {
-        document.getElementById('globalSearchInput').value = "";
-        document.getElementById('customerFilterInput').value = "";
-        if (table) table.clearFilter();
-        if (reload) loadDataFromSheet();
+        document.getElementById('globalSearchInput').value = '';
+        document.getElementById('customerFilterInput').value = '';
+        if (table) {
+            table.clearFilter(true);
+            table.clearHeaderFilter();
+        }
+    }
+
+    function saveRowToSheet(sheetRowIndex, fullRowData) {
+        showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
+        var formData = new URLSearchParams();
+        formData.append("payload", JSON.stringify({
+            action: "updateRow",
+            sheetName: currentMode,
+            rowIndex: sheetRowIndex,
+            rowData: fullRowData
+        }));
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+        }).catch(err => {});
+
+        setTimeout(() => { showLoading(false); }, 900);
     }
 
     function addRow() {
-        let activeCols = getActiveColumns();
-        let newRowData = new Array(activeCols.length).fill("");
-        
-        showLoading(true, "Đang thêm dòng mới vào Google Sheets...");
-        
+        var activeCols = getActiveColumns();
+        var emptyRow = new Array(activeCols.length).fill('');
+
+        showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
+
+        var formData = new URLSearchParams();
+        formData.append("payload", JSON.stringify({
+            action: "appendRows",
+            sheetName: currentMode,
+            rows: [emptyRow]
+        }));
+
         fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'appendRows',
-                sheetName: currentMode,
-                rows: [newRowData]
-            })
-        })
-        .then(res => res.json())
-        .then(res => {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+        }).catch(err => {});
+
+        setTimeout(() => {
             showLoading(false);
-            if (res.status === 'success') {
-                loadDataFromSheet();
-            } else {
-                alert("Lỗi: " + res.message);
-            }
-        })
-        .catch(err => {
-            showLoading(false);
-            alert("Lỗi kết nối khi thêm dòng!");
-        });
+            loadDataFromSheet();
+        }, 1200);
     }
 
     function handleExcelUpload(event) {
-        let file = event.target.files[0];
+        var file = event.target.files[0];
         if (!file) return;
 
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            let data = new Uint8Array(e.target.result);
-            let workbook = XLSX.read(data, { type: 'array' });
-            let firstSheetName = workbook.SheetNames[0];
-            let worksheet = workbook.Sheets[firstSheetName];
-            let json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        var activeCols = getActiveColumns();
+        var reader = new FileReader();
+        reader.onload = async function(e) {
+            var data = new Uint8Array(e.target.result);
+            var workbook = XLSX.read(data, { type: 'array' });
+            var worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-            if (json.length <= 1) {
-                alert("File Excel không có dữ liệu!");
+            var rawRows = excelData.slice(1).filter(r => r.length > 0 && r.some(cell => cell !== null && cell !== ''));
+            if (rawRows.length === 0) {
+                alert("File Excel không chứa dữ liệu!");
                 return;
             }
 
-            let rowsToAppend = json.slice(1); // Bỏ qua header
-            showLoading(true, `Đang tải ${rowsToAppend.length} dòng lên Google Sheets...`);
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: 'appendRows',
-                    sheetName: currentMode,
-                    rows: rowsToAppend
-                })
-            })
-            .then(res => res.json())
-            .then(res => {
-                showLoading(false);
-                if (res.status === 'success') {
-                    alert("Nhập Excel thành công!");
-                    loadDataFromSheet();
-                } else {
-                    alert("Lỗi: " + res.message);
+            var formattedRows = rawRows.map(row => {
+                var newRow = [];
+                for (var i = 0; i < activeCols.length; i++) {
+                    var cellVal = row[i] !== undefined && row[i] !== null ? row[i] : '';
+                    newRow.push(String(cellVal));
                 }
-            })
-            .catch(err => {
-                showLoading(false);
-                alert("Lỗi kết nối khi nhập Excel!");
+                return newRow;
             });
+
+            showLoading(true, `Đang đẩy ${formattedRows.length} dòng vào Sheet '${currentMode}'...`);
+            
+            var formData = new URLSearchParams();
+            formData.append("payload", JSON.stringify({
+                action: "appendRows",
+                sheetName: currentMode,
+                rows: formattedRows
+            }));
+
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: formData.toString()
+                });
+            } catch (err) {}
+
+            setTimeout(() => {
+                showLoading(false);
+                alert(`Đã hoàn tất tải lên file Excel vào Sheet '${currentMode}'!`);
+                loadDataFromSheet();
+            }, 1500);
+
+            event.target.value = '';
         };
         reader.readAsArrayBuffer(file);
     }
 
     window.onload = function() {
-        switchTableMode('LAPTOP');
+        loadDataFromSheet();
     };
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
