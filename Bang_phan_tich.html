@@ -443,7 +443,7 @@
             { label: 'Mã NCC', ncc: true }, { label: 'Tên NCC', ncc: true }, { label: 'Diễn Giải', code: true }, { label: 'Mã Hàng', code: true },
             { label: 'ĐVT' }, { label: 'Số Lượng', numeric: true }, { label: 'Đơn Giá', numeric: true }, { label: 'Thành Tiền', numeric: true },
             { label: 'Giá cost', numeric: true }, { label: 'Sell In Hãng', numeric: true }, { label: 'SELL OUT HÃNG', numeric: true },
-            { label: 'CHIẾT KHẤU', numeric: true }, { label: 'Tên nhóm VTHH', desc: true },{ label: 'TỔNG SL BÁN', numeric: true },
+            { label: 'CHIẾT KHẤU', numeric: true }, { label: 'Tên nhóm VTHH', desc: true },
             { label: 'SELL IN NPP', numeric: true },{ label: 'SELL OUT NPP', numeric: true }, { label: 'SL SELL OUT HÃNG SUPPORT', numeric: true }
         ],
         'TON_KHO': [
@@ -483,6 +483,7 @@
     let tableBrandSummary = null;
     let barChartInstance = null;
     let doughnutChartInstance = null;
+    let currentRawDataLength = 0; // Biến lưu tổng số dòng thực tế để tính Offset
 
     function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
 
@@ -538,6 +539,11 @@
         fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(targetSheet)}`)
             .then(res => res.json())
             .then(data => {
+                if (data && data.status === 'error') {
+                    showLoading(false);
+                    alert("Lỗi từ Google Sheets: " + data.message);
+                    return;
+                }
                 if (currentMode === 'THONG_KE_QUY') {
                     processThongKeQuyData(data);
                 } else {
@@ -884,11 +890,13 @@
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
-function buildTabulatorTable(rawData) {
-        let rows = rawData.rows || [];
-        let headers = rawData.headers || [];
-        let activeCols = getActiveColumns();
+    function buildTabulatorTable(rawData) {
+        if (!rawData || rawData.length === 0) {
+            if (table) table.clearData();
+            return;
+        }
 
+        let activeCols = getActiveColumns();
         let columnsConfig = [
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
         ];
@@ -935,8 +943,8 @@ function buildTabulatorTable(rawData) {
                         fullRowData.push(rowData["col_" + i] !== undefined ? rowData["col_" + i] : '');
                     }
 
-                    // Gửi chính xác realRowIndex chuẩn từ Google Sheets lên để backend tìm SKU / dòng cũ
-                    saveRowToSheet(rowData.realRowIndex, fullRowData);
+                    // Lưu dữ liệu vào dòng cũ
+                    saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
                     rowData._isEditing = false;
                     btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
@@ -1002,11 +1010,24 @@ function buildTabulatorTable(rawData) {
             columnsConfig.push(colDef);
         });
 
-        // Đọc chuẩn cấu trúc dữ liệu từ Backend ({ headers, rows })
-        let tableData = rows.map(r => {
-            let obj = { realRowIndex: r.realRowIndex, _isEditing: false }; 
+        let rowsToProcess = rawData;
+        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
+            rowsToProcess = rawData.slice(1);
+        }
+
+        // TÍNH TOÁN OFFSET ĐỂ LẤY ĐÚNG SỐ DÒNG THỰC BÊN GOOGLE SHEETS
+        let startRowOffset = 2; 
+        if (rowsToProcess.length >= 500 && currentMode === 'NHAP_KHO') {
+            startRowOffset = rawData.length - rowsToProcess.length + 1;
+        } else if (rowsToProcess.length >= 1500 && currentMode === 'BAN_HANG') {
+            startRowOffset = rawData.length - rowsToProcess.length + 1;
+        }
+
+        let tableData = rowsToProcess.map((row, rowIndex) => {
+            let actualSheetRow = startRowOffset + rowIndex;
+            let obj = { sheetRowIndex: actualSheetRow, _isEditing: false }; 
             activeCols.forEach((col, index) => {
-                obj["col_" + index] = r.values[index] !== undefined && r.values[index] !== null ? r.values[index] : '';
+                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
             return obj;
         });
@@ -1091,22 +1112,30 @@ function buildTabulatorTable(rawData) {
 
     function saveRowToSheet(sheetRowIndex, fullRowData) {
         showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
-        var formData = new URLSearchParams();
-        formData.append("payload", JSON.stringify({
+        
+        var payloadData = {
             action: "updateRow",
-            sheetName: currentMode,
+            sheetName: currentMode.trim(),
             rowIndex: sheetRowIndex,
             rowData: fullRowData
-        }));
+        };
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
-        }).catch(err => {});
-
-        setTimeout(() => { showLoading(false); }, 900);
+            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+        })
+        .then(res => res.json())
+        .then(resData => {
+            showLoading(false);
+            if (resData.status !== 'success') {
+                alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
+            }
+        })
+        .catch(err => {
+            showLoading(false);
+            alert("Lỗi kết nối khi lưu dữ liệu!");
+        });
     }
 
     function addRow() {
@@ -1115,24 +1144,30 @@ function buildTabulatorTable(rawData) {
 
         showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
 
-        var formData = new URLSearchParams();
-        formData.append("payload", JSON.stringify({
+        var payloadData = {
             action: "appendRows",
-            sheetName: currentMode,
+            sheetName: currentMode.trim(),
             rows: [emptyRow]
-        }));
+        };
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
-        }).catch(err => {});
-
-        setTimeout(() => {
+            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+        })
+        .then(res => res.json())
+        .then(resData => {
             showLoading(false);
-            loadDataFromSheet();
-        }, 1200);
+            if (resData.status === 'success') {
+                loadDataFromSheet();
+            } else {
+                alert("Lỗi khi thêm dòng: " + resData.message);
+            }
+        })
+        .catch(err => {
+            showLoading(false);
+            alert("Lỗi kết nối khi thêm dòng!");
+        });
     }
 
     function handleExcelUpload(event) {
@@ -1141,7 +1176,7 @@ function buildTabulatorTable(rawData) {
 
         var activeCols = getActiveColumns();
         var reader = new FileReader();
-        reader.onload = async function(e) {
+        reader.onload = function(e) {
             var data = new Uint8Array(e.target.result);
             var workbook = XLSX.read(data, { type: 'array' });
             var worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -1164,27 +1199,31 @@ function buildTabulatorTable(rawData) {
 
             showLoading(true, `Đang đẩy ${formattedRows.length} dòng vào Sheet '${currentMode}'...`);
             
-            var formData = new URLSearchParams();
-            formData.append("payload", JSON.stringify({
+            var payloadData = {
                 action: "appendRows",
-                sheetName: currentMode,
+                sheetName: currentMode.trim(),
                 rows: formattedRows
-            }));
+            };
 
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: formData.toString()
-                });
-            } catch (err) {}
-
-            setTimeout(() => {
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+            })
+            .then(res => res.json())
+            .then(resData => {
                 showLoading(false);
-                alert(`Đã hoàn tất tải lên file Excel vào Sheet '${currentMode}'!`);
-                loadDataFromSheet();
-            }, 1500);
+                if (resData.status === 'success') {
+                    alert(`Đã hoàn tất tải lên ${formattedRows.length} dòng vào Sheet '${currentMode}'!`);
+                    loadDataFromSheet();
+                } else {
+                    alert("Lỗi khi tải file Excel: " + resData.message);
+                }
+            })
+            .catch(err => {
+                showLoading(false);
+                alert("Lỗi kết nối khi tải file Excel!");
+            });
 
             event.target.value = '';
         };
