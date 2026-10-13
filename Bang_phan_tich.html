@@ -767,7 +767,7 @@
             },
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
-                { title: "Quý / Brand", field: "quarter", width: 110, formatter: function(cell){
+                { title: "Quý / Brand", field: "quarter", width: 210, formatter: function(cell){
                     return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} - ${cell.getRow().getData().productType}</small>`;
                 }},
 { 
