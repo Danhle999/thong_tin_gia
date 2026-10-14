@@ -556,30 +556,31 @@
             });
     }
 
-    function processThongKeQuyData(data) {
-        let actualsRaw = (data && data.actuals) ? data.actuals : [];
-        let targetsRaw = (data && data.targets) ? data.targets : [];
+function processThongKeQuyData(data) {
+    // Bóc tách đúng object trả về từ Backend
+    let actualsRaw = (data && data.actuals) ? data.actuals : [];
+    let targetsRaw = (data && data.targets) ? data.targets : [];
 
-        if (actualsRaw.length <= 1) {
-            renderDashboardAndTables([], {});
-            return;
-        }
-
-        let actualRows = actualsRaw.slice(1);
-        let targetMap = {};
-
-        if (targetsRaw.length > 1) {
-            targetsRaw.slice(1).forEach(r => {
-                let key = `${r[0]}_${r[1]}_${r[2]}`;
-                targetMap[key] = {
-                    targetQty: parseFloat(r[3]) || 0,
-                    targetAmount: parseFloat(r[4]) || 0
-                };
-            });
-        }
-
-        renderDashboardAndTables(actualRows, targetMap);
+    if (actualsRaw.length <= 1) {
+        renderDashboardAndTables([], {});
+        return;
     }
+
+    let actualRows = actualsRaw.slice(1);
+    let targetMap = {};
+
+    if (targetsRaw.length > 1) {
+        targetsRaw.slice(1).forEach(r => {
+            let key = `${r[0]}_${r[1]}_${r[2]}`;
+            targetMap[key] = {
+                targetQty: parseFloat(r[3]) || 0,
+                targetAmount: parseFloat(r[4]) || 0
+            };
+        });
+    }
+
+    renderDashboardAndTables(actualRows, targetMap);
+}
 
     function saveTargetToSheet(quarter, brand, productType, targetAmount, targetQty = 0) {
         let key = `${quarter}_${brand}_${productType}`;
