@@ -496,8 +496,8 @@
     let tableBrandSummary = null;
     let barChartInstance = null;
     let doughnutChartInstance = null;
+    let globalMucTieuData = []; // Lưu lại dữ liệu mục tiêu doanh số
 
-    // Hàm tính tổng riêng cho Tabulator (bỏ qua ký tự không phải số)
     function customSumCalc(values, data, calcParams) {
         let sum = 0;
         values.forEach(function(val) {
@@ -562,25 +562,36 @@
         let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
         showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
-        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(targetSheet)}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.status === 'error') {
-                    showLoading(false);
-                    alert("Lỗi từ Google Sheets: " + data.message);
-                    return;
-                }
-                if (currentMode === 'THONG_KE_QUY') {
-                    processThongKeQuyData(data);
-                } else {
-                    buildTabulatorTable(data);
-                }
+        // Nếu là Thống kê quý, tải đồng thời cả dữ liệu Nhập Kho và đọc Sheet Mục Tiêu
+        if (currentMode === 'THONG_KE_QUY') {
+            Promise.all([
+                fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=NHAP_KHO`).then(res => res.json()),
+                fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=MUC_TIEU_QUY`).then(res => res.json()).catch(() => [])
+            ]).then(([nhapKhoData, mucTieuData]) => {
+                globalMucTieuData = Array.isArray(mucTieuData) ? mucTieuData : [];
+                processThongKeQuyData(nhapKhoData);
                 showLoading(false);
-            })
-            .catch(err => {
+            }).catch(err => {
                 showLoading(false);
-                alert("Lỗi kết nối đến Google Sheets!");
+                alert("Lỗi tải dữ liệu Thống kê quý!");
             });
+        } else {
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(targetSheet)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.status === 'error') {
+                        showLoading(false);
+                        alert("Lỗi từ Google Sheets: " + data.message);
+                        return;
+                    }
+                    buildTabulatorTable(data);
+                    showLoading(false);
+                })
+                .catch(err => {
+                    showLoading(false);
+                    alert("Lỗi kết nối đến Google Sheets!");
+                });
+        }
     }
 
     function processThongKeQuyData(rawData) {
@@ -771,17 +782,37 @@
             ]
         });
 
-        let targetTableData = detailArray.map((row, idx) => ({
-            id: idx + 1,
-            quarter: row[0],
-            brand: row[1],
-            productType: row[2],
-            targetAmount: 0,
-            actualAmount: row[4] || 0,
-            pctActual: 0,
-            remainingAmount: 0,
-            pctRemaining: 0
-        }));
+        // Xử lý dữ liệu Mục tiêu doanh số khớp với dữ liệu đã tải từ Sheet MUC_TIEU_QUY nếu có
+        let targetTableData = detailArray.map((row, idx) => {
+            let quarter = row[0];
+            let brand = row[1];
+            let productType = row[2];
+            let actualAmount = row[4] || 0;
+            let targetAmount = 0;
+
+            if (globalMucTieuData.length > 1) {
+                let foundRow = globalMucTieuData.slice(1).find(r => r[1] == quarter && r[2] == brand && r[3] == productType);
+                if (foundRow && foundRow[4] !== undefined && foundRow[4] !== '') {
+                    targetAmount = parseFloat(String(foundRow[4]).replace(/[,.]/g, '')) || 0;
+                }
+            }
+
+            let pctActual = targetAmount > 0 ? (actualAmount / targetAmount) * 100 : 0;
+            let remainingAmount = targetAmount - actualAmount;
+            let pctRemaining = targetAmount > 0 ? (remainingAmount / targetAmount) * 100 : 0;
+
+            return {
+                id: idx + 1,
+                quarter: quarter,
+                brand: brand,
+                productType: productType,
+                targetAmount: targetAmount > 0 ? targetAmount : '',
+                actualAmount: actualAmount,
+                pctActual: pctActual,
+                remainingAmount: remainingAmount,
+                pctRemaining: pctRemaining
+            };
+        });
 
         if (tableBrandSummary) tableBrandSummary.destroy();
         tableBrandSummary = new Tabulator("#table-brand-summary", {
@@ -794,7 +825,7 @@
                 if (cell.getField() === "targetAmount") {
                     let row = cell.getRow();
                     let data = row.getData();
-                    let target = parseFloat(data.targetAmount) || 0;
+                    let target = parseFloat(String(data.targetAmount).replace(/[,.]/g, '')) || 0;
                     let actual = parseFloat(data.actualAmount) || 0;
 
                     if (target > 0) {
@@ -807,6 +838,9 @@
                         data.pctRemaining = 0;
                     }
                     row.update(data);
+
+                    // Gọi hàm lưu mục tiêu doanh số lên Google Sheets
+                    saveTargetToGoogleSheet(data.quarter, data.brand, data.productType, target);
                 }
             },
             columns: [
@@ -889,6 +923,36 @@
         resetFilterTable2(false);
     }
 
+    function saveTargetToGoogleSheet(quarter, brand, productType, targetAmount) {
+        showLoading(true, "Đang lưu mục tiêu doanh số lên Google Sheets...");
+
+        var payloadData = {
+            action: "updateTarget",
+            sheetName: "MUC_TIEU_QUY",
+            quarter: quarter,
+            brand: brand,
+            productType: productType,
+            targetAmount: targetAmount
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+        })
+        .then(res => res.json())
+        .then(resData => {
+            showLoading(false);
+            if (resData.status !== 'success') {
+                alert("Lỗi khi lưu mục tiêu vào Sheet: " + (resData.message || "Không thể cập nhật"));
+            }
+        })
+        .catch(err => {
+            showLoading(false);
+            alert("Lỗi kết nối khi lưu dữ liệu mục tiêu!");
+        });
+    }
+
     function populateSelectOptions(selectId1, selectId2, setValues) {
         let sel1 = document.getElementById(selectId1);
         let sel2 = document.getElementById(selectId2);
@@ -968,7 +1032,7 @@
                 headerSort: false, 
                 frozen: true, 
                 title: "STT",
-                bottomCalc: function() { return "TỔNG"; } // Hiển thị chữ TỔNG ở ô đầu tiên của dòng chân trang
+                bottomCalc: function() { return "TỔNG"; }
             }
         ];
 
@@ -1074,7 +1138,6 @@
                     return isNaN(num) ? val : num.toLocaleString('vi-VN');
                 };
 
-                // Bổ sung tính năng TÍNH TỔNG (bottomCalc) cho các cột Số lượng / Giá trị / Tiền tệ (Không tính % tỷ lệ)
                 if (!col.percent) {
                     colDef.bottomCalc = customSumCalc;
                     colDef.bottomCalcFormatter = function(cell) {
