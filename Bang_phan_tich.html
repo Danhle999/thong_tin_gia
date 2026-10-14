@@ -71,10 +71,16 @@
         .view-mode-btn-group .btn { font-weight: 600; font-size: 0.95rem; }
         .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
         
-        .tabulator { font-size: 0.95rem; }
+        .tabulator {
+            font-size: 0.95rem;
+        }
 
-        .btn-edit-action { transition: all 0.2s ease-in-out; }
-        .btn-edit-action:hover { transform: scale(1.05); }
+        .btn-edit-action {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-edit-action:hover {
+            transform: scale(1.05);
+        }
 
         .tabulator .tabulator-header .tabulator-col {
             white-space: normal !important;
@@ -82,7 +88,9 @@
             vertical-align: middle !important;
         }
         
-        .tabulator .tabulator-header .tabulator-col-content { padding: 4px !important; }
+        .tabulator .tabulator-header .tabulator-col-content {
+            padding: 4px !important;
+        }
 
         .tabulator .tabulator-header .tabulator-col-title {
             white-space: normal !important;
@@ -208,7 +216,7 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BỘ LỌC TOÀN CỤC -->
+        <!-- BỘ LỌC TOÀN CỤC PHÍA TRÊN -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -242,7 +250,7 @@
         <!-- KHUNG CHỨA BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
-        <!-- DASHBOARD & TABULATOR DÀNH RIÊNG CHO THỐNG KÊ QUÝ -->
+        <!-- KHUNG CHỨA DASHBOARD & 2 TABULATOR (Dành riêng cho THỐNG KÊ QUÝ) -->
         <div id="dashboardView" class="dashboard-container">
             <div class="row g-2">
                 <div class="col-md-4">
@@ -525,9 +533,10 @@
     }
 
     function loadDataFromSheet() {
-        showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
+        let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
+        showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
 
-        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}`)
+        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(targetSheet)}`)
             .then(res => res.json())
             .then(data => {
                 if (data && data.status === 'error') {
@@ -548,61 +557,68 @@
             });
     }
 
-    function processThongKeQuyData(data) {
-        let actualsRaw = (data && data.actuals) ? data.actuals : [];
-        let targetsRaw = (data && data.targets) ? data.targets : [];
-
-        if (actualsRaw.length <= 1) {
-            renderDashboardAndTables([], {});
+    function processThongKeQuyData(rawData) {
+        if (!rawData || rawData.length <= 1) {
+            renderDashboardAndTables([]);
             return;
         }
 
-        let actualRows = actualsRaw.slice(1);
-        let targetMap = {};
+        let rows = rawData.slice(1);
+        let aggregatedMap = {};
 
-        if (targetsRaw.length > 1) {
-            targetsRaw.slice(1).forEach(r => {
-                let key = `${r[0]}_${r[1]}_${r[2]}`;
-                targetMap[key] = {
-                    targetQty: parseFloat(r[3]) || 0,
-                    targetAmount: parseFloat(r[4]) || 0
-                };
-            });
+        rows.forEach(r => {
+            let ngayStr = r[0] || ''; 
+            let tenHang = String(r[7] || '').toLowerCase(); 
+            let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
+            let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; 
+
+            if (!ngayStr) return;
+
+            let d = new Date(ngayStr);
+            if (isNaN(d.getTime())) return;
+            let month = d.getMonth() + 1;
+            let year = d.getFullYear();
+            let quarter = '';
+            if (month >= 1 && month <= 3) quarter = `Quý 1 / ${year}`;
+            else if (month >= 4 && month <= 6) quarter = `Quý 2 / ${year}`;
+            else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
+            else quarter = `Quý 4 / ${year}`;
+
+            let brand = 'Khác';
+            if (tenHang.includes('dell')) brand = 'Dell';
+            else if (tenHang.includes('hp') || tenHang.includes('hewlett')) brand = 'HP';
+            else if (tenHang.includes('lenovo')) brand = 'Lenovo';
+            else return; 
+
+            let productType = 'Khác';
+            if (tenHang.includes('laptop') || tenHang.includes('xách tay') || tenHang.includes('notebook')) {
+                productType = 'Máy tính xách tay';
+            } else if (tenHang.includes('thinkcentre') || tenHang.includes('desktop') || tenHang.includes('máy tính để bàn') || tenHang.includes('pc') || tenHang.includes('pro tower') || tenHang.includes('m70s')) {
+                productType = 'Máy tính để bàn';
+            } else if (tenHang.includes('lcd') || tenHang.includes('màn hình') || tenHang.includes('monitor') || tenHang.includes('se2225h')) {
+                productType = 'Màn hình';
+            } else {
+                return; 
+            }
+
+            let key = `${quarter}_${brand}_${productType}`;
+            if (!aggregatedMap[key]) {
+                aggregatedMap[key] = { quarter, brand, productType, totalQty: 0, totalAmount: 0 };
+            }
+            aggregatedMap[key].totalQty += soLuong;
+            aggregatedMap[key].totalAmount += thanhTien;
+        });
+
+        let detailDataArray = [];
+        for (let key in aggregatedMap) {
+            let item = aggregatedMap[key];
+            detailDataArray.push([item.quarter, item.brand, item.productType, item.totalQty, item.totalAmount]);
         }
 
-        renderDashboardAndTables(actualRows, targetMap);
+        renderDashboardAndTables(detailDataArray);
     }
 
-    function saveTargetToSheet(quarter, brand, productType, targetAmount, targetQty = 0) {
-        let key = `${quarter}_${brand}_${productType}`;
-        
-        var payloadData = {
-            action: "saveTargetAmount",
-            key: key,
-            quarter: quarter,
-            brand: brand,
-            productType: productType,
-            targetAmount: targetAmount,
-            targetQty: targetQty
-        };
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
-        })
-        .then(res => res.json())
-        .then(resData => {
-            if (resData.status !== 'success') {
-                console.error("Lỗi lưu mục tiêu:", resData.message);
-            }
-        })
-        .catch(err => {
-            console.error("Lỗi kết nối khi lưu mục tiêu:", err);
-        });
-    }
-
-    function renderDashboardAndTables(detailArray, targetMap = {}) {
+    function renderDashboardAndTables(detailArray) {
         let totalQty = 0;
         let totalAmount = 0;
         let brandQtyMap = {};
@@ -711,31 +727,17 @@
             ]
         });
 
-        let targetTableData = detailArray.map((row, idx) => {
-            let quarter = row[0];
-            let brand = row[1];
-            let productType = row[2];
-            let actualAmount = parseFloat(row[4]) || 0;
-            
-            let key = `${quarter}_${brand}_${productType}`;
-            let savedTarget = targetMap[key] ? targetMap[key].targetAmount : 0;
-            
-            let pctActual = savedTarget > 0 ? (actualAmount / savedTarget) * 100 : 0;
-            let remainingAmount = savedTarget > 0 ? savedTarget - actualAmount : 0 - actualAmount;
-            let pctRemaining = savedTarget > 0 ? (remainingAmount / savedTarget) * 100 : 0;
-
-            return {
-                id: idx + 1,
-                quarter: quarter,
-                brand: brand,
-                productType: productType,
-                targetAmount: savedTarget,
-                actualAmount: actualAmount,
-                pctActual: pctActual,
-                remainingAmount: remainingAmount,
-                pctRemaining: pctRemaining
-            };
-        });
+        let targetTableData = detailArray.map((row, idx) => ({
+            id: idx + 1,
+            quarter: row[0],
+            brand: row[1],
+            productType: row[2],
+            targetAmount: 0,
+            actualAmount: row[4] || 0,
+            pctActual: 0,
+            remainingAmount: 0,
+            pctRemaining: 0
+        }));
 
         if (tableBrandSummary) tableBrandSummary.destroy();
         tableBrandSummary = new Tabulator("#table-brand-summary", {
@@ -761,8 +763,6 @@
                         data.pctRemaining = 0;
                     }
                     row.update(data);
-
-                    saveTargetToSheet(data.quarter, data.brand, data.productType, target);
                 }
             },
             columns: [
@@ -770,21 +770,29 @@
                 { title: "Quý / Brand", field: "quarter", width: 210, formatter: function(cell){
                     return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} - ${cell.getRow().getData().productType}</small>`;
                 }},
-                { 
-                    title: "Mục tiêu doanh số", 
-                    field: "targetAmount", 
-                    hozAlign: "right", 
-                    editor: "number",
-                    editorParams: { min: 0, step: "any" },
-                    cssClass: "bg-light text-primary fw-bold",
-                    formatter: function(cell) {
-                        let val = cell.getValue();
-                        if (val === null || val === undefined || val === '') return "-";
-                        let cleanNum = parseFloat(String(val).replace(/[,.]/g, ''));
-                        if (isNaN(cleanNum) || cleanNum <= 0) return "-";
-                        return cleanNum.toLocaleString('vi-VN');
-                    }
-                },
+{ 
+    title: "Mục tiêu doanh số", 
+    field: "targetAmount", 
+    hozAlign: "right", 
+    editor: "number",
+    editorParams: {
+        min: 0,
+        step: "any" // Cho phép nhập số lớn tùy ý không bị giới hạn
+    },
+    cssClass: "bg-light text-primary fw-bold",
+    formatter: function(cell) {
+        let val = cell.getValue();
+        if (val === null || val === undefined || val === '') return "-";
+        
+        // Làm sạch chuỗi nếu dữ liệu đầu vào có chứa dấu chấm/phẩy phân cách hàng nghìn
+        let cleanNum = parseFloat(String(val).replace(/[,.]/g, ''));
+        
+        if (isNaN(cleanNum) || cleanNum <= 0) return "-";
+        
+        // Định dạng hiển thị chuẩn Tiếng Việt (Ví dụ: 1.500.000.000)
+        return cleanNum.toLocaleString('vi-VN');
+    }
+},
                 { 
                     title: "Đã thực hiện", 
                     field: "actualAmount", 
@@ -946,6 +954,7 @@
                     activeCols.forEach((col, i) => {
                         let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
                         
+                        // Định dạng cột Ngày tháng về dạng YYYY-MM-DD chuẩn trước khi lưu
                         if (col.date && val) {
                             let d = new Date(val);
                             if (!isNaN(d.getTime())) {
@@ -958,6 +967,7 @@
                         fullRowData.push(val);
                     });
 
+                    // Lưu dữ liệu dòng về Google Sheet
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
                     rowData._isEditing = false;
