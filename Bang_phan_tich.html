@@ -109,6 +109,18 @@
             padding-bottom: 3px !important;
         }
 
+        /* Định dạng nổi bật cho dòng tính tổng chân trang (Footer Bottom Calc) */
+        .tabulator-footer .tabulator-calcs-holder {
+            background-color: #e2e8f0 !important;
+            border-top: 2px solid #0d6efd !important;
+            font-weight: bold !important;
+            color: #0f172a !important;
+        }
+        .tabulator-footer .tabulator-calcs-holder .tabulator-cell {
+            background-color: #e2e8f0 !important;
+            border-right: 1px solid #cbd5e1 !important;
+        }
+
         /* Dashboard Styles */
         .dashboard-container {
             display: none;
@@ -485,6 +497,20 @@
     let barChartInstance = null;
     let doughnutChartInstance = null;
 
+    // Hàm tính tổng riêng cho Tabulator (bỏ qua ký tự không phải số)
+    function customSumCalc(values, data, calcParams) {
+        let sum = 0;
+        values.forEach(function(val) {
+            if (val !== null && val !== undefined && val !== '') {
+                let cleanVal = parseFloat(String(val).replace(/[,.]/g, ''));
+                if (!isNaN(cleanVal)) {
+                    sum += cleanVal;
+                }
+            }
+        });
+        return sum;
+    }
+
     function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
 
     function switchTableMode(mode) {
@@ -718,12 +744,30 @@
             pagination: "local",
             paginationSize: 8,
             columns: [
-                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Quý / Thời gian", field: "col_0" },
                 { title: "Hãng (Brand)", field: "col_1" },
                 { title: "Loại Sản Phẩm", field: "col_2" },
-                { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+                { 
+                    title: "Tổng Số Lượng", 
+                    field: "col_3", 
+                    hozAlign: "right", 
+                    formatter: "money", 
+                    formatterParams: { precision: 0, thousand: "." },
+                    bottomCalc: customSumCalc,
+                    bottomCalcFormatter: "money",
+                    bottomCalcFormatterParams: { precision: 0, thousand: "." }
+                },
+                { 
+                    title: "Tổng Giá Trị (VNĐ)", 
+                    field: "col_4", 
+                    hozAlign: "right", 
+                    formatter: "money", 
+                    formatterParams: { precision: 0, thousand: "." },
+                    bottomCalc: customSumCalc,
+                    bottomCalcFormatter: "money",
+                    bottomCalcFormatterParams: { precision: 0, thousand: "." }
+                }
             ]
         });
 
@@ -766,37 +810,39 @@
                 }
             },
             columns: [
-                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT" },
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Quý / Brand", field: "quarter", width: 210, formatter: function(cell){
                     return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} - ${cell.getRow().getData().productType}</small>`;
                 }},
-{ 
-    title: "Mục tiêu doanh số", 
-    field: "targetAmount", 
-    hozAlign: "right", 
-    editor: "number",
-    editorParams: {
-        min: 0,
-        step: "any" // Cho phép nhập số lớn tùy ý không bị giới hạn
-    },
-    cssClass: "bg-light text-primary fw-bold",
-    formatter: function(cell) {
-        let val = cell.getValue();
-        if (val === null || val === undefined || val === '') return "-";
-        
-        // Làm sạch chuỗi nếu dữ liệu đầu vào có chứa dấu chấm/phẩy phân cách hàng nghìn
-        let cleanNum = parseFloat(String(val).replace(/[,.]/g, ''));
-        
-        if (isNaN(cleanNum) || cleanNum <= 0) return "-";
-        
-        // Định dạng hiển thị chuẩn Tiếng Việt (Ví dụ: 1.500.000.000)
-        return cleanNum.toLocaleString('vi-VN');
-    }
-},
+                { 
+                    title: "Mục tiêu doanh số", 
+                    field: "targetAmount", 
+                    hozAlign: "right", 
+                    editor: "number",
+                    editorParams: { min: 0, step: "any" },
+                    cssClass: "bg-light text-primary fw-bold",
+                    bottomCalc: customSumCalc,
+                    bottomCalcFormatter: function(cell) {
+                        let val = cell.getValue();
+                        return val ? val.toLocaleString('vi-VN') : "-";
+                    },
+                    formatter: function(cell) {
+                        let val = cell.getValue();
+                        if (val === null || val === undefined || val === '') return "-";
+                        let cleanNum = parseFloat(String(val).replace(/[,.]/g, ''));
+                        if (isNaN(cleanNum) || cleanNum <= 0) return "-";
+                        return cleanNum.toLocaleString('vi-VN');
+                    }
+                },
                 { 
                     title: "Đã thực hiện", 
                     field: "actualAmount", 
                     hozAlign: "right", 
+                    bottomCalc: customSumCalc,
+                    bottomCalcFormatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toLocaleString('vi-VN') : "-";
+                    },
                     formatter: function(cell) {
                         let v = parseFloat(cell.getValue()) || 0;
                         return v > 0 ? v.toLocaleString('vi-VN') : "-";
@@ -815,6 +861,11 @@
                     title: "Còn thực hiện", 
                     field: "remainingAmount", 
                     hozAlign: "right", 
+                    bottomCalc: customSumCalc,
+                    bottomCalcFormatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v ? v.toLocaleString('vi-VN') : "-";
+                    },
                     formatter: function(cell) {
                         let v = parseFloat(cell.getValue()) || 0;
                         if (v === 0 && cell.getRow().getData().targetAmount === 0) return "-";
@@ -910,7 +961,15 @@
 
         let activeCols = getActiveColumns();
         let columnsConfig = [
-            { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
+            { 
+                formatter: "rownum", 
+                hozAlign: "center", 
+                width: 60, 
+                headerSort: false, 
+                frozen: true, 
+                title: "STT",
+                bottomCalc: function() { return "TỔNG"; } // Hiển thị chữ TỔNG ở ô đầu tiên của dòng chân trang
+            }
         ];
 
         columnsConfig.push({
@@ -954,7 +1013,6 @@
                     activeCols.forEach((col, i) => {
                         let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
                         
-                        // Định dạng cột Ngày tháng về dạng YYYY-MM-DD chuẩn trước khi lưu
                         if (col.date && val) {
                             let d = new Date(val);
                             if (!isNaN(d.getTime())) {
@@ -967,7 +1025,6 @@
                         fullRowData.push(val);
                     });
 
-                    // Lưu dữ liệu dòng về Google Sheet
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
 
                     rowData._isEditing = false;
@@ -1016,6 +1073,16 @@
                     let num = parseFloat(String(val).replace(/[,.]/g, ''));
                     return isNaN(num) ? val : num.toLocaleString('vi-VN');
                 };
+
+                // Bổ sung tính năng TÍNH TỔNG (bottomCalc) cho các cột Số lượng / Giá trị / Tiền tệ (Không tính % tỷ lệ)
+                if (!col.percent) {
+                    colDef.bottomCalc = customSumCalc;
+                    colDef.bottomCalcFormatter = function(cell) {
+                        let val = cell.getValue();
+                        if (val === null || val === undefined || val === 0) return "0";
+                        return val.toLocaleString('vi-VN');
+                    };
+                }
             } else if (col.date) {
                 colDef.hozAlign = "center";
                 colDef.formatter = function(cell) {
