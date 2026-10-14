@@ -533,10 +533,9 @@
     }
 
     function loadDataFromSheet() {
-        let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
-        showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
+        showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
 
-        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(targetSheet)}`)
+        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}`)
             .then(res => res.json())
             .then(data => {
                 if (data && data.status === 'error') {
@@ -557,68 +556,61 @@
             });
     }
 
-    function processThongKeQuyData(rawData) {
-        if (!rawData || rawData.length <= 1) {
-            renderDashboardAndTables([]);
+    function processThongKeQuyData(data) {
+        let actualsRaw = (data && data.actuals) ? data.actuals : [];
+        let targetsRaw = (data && data.targets) ? data.targets : [];
+
+        if (actualsRaw.length <= 1) {
+            renderDashboardAndTables([], {});
             return;
         }
 
-        let rows = rawData.slice(1);
-        let aggregatedMap = {};
+        let actualRows = actualsRaw.slice(1);
+        let targetMap = {};
 
-        rows.forEach(r => {
-            let ngayStr = r[0] || ''; 
-            let tenHang = String(r[7] || '').toLowerCase(); 
-            let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
-            let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; 
-
-            if (!ngayStr) return;
-
-            let d = new Date(ngayStr);
-            if (isNaN(d.getTime())) return;
-            let month = d.getMonth() + 1;
-            let year = d.getFullYear();
-            let quarter = '';
-            if (month >= 1 && month <= 3) quarter = `Quý 1 / ${year}`;
-            else if (month >= 4 && month <= 6) quarter = `Quý 2 / ${year}`;
-            else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
-            else quarter = `Quý 4 / ${year}`;
-
-            let brand = 'Khác';
-            if (tenHang.includes('dell')) brand = 'Dell';
-            else if (tenHang.includes('hp') || tenHang.includes('hewlett')) brand = 'HP';
-            else if (tenHang.includes('lenovo')) brand = 'Lenovo';
-            else return; 
-
-            let productType = 'Khác';
-            if (tenHang.includes('laptop') || tenHang.includes('xách tay') || tenHang.includes('notebook')) {
-                productType = 'Máy tính xách tay';
-            } else if (tenHang.includes('thinkcentre') || tenHang.includes('desktop') || tenHang.includes('máy tính để bàn') || tenHang.includes('pc') || tenHang.includes('pro tower') || tenHang.includes('m70s')) {
-                productType = 'Máy tính để bàn';
-            } else if (tenHang.includes('lcd') || tenHang.includes('màn hình') || tenHang.includes('monitor') || tenHang.includes('se2225h')) {
-                productType = 'Màn hình';
-            } else {
-                return; 
-            }
-
-            let key = `${quarter}_${brand}_${productType}`;
-            if (!aggregatedMap[key]) {
-                aggregatedMap[key] = { quarter, brand, productType, totalQty: 0, totalAmount: 0 };
-            }
-            aggregatedMap[key].totalQty += soLuong;
-            aggregatedMap[key].totalAmount += thanhTien;
-        });
-
-        let detailDataArray = [];
-        for (let key in aggregatedMap) {
-            let item = aggregatedMap[key];
-            detailDataArray.push([item.quarter, item.brand, item.productType, item.totalQty, item.totalAmount]);
+        if (targetsRaw.length > 1) {
+            targetsRaw.slice(1).forEach(r => {
+                let key = `${r[0]}_${r[1]}_${r[2]}`;
+                targetMap[key] = {
+                    targetQty: parseFloat(r[3]) || 0,
+                    targetAmount: parseFloat(r[4]) || 0
+                };
+            });
         }
 
-        renderDashboardAndTables(detailDataArray);
+        renderDashboardAndTables(actualRows, targetMap);
     }
 
-    function renderDashboardAndTables(detailArray) {
+    function saveTargetToSheet(quarter, brand, productType, targetAmount, targetQty = 0) {
+        let key = `${quarter}_${brand}_${productType}`;
+        
+        var payloadData = {
+            action: "saveTargetAmount",
+            key: key,
+            quarter: quarter,
+            brand: brand,
+            productType: productType,
+            targetAmount: targetAmount,
+            targetQty: targetQty
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+        })
+        .then(res => res.json())
+        .then(resData => {
+            if (resData.status !== 'success') {
+                console.error("Lỗi lưu mục tiêu:", resData.message);
+            }
+        })
+        .catch(err => {
+            console.error("Lỗi kết nối khi lưu mục tiêu:", err);
+        });
+    }
+
+    function renderDashboardAndTables(detailArray, targetMap = {}) {
         let totalQty = 0;
         let totalAmount = 0;
         let brandQtyMap = {};
@@ -727,17 +719,31 @@
             ]
         });
 
-        let targetTableData = detailArray.map((row, idx) => ({
-            id: idx + 1,
-            quarter: row[0],
-            brand: row[1],
-            productType: row[2],
-            targetAmount: 0,
-            actualAmount: row[4] || 0,
-            pctActual: 0,
-            remainingAmount: 0,
-            pctRemaining: 0
-        }));
+        let targetTableData = detailArray.map((row, idx) => {
+            let quarter = row[0];
+            let brand = row[1];
+            let productType = row[2];
+            let actualAmount = parseFloat(row[4]) || 0;
+            
+            let key = `${quarter}_${brand}_${productType}`;
+            let savedTarget = targetMap[key] ? targetMap[key].targetAmount : 0;
+            
+            let pctActual = savedTarget > 0 ? (actualAmount / savedTarget) * 100 : 0;
+            let remainingAmount = savedTarget > 0 ? savedTarget - actualAmount : 0 - actualAmount;
+            let pctRemaining = savedTarget > 0 ? (remainingAmount / savedTarget) * 100 : 0;
+
+            return {
+                id: idx + 1,
+                quarter: quarter,
+                brand: brand,
+                productType: productType,
+                targetAmount: savedTarget,
+                actualAmount: actualAmount,
+                pctActual: pctActual,
+                remainingAmount: remainingAmount,
+                pctRemaining: pctRemaining
+            };
+        });
 
         if (tableBrandSummary) tableBrandSummary.destroy();
         tableBrandSummary = new Tabulator("#table-brand-summary", {
@@ -763,6 +769,9 @@
                         data.pctRemaining = 0;
                     }
                     row.update(data);
+
+                    // Tự động lưu Mục tiêu doanh số về Google Sheet khi nhập/sửa ô
+                    saveTargetToSheet(data.quarter, data.brand, data.productType, target);
                 }
             },
             columns: [
@@ -770,29 +779,21 @@
                 { title: "Quý / Brand", field: "quarter", width: 210, formatter: function(cell){
                     return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} - ${cell.getRow().getData().productType}</small>`;
                 }},
-{ 
-    title: "Mục tiêu doanh số", 
-    field: "targetAmount", 
-    hozAlign: "right", 
-    editor: "number",
-    editorParams: {
-        min: 0,
-        step: "any" // Cho phép nhập số lớn tùy ý không bị giới hạn
-    },
-    cssClass: "bg-light text-primary fw-bold",
-    formatter: function(cell) {
-        let val = cell.getValue();
-        if (val === null || val === undefined || val === '') return "-";
-        
-        // Làm sạch chuỗi nếu dữ liệu đầu vào có chứa dấu chấm/phẩy phân cách hàng nghìn
-        let cleanNum = parseFloat(String(val).replace(/[,.]/g, ''));
-        
-        if (isNaN(cleanNum) || cleanNum <= 0) return "-";
-        
-        // Định dạng hiển thị chuẩn Tiếng Việt (Ví dụ: 1.500.000.000)
-        return cleanNum.toLocaleString('vi-VN');
-    }
-},
+                { 
+                    title: "Mục tiêu doanh số", 
+                    field: "targetAmount", 
+                    hozAlign: "right", 
+                    editor: "number",
+                    editorParams: { min: 0, step: "any" },
+                    cssClass: "bg-light text-primary fw-bold",
+                    formatter: function(cell) {
+                        let val = cell.getValue();
+                        if (val === null || val === undefined || val === '') return "-";
+                        let cleanNum = parseFloat(String(val).replace(/[,.]/g, ''));
+                        if (isNaN(cleanNum) || cleanNum <= 0) return "-";
+                        return cleanNum.toLocaleString('vi-VN');
+                    }
+                },
                 { 
                     title: "Đã thực hiện", 
                     field: "actualAmount", 
@@ -890,374 +891,4 @@
         tableBrandSummary.setFilter(function(data) {
             let matchQ = !qVal || data.quarter === qVal;
             let matchB = !bVal || data.brand === bVal;
-            let matchT = !tVal || data.productType === tVal;
-            return matchQ && matchB && matchT;
-        });
-    }
-
-    function resetFilterTable2(reapply = true) {
-        document.getElementById('filter2Quarter').value = "";
-        document.getElementById('filter2Brand').value = "";
-        document.getElementById('filter2Type').value = "";
-        if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
-    }
-
-    function buildTabulatorTable(rawData) {
-        if (!rawData || rawData.length === 0) {
-            if (table) table.clearData();
-            return;
-        }
-
-        let activeCols = getActiveColumns();
-        let columnsConfig = [
-            { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT" }
-        ];
-
-        columnsConfig.push({
-            title: "Thao tác",
-            field: "_actionCol",
-            formatter: function(cell) {
-                let rowData = cell.getRow().getData();
-                let isEditing = rowData._isEditing || false;
-                if (isEditing) {
-                    return `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
-                } else {
-                    return `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
-                }
-            },
-            width: 95,
-            hozAlign: "center",
-            headerSort: false,
-            frozen: true,
-            cellClick: function(e, cell) {
-                let row = cell.getRow();
-                let rowData = row.getData();
-                let activeCols = getActiveColumns();
-                let cellEl = cell.getElement();
-                let btn = cellEl.querySelector('button');
-
-                if (!rowData._isEditing) {
-                    rowData._isEditing = true;
-                    btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
-                    btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
-                    row.update(rowData);
-
-                    let cells = row.getCells();
-                    for (let c of cells) {
-                        if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
-                            c.edit();
-                            break;
-                        }
-                    }
-                } else {
-                    let fullRowData = [];
-                    activeCols.forEach((col, i) => {
-                        let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
-                        
-                        // Định dạng cột Ngày tháng về dạng YYYY-MM-DD chuẩn trước khi lưu
-                        if (col.date && val) {
-                            let d = new Date(val);
-                            if (!isNaN(d.getTime())) {
-                                let yyyy = d.getFullYear();
-                                let mm = String(d.getMonth() + 1).padStart(2, '0');
-                                let dd = String(d.getDate()).padStart(2, '0');
-                                val = `${yyyy}-${mm}-${dd}`;
-                            }
-                        }
-                        fullRowData.push(val);
-                    });
-
-                    // Lưu dữ liệu dòng về Google Sheet
-                    saveRowToSheet(rowData.sheetRowIndex, fullRowData);
-
-                    rowData._isEditing = false;
-                    btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
-                    btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
-                    row.update(rowData);
-                }
-            }
-        });
-
-        activeCols.forEach((col, index) => {
-            let colDef = {
-                title: col.label,
-                field: "col_" + index,
-                width: col.width || undefined, 
-                minWidth: 80, 
-                editor: "input",
-                editable: function(cell) {
-                    let rowData = cell.getRow().getData();
-                    if (!rowData._isEditing) return false;
-
-                    let allowedColumns = [
-                        'COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB',
-                        'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT', 'SL TON LUC DO', 'TEN CHUONG TRINH'
-                    ];
-                    let colLabel = col.label.trim().toUpperCase();
-                    return allowedColumns.includes(colLabel);
-                },
-                editorParams: { selectContents: true },
-                headerFilter: "input", 
-                headerFilterFunc: "like", 
-                headerFilterPlaceholder: "Lọc..."
-            };
-
-            if (col.numeric) {
-                colDef.hozAlign = "right";
-                colDef.formatter = function(cell) {
-                    let val = cell.getValue();
-                    if (val === null || val === undefined || val === '') return '';
-                    if (col.percent) {
-                        let cleanVal = String(val).replace('%', '').trim();
-                        let num = parseFloat(cleanVal);
-                        if (isNaN(num)) return val;
-                        return num > 1 ? num.toFixed(2) + '%' : (num * 100).toFixed(2) + '%';
-                    }
-                    let num = parseFloat(String(val).replace(/[,.]/g, ''));
-                    return isNaN(num) ? val : num.toLocaleString('vi-VN');
-                };
-            } else if (col.date) {
-                colDef.hozAlign = "center";
-                colDef.formatter = function(cell) {
-                    let val = cell.getValue();
-                    if (!val) return '';
-                    let d = new Date(val);
-                    if (typeof val === 'string' && val.includes('T')) {
-                        return !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
-                    } else if (!isNaN(d.getTime()) && isNaN(val)) {
-                        return d.toLocaleDateString('vi-VN');
-                    }
-                    return val;
-                };
-            }
-
-            columnsConfig.push(colDef);
-        });
-
-        let rowsToProcess = rawData;
-        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
-            rowsToProcess = rawData.slice(1);
-        }
-
-        let startRowOffset = 2; 
-        if (rowsToProcess.length >= 500 && currentMode === 'NHAP_KHO') {
-            startRowOffset = rawData.length - rowsToProcess.length + 1;
-        } else if (rowsToProcess.length >= 1500 && currentMode === 'BAN_HANG') {
-            startRowOffset = rawData.length - rowsToProcess.length + 1;
-        }
-
-        let tableData = rowsToProcess.map((row, rowIndex) => {
-            let actualSheetRow = startRowOffset + rowIndex;
-            let obj = { sheetRowIndex: actualSheetRow, _isEditing: false }; 
-            activeCols.forEach((col, index) => {
-                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
-            });
-            return obj;
-        });
-
-        if (table) table.destroy();
-
-        table = new Tabulator("#example-table", {
-            data: tableData,
-            layout: "fitColumns",
-            responsiveLayout: false,
-            height: "100%",
-            columns: columnsConfig,
-            pagination: "local",
-            paginationSize: 50,
-            paginationSizeSelector: [25, 50, 100, 200, 500],
-            movableColumns: true,
-            columnDefaults: { resizable: true },
-            rowFormatter: function(row) {
-                let data = row.getData();
-                let activeCols = getActiveColumns();
-                let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
-                
-                if (idxCheckGia !== -1) {
-                    let checkVal = parseFloat(String(data["col_" + idxCheckGia]).replace(/[,.]/g, '')) || 0;
-                    let rowEl = row.getElement();
-                    if (checkVal < 0) {
-                        rowEl.style.backgroundColor = "#ffdddd";
-                    } else {
-                        rowEl.style.backgroundColor = "";
-                    }
-                }
-            }
-        });
-
-        table.on("dataFiltered", function(filters, rows){
-            document.getElementById('rowCountBadge').innerText = `Hiển thị: ${rows.length} / ${tableData.length} dòng`;
-        });
-
-        table.on("tableBuilt", function() {
-            document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} / ${tableData.length} dòng`;
-        });
-    }
-
-    function applyGlobalSearch() {
-        if (!table) return;
-        let kw = document.getElementById('globalSearchInput').value.toLowerCase();
-        let kwCus = document.getElementById('customerFilterInput').value.toLowerCase();
-
-        table.setFilter(function(data){
-            let matchGlobal = true;
-            let matchCus = true;
-
-            if (kw) {
-                matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
-            }
-
-            if (kwCus) {
-                matchCus = Object.entries(data).some(([key, val]) => {
-                    if (key.startsWith('col_')) {
-                        let idx = parseInt(key.replace('col_', ''));
-                        let col = getActiveColumns()[idx];
-                        if (col && (col.customer || col.ncc || col.code)) {
-                            return String(val).toLowerCase().includes(kwCus);
-                        }
-                    }
-                    return false;
-                });
-            }
-
-            return matchGlobal && matchCus;
-        });
-    }
-
-    function resetAllFilters(reload = true) {
-        document.getElementById('globalSearchInput').value = '';
-        document.getElementById('customerFilterInput').value = '';
-        if (table) {
-            table.clearFilter(true);
-            table.clearHeaderFilter();
-        }
-    }
-
-    function saveRowToSheet(sheetRowIndex, fullRowData) {
-        showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
-        
-        var payloadData = {
-            action: "updateRow",
-            sheetName: currentMode.trim(),
-            rowIndex: sheetRowIndex,
-            rowData: fullRowData
-        };
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
-        })
-        .then(res => res.json())
-        .then(resData => {
-            showLoading(false);
-            if (resData.status !== 'success') {
-                alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
-            }
-        })
-        .catch(err => {
-            showLoading(false);
-            alert("Lỗi kết nối khi lưu dữ liệu!");
-        });
-    }
-
-    function addRow() {
-        var activeCols = getActiveColumns();
-        var emptyRow = new Array(activeCols.length).fill('');
-
-        showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
-
-        var payloadData = {
-            action: "appendRows",
-            sheetName: currentMode.trim(),
-            rows: [emptyRow]
-        };
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
-        })
-        .then(res => res.json())
-        .then(resData => {
-            showLoading(false);
-            if (resData.status === 'success') {
-                loadDataFromSheet();
-            } else {
-                alert("Lỗi khi thêm dòng: " + resData.message);
-            }
-        })
-        .catch(err => {
-            showLoading(false);
-            alert("Lỗi kết nối khi thêm dòng!");
-        });
-    }
-
-    function handleExcelUpload(event) {
-        var file = event.target.files[0];
-        if (!file) return;
-
-        var activeCols = getActiveColumns();
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            var data = new Uint8Array(e.target.result);
-            var workbook = XLSX.read(data, { type: 'array' });
-            var worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-            var rawRows = excelData.slice(1).filter(r => r.length > 0 && r.some(cell => cell !== null && cell !== ''));
-            if (rawRows.length === 0) {
-                alert("File Excel không chứa dữ liệu!");
-                return;
-            }
-
-            var formattedRows = rawRows.map(row => {
-                var newRow = [];
-                for (var i = 0; i < activeCols.length; i++) {
-                    var cellVal = row[i] !== undefined && row[i] !== null ? row[i] : '';
-                    newRow.push(String(cellVal));
-                }
-                return newRow;
-            });
-
-            showLoading(true, `Đang đẩy ${formattedRows.length} dòng vào Sheet '${currentMode}'...`);
-            
-            var payloadData = {
-                action: "appendRows",
-                sheetName: currentMode.trim(),
-                rows: formattedRows
-            };
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
-            })
-            .then(res => res.json())
-            .then(resData => {
-                showLoading(false);
-                if (resData.status === 'success') {
-                    alert(`Đã hoàn tất tải lên ${formattedRows.length} dòng vào Sheet '${currentMode}'!`);
-                    loadDataFromSheet();
-                } else {
-                    alert("Lỗi khi tải file Excel: " + resData.message);
-                }
-            })
-            .catch(err => {
-                showLoading(false);
-                alert("Lỗi kết nối khi tải file Excel!");
-            });
-
-            event.target.value = '';
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    window.onload = function() {
-        loadDataFromSheet();
-    };
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+            let matchT = !tVal || data.product
