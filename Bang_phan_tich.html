@@ -71,16 +71,10 @@
         .view-mode-btn-group .btn { font-weight: 600; font-size: 0.95rem; }
         .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
         
-        .tabulator {
-            font-size: 0.95rem;
-        }
+        .tabulator { font-size: 0.95rem; }
 
-        .btn-edit-action {
-            transition: all 0.2s ease-in-out;
-        }
-        .btn-edit-action:hover {
-            transform: scale(1.05);
-        }
+        .btn-edit-action { transition: all 0.2s ease-in-out; }
+        .btn-edit-action:hover { transform: scale(1.05); }
 
         .tabulator .tabulator-header .tabulator-col {
             white-space: normal !important;
@@ -88,9 +82,7 @@
             vertical-align: middle !important;
         }
         
-        .tabulator .tabulator-header .tabulator-col-content {
-            padding: 4px !important;
-        }
+        .tabulator .tabulator-header .tabulator-col-content { padding: 4px !important; }
 
         .tabulator .tabulator-header .tabulator-col-title {
             white-space: normal !important;
@@ -216,7 +208,7 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BỘ LỌC TOÀN CỤC PHÍA TRÊN -->
+        <!-- BỘ LỌC TOÀN CỤC -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -250,7 +242,7 @@
         <!-- KHUNG CHỨA BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
-        <!-- KHUNG CHỨA DASHBOARD & 2 TABULATOR (Dành riêng cho THỐNG KÊ QUÝ) -->
+        <!-- DASHBOARD & TABULATOR DÀNH RIÊNG CHO THỐNG KÊ QUÝ -->
         <div id="dashboardView" class="dashboard-container">
             <div class="row g-2">
                 <div class="col-md-4">
@@ -556,31 +548,30 @@
             });
     }
 
-function processThongKeQuyData(data) {
-    // Bóc tách đúng object trả về từ Backend
-    let actualsRaw = (data && data.actuals) ? data.actuals : [];
-    let targetsRaw = (data && data.targets) ? data.targets : [];
+    function processThongKeQuyData(data) {
+        let actualsRaw = (data && data.actuals) ? data.actuals : [];
+        let targetsRaw = (data && data.targets) ? data.targets : [];
 
-    if (actualsRaw.length <= 1) {
-        renderDashboardAndTables([], {});
-        return;
+        if (actualsRaw.length <= 1) {
+            renderDashboardAndTables([], {});
+            return;
+        }
+
+        let actualRows = actualsRaw.slice(1);
+        let targetMap = {};
+
+        if (targetsRaw.length > 1) {
+            targetsRaw.slice(1).forEach(r => {
+                let key = `${r[0]}_${r[1]}_${r[2]}`;
+                targetMap[key] = {
+                    targetQty: parseFloat(r[3]) || 0,
+                    targetAmount: parseFloat(r[4]) || 0
+                };
+            });
+        }
+
+        renderDashboardAndTables(actualRows, targetMap);
     }
-
-    let actualRows = actualsRaw.slice(1);
-    let targetMap = {};
-
-    if (targetsRaw.length > 1) {
-        targetsRaw.slice(1).forEach(r => {
-            let key = `${r[0]}_${r[1]}_${r[2]}`;
-            targetMap[key] = {
-                targetQty: parseFloat(r[3]) || 0,
-                targetAmount: parseFloat(r[4]) || 0
-            };
-        });
-    }
-
-    renderDashboardAndTables(actualRows, targetMap);
-}
 
     function saveTargetToSheet(quarter, brand, productType, targetAmount, targetQty = 0) {
         let key = `${quarter}_${brand}_${productType}`;
@@ -771,7 +762,6 @@ function processThongKeQuyData(data) {
                     }
                     row.update(data);
 
-                    // Tự động lưu Mục tiêu doanh số về Google Sheet khi nhập/sửa ô
                     saveTargetToSheet(data.quarter, data.brand, data.productType, target);
                 }
             },
