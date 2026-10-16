@@ -808,6 +808,12 @@
             opt2.text = val;
             sel2.appendChild(opt2);
         });
+        // TỰ ĐỘNG CHỌN QUÝ MỚI NHẤT LÀM MẶC ĐỊNH
+        if (selectId1 === 'filter1Quarter' && sortedArray.length > 0) {
+            let latestQuarter = sortedArray[sortedArray.length - 1]; // Phần tử cuối cùng là Quý lớn nhất
+            sel1.value = latestQuarter;
+            sel2.value = latestQuarter;
+        }
     }
 
     function applyMultiFilterTable1() {
