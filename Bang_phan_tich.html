@@ -535,7 +535,6 @@
         }
     }
 
-    // XỬ LÝ RENDER BẢNG VÀ DASHBOARD CHO TAB THỐNG KÊ QUÝ
     function renderThongKeQuyTab() {
         let actualRows = globalActualData.length > 1 ? globalActualData.slice(1) : [];
         let targetRows = globalTargetData.length > 1 ? globalTargetData.slice(1) : [];
@@ -634,10 +633,10 @@
             let parts = key.split('_');
             let q = parts[0], b = parts[1], t = parts[2];
 
-            let actualMatch = actualRows.find(r => r[0] === q && r[1] === b && r[2] === t);
+            let actualMatch = actualRows.find(r => String(r[0]).trim() === q && String(r[1]).trim().toLowerCase() === b.toLowerCase() && String(r[2]).trim().toLowerCase() === t.toLowerCase());
             let actualAmt = actualMatch ? parseFloat(actualMatch[4]) || 0 : 0;
 
-            let targetMatch = targetRows.find(r => r[0] === q && r[1] === b && r[2] === t);
+            let targetMatch = targetRows.find(r => String(r[0]).trim() === q && String(r[1]).trim().toLowerCase() === b.toLowerCase() && String(r[2]).trim().toLowerCase() === t.toLowerCase());
             let targetAmt = targetMatch ? parseFloat(targetMatch[4]) || 0 : 0;
 
             let pctAct = targetAmt > 0 ? (actualAmt / targetAmt) * 100 : 0;
@@ -682,7 +681,6 @@
                     }
                     row.update(d);
 
-                    // Lưu trực tiếp vào MUC_TIEU_QUY
                     saveTargetToGoogleSheet(d.quarter, d.brand, d.productType, target);
                 }
             },
@@ -782,9 +780,7 @@
         .then(res => res.json())
         .then(resData => {
             showLoading(false);
-            if (resData.status !== 'success') {
-                alert("Lỗi khi lưu mục tiêu: " + (resData.message || "Không thể cập nhật"));
-            }
+            if (resData.status !== 'success') alert("Lỗi khi lưu mục tiêu: " + (resData.message || "Không thể cập nhật"));
         })
         .catch(err => {
             showLoading(false);
