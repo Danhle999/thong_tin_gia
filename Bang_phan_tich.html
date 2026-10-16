@@ -320,7 +320,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxy-k8aQWyknyTnDVLm9CrKO9C85viGIAJ3VhhFt_Gk35kIXBIN-kUeXycd8Bs-VM/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPyMv3siUxOrxeX4c9hH8U1VFwZcSsPLBFTVKezvrUxaJ2jo34NOEOjI-x93fYsI-2/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -575,7 +575,6 @@
         document.getElementById('statTotalRecords').innerText = actualRows.length;
         document.getElementById('rowCountBadge').innerText = `Hiển thị: ${actualRows.length} mục`;
 
-        // Điền danh sách chọn và TỰ ĐỘNG CHỌN QUÝ MỚI NHẤT
         populateSelectOptions('filter1Quarter', 'filter2Quarter', quartersSet);
         populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
         populateSelectOptions('filter1Type', 'filter2Type', typesSet);
@@ -758,7 +757,7 @@
             ]
         });
 
-        // TỰ ĐỘNG LỌC BẢNG THEO QUÝ MỚI NHẤT KHI VỪA RENDER
+        // TỰ ĐỘNG ÁP DỤNG BỘ LỌC QUÝ MỚI NHẤT DÀNH CHO CẢ 2 BẢNG
         applyMultiFilterTable1();
         applyMultiFilterTable2();
     }
@@ -813,9 +812,9 @@
             sel2.appendChild(opt2);
         });
 
-        // TỰ ĐỘNG CHỌN QUÝ MỚI NHẤT
+        // TỰ ĐỘNG CHỌN QUÝ MỚI NHẤT LÀM MẶC ĐỊNH
         if (selectId1 === 'filter1Quarter' && sortedArray.length > 0) {
-            let latestQuarter = sortedArray[sortedArray.length - 1];
+            let latestQuarter = sortedArray[sortedArray.length - 1]; // Phần tử cuối cùng là Quý lớn nhất
             sel1.value = latestQuarter;
             sel2.value = latestQuarter;
         }
