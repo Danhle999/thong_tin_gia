@@ -71,16 +71,10 @@
         .view-mode-btn-group .btn { font-weight: 600; font-size: 0.95rem; }
         .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
         
-        .tabulator {
-            font-size: 0.95rem;
-        }
+        .tabulator { font-size: 0.95rem; }
 
-        .btn-edit-action {
-            transition: all 0.2s ease-in-out;
-        }
-        .btn-edit-action:hover {
-            transform: scale(1.05);
-        }
+        .btn-edit-action { transition: all 0.2s ease-in-out; }
+        .btn-edit-action:hover { transform: scale(1.05); }
 
         .tabulator .tabulator-header .tabulator-col {
             white-space: normal !important;
@@ -88,10 +82,7 @@
             vertical-align: middle !important;
         }
         
-        .tabulator .tabulator-header .tabulator-col-content {
-            padding: 4px !important;
-        }
-
+        .tabulator .tabulator-header .tabulator-col-content { padding: 4px !important; }
         .tabulator .tabulator-header .tabulator-col-title {
             white-space: normal !important;
             text-overflow: clip !important;
@@ -184,42 +175,18 @@
             </div>
             
             <div class="btn-group view-mode-btn-group flex-wrap gap-1" role="group">
-                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">
-                    <i class="fa-solid fa-laptop me-1"></i> LAPTOP
-                </button>
-                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">
-                    <i class="fa-solid fa-desktop me-1"></i> PC
-                </button>
-                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">
-                    <i class="fa-solid fa-tv me-1"></i> LCD
-                </button>
-                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">
-                    <i class="fa-solid fa-computer me-1"></i> AIO
-                </button>
-                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">
-                    <i class="fa-solid fa-print me-1"></i> MÁY IN / SCAN
-                </button>
-                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">
-                    <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
-                </button>
-                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">
-                    <i class="fa-solid fa-file-import me-1"></i> NHẬP KHO
-                </button>
-                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
-                    <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO
-                </button>
-                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">
-                    <i class="fa-solid fa-chart-pie me-1"></i> THỐNG KÊ QUÝ
-                </button>
-                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">
-                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ DELL
-                </button>
-                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">
-                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ HP
-                </button>
-                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">
-                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ LENOVO
-                </button>
+                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">LAPTOP</button>
+                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">PC</button>
+                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">LCD</button>
+                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">AIO</button>
+                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">MÁY IN / SCAN</button>
+                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">BÁN HÀNG</button>
+                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
+                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
+                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
+                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
+                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
+                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
             </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
@@ -477,16 +444,15 @@
     let tableBrandSummary = null;
     let barChartInstance = null;
     let doughnutChartInstance = null;
-    let globalMucTieuData = [];
+    let globalActualData = [];
+    let globalTargetData = [];
 
-    function customSumCalc(values, data, calcParams) {
+    function customSumCalc(values) {
         let sum = 0;
         values.forEach(function(val) {
             if (val !== null && val !== undefined && val !== '') {
                 let cleanVal = parseFloat(String(val).replace(/[,.]/g, ''));
-                if (!isNaN(cleanVal)) {
-                    sum += cleanVal;
-                }
+                if (!isNaN(cleanVal)) sum += cleanVal;
             }
         });
         return sum;
@@ -541,15 +507,14 @@
 
     function loadDataFromSheet() {
         if (currentMode === 'THONG_KE_QUY') {
-            showLoading(true, "Đang nạp dữ liệu Thống kê Quý...");
+            showLoading(true, "Đang tải dữ liệu Thống kê Quý...");
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=THONG_KE_QUY`)
                 .then(res => res.json())
                 .then(data => {
                     showLoading(false);
-                    if (data && data.actuals) {
-                        globalMucTieuData = data.targets || [];
-                        processThongKeQuyData(data.actuals);
-                    }
+                    globalActualData = data.actuals || [];
+                    globalTargetData = data.targets || [];
+                    renderThongKeQuyTab();
                 })
                 .catch(err => {
                     showLoading(false);
@@ -560,13 +525,8 @@
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data && data.status === 'error') {
-                        showLoading(false);
-                        alert("Lỗi từ Google Sheets: " + data.message);
-                        return;
-                    }
-                    buildTabulatorTable(data);
                     showLoading(false);
+                    buildTabulatorTable(data);
                 })
                 .catch(err => {
                     showLoading(false);
@@ -575,16 +535,11 @@
         }
     }
 
-    function processThongKeQuyData(actualsData) {
-        if (!actualsData || actualsData.length <= 1) {
-            renderDashboardAndTables([]);
-            return;
-        }
-        let rows = actualsData.slice(1);
-        renderDashboardAndTables(rows);
-    }
+    // XỬ LÝ RENDER BẢNG VÀ DASHBOARD CHO TAB THỐNG KÊ QUÝ
+    function renderThongKeQuyTab() {
+        let actualRows = globalActualData.length > 1 ? globalActualData.slice(1) : [];
+        let targetRows = globalTargetData.length > 1 ? globalTargetData.slice(1) : [];
 
-    function renderDashboardAndTables(detailArray) {
         let totalQty = 0;
         let totalAmount = 0;
         let brandQtyMap = {};
@@ -594,93 +549,67 @@
         let brandsSet = new Set();
         let typesSet = new Set();
 
-        detailArray.forEach(item => {
+        actualRows.forEach(item => {
+            let q = item[0], b = item[1], t = item[2];
             let qty = parseFloat(item[3]) || 0;
             let amt = parseFloat(item[4]) || 0;
-            let quarter = item[0];
-            let brand = item[1];
-            let type = item[2];
 
             totalQty += qty;
             totalAmount += amt;
 
-            brandQtyMap[brand] = (brandQtyMap[brand] || 0) + qty;
-            typeAmountMap[type] = (typeAmountMap[type] || 0) + amt;
+            brandQtyMap[b] = (brandQtyMap[b] || 0) + qty;
+            typeAmountMap[t] = (typeAmountMap[t] || 0) + amt;
 
-            quartersSet.add(quarter);
-            brandsSet.add(brand);
-            typesSet.add(type);
+            quartersSet.add(q);
+            brandsSet.add(b);
+            typesSet.add(t);
+        });
+
+        targetRows.forEach(item => {
+            if (item[0]) quartersSet.add(item[0]);
+            if (item[1]) brandsSet.add(item[1]);
+            if (item[2]) typesSet.add(item[2]);
         });
 
         document.getElementById('statTotalQty').innerText = totalQty.toLocaleString('vi-VN');
         document.getElementById('statTotalAmount').innerText = totalAmount.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('statTotalRecords').innerText = detailArray.length;
-        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${detailArray.length} mục`;
+        document.getElementById('statTotalRecords').innerText = actualRows.length;
+        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${actualRows.length} mục`;
 
         populateSelectOptions('filter1Quarter', 'filter2Quarter', quartersSet);
         populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
         populateSelectOptions('filter1Type', 'filter2Type', typesSet);
 
+        // Biểu đồ
         let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
         if (barChartInstance) barChartInstance.destroy();
-        
         barChartInstance = new Chart(ctxBar, {
             type: 'bar',
             data: {
                 labels: Object.keys(brandQtyMap),
-                datasets: [{
-                    label: 'Tổng Số Lượng Nhập',
-                    data: Object.values(brandQtyMap),
-                    backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'],
-                    borderWidth: 1
-                }]
+                datasets: [{ label: 'Tổng SL Nhập', data: Object.values(brandQtyMap), backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'] }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng', font: { size: 12, weight: 'bold' } },
-                    legend: { display: false }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng' }, legend: { display: false } } }
         });
 
         let ctxDoughnut = document.getElementById('doughnutChartType').getContext('2d');
         if (doughnutChartInstance) doughnutChartInstance.destroy();
-
         doughnutChartInstance = new Chart(ctxDoughnut, {
             type: 'doughnut',
             data: {
                 labels: Object.keys(typeAmountMap),
-                datasets: [{
-                    data: Object.values(typeAmountMap),
-                    backgroundColor: ['#0dcaf0', '#6f42c1', '#fd7e14', '#20c997']
-                }]
+                datasets: [{ data: Object.values(typeAmountMap), backgroundColor: ['#0dcaf0', '#6f42c1', '#fd7e14', '#20c997'] }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại', font: { size: 12, weight: 'bold' } },
-                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại' }, legend: { position: 'bottom' } } }
         });
 
-        let detailTableData = detailArray.map((row, idx) => ({
-            id: idx + 1,
-            col_0: row[0],
-            col_1: row[1],
-            col_2: row[2],
-            col_3: row[3],
-            col_4: row[4]
-        }));
-
+        // BẢNG 1: Chi Tiết Nhập Kho
+        let detailTableData = actualRows.map((r, idx) => ({ id: idx + 1, col_0: r[0], col_1: r[1], col_2: r[2], col_3: r[3], col_4: r[4] }));
         if (tableQuarterDetail) tableQuarterDetail.destroy();
         tableQuarterDetail = new Tabulator("#table-quarter-detail", {
             data: detailTableData,
             layout: "fitColumns",
-            height: "420px",
+            height: "250px",
             pagination: "local",
             paginationSize: 8,
             columns: [
@@ -688,67 +617,49 @@
                 { title: "Quý / Thời gian", field: "col_0" },
                 { title: "Hãng (Brand)", field: "col_1" },
                 { title: "Loại Sản Phẩm", field: "col_2" },
-                { 
-                    title: "Tổng Số Lượng", 
-                    field: "col_3", 
-                    hozAlign: "right", 
-                    formatter: "money", 
-                    formatterParams: { precision: 0, thousand: "." },
-                    bottomCalc: customSumCalc,
-                    bottomCalcFormatter: "money",
-                    bottomCalcFormatterParams: { precision: 0, thousand: "." }
-                },
-                { 
-                    title: "Tổng Giá Trị (VNĐ)", 
-                    field: "col_4", 
-                    hozAlign: "right", 
-                    formatter: "money", 
-                    formatterParams: { precision: 0, thousand: "." },
-                    bottomCalc: customSumCalc,
-                    bottomCalcFormatter: "money",
-                    bottomCalcFormatterParams: { precision: 0, thousand: "." }
-                }
+                { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
             ]
         });
 
-        let targetTableData = detailArray.map((row, idx) => {
-            let quarter = row[0];
-            let brand = row[1];
-            let productType = row[2];
-            let actualAmount = row[4] || 0;
-            let targetAmount = 0;
+        // BẢNG 2: Theo Dõi Mục Tiêu Doanh Số
+        let summaryKeys = new Set();
+        actualRows.forEach(r => summaryKeys.add(`${r[0]}_${r[1]}_${r[2]}`));
+        targetRows.forEach(r => summaryKeys.add(`${r[0]}_${r[1]}_${r[2]}`));
 
-            if (globalMucTieuData && globalMucTieuData.length > 1) {
-                let foundRow = globalMucTieuData.slice(1).find(r => 
-                    String(r[0]).trim() === String(quarter).trim() && 
-                    String(r[1]).trim().toLowerCase() === String(brand).trim().toLowerCase() && 
-                    String(r[2]).trim().toLowerCase() === String(productType).trim().toLowerCase()
-                );
-                if (foundRow && foundRow[4] !== undefined) {
-                    targetAmount = parseFloat(String(foundRow[4]).replace(/[,.]/g, '')) || 0;
-                }
-            }
+        let summaryTableData = [];
+        let idxCounter = 1;
 
-            let pctActual = targetAmount > 0 ? (actualAmount / targetAmount) * 100 : 0;
-            let remainingAmount = targetAmount - actualAmount;
-            let pctRemaining = targetAmount > 0 ? (remainingAmount / targetAmount) * 100 : 0;
+        summaryKeys.forEach(key => {
+            let parts = key.split('_');
+            let q = parts[0], b = parts[1], t = parts[2];
 
-            return {
-                id: idx + 1,
-                quarter: quarter,
-                brand: brand,
-                productType: productType,
-                targetAmount: targetAmount > 0 ? targetAmount : '',
-                actualAmount: actualAmount,
-                pctActual: pctActual,
-                remainingAmount: remainingAmount,
-                pctRemaining: pctRemaining
-            };
+            let actualMatch = actualRows.find(r => r[0] === q && r[1] === b && r[2] === t);
+            let actualAmt = actualMatch ? parseFloat(actualMatch[4]) || 0 : 0;
+
+            let targetMatch = targetRows.find(r => r[0] === q && r[1] === b && r[2] === t);
+            let targetAmt = targetMatch ? parseFloat(targetMatch[4]) || 0 : 0;
+
+            let pctAct = targetAmt > 0 ? (actualAmt / targetAmt) * 100 : 0;
+            let remAmt = targetAmt - actualAmt;
+            let pctRem = targetAmt > 0 ? (remAmt / targetAmt) * 100 : 0;
+
+            summaryTableData.push({
+                id: idxCounter++,
+                quarter: q,
+                brand: b,
+                productType: t,
+                targetAmount: targetAmt > 0 ? targetAmt : '',
+                actualAmount: actualAmt,
+                pctActual: pctAct,
+                remainingAmount: remAmt,
+                pctRemaining: pctRem
+            });
         });
 
         if (tableBrandSummary) tableBrandSummary.destroy();
         tableBrandSummary = new Tabulator("#table-brand-summary", {
-            data: targetTableData,
+            data: summaryTableData,
             layout: "fitColumns",
             height: "420px",
             pagination: "local",
@@ -756,35 +667,36 @@
             cellEdited: function(cell) {
                 if (cell.getField() === "targetAmount") {
                     let row = cell.getRow();
-                    let data = row.getData();
-                    let target = parseFloat(String(data.targetAmount).replace(/[,.]/g, '')) || 0;
-                    let actual = parseFloat(data.actualAmount) || 0;
+                    let d = row.getData();
+                    let target = parseFloat(String(d.targetAmount).replace(/[,.]/g, '')) || 0;
+                    let actual = parseFloat(d.actualAmount) || 0;
 
                     if (target > 0) {
-                        data.pctActual = (actual / target) * 100;
-                        data.remainingAmount = target - actual;
-                        data.pctRemaining = (data.remainingAmount / target) * 100;
+                        d.pctActual = (actual / target) * 100;
+                        d.remainingAmount = target - actual;
+                        d.pctRemaining = (d.remainingAmount / target) * 100;
                     } else {
-                        data.pctActual = 0;
-                        data.remainingAmount = 0 - actual;
-                        data.pctRemaining = 0;
+                        d.pctActual = 0;
+                        d.remainingAmount = 0 - actual;
+                        d.pctRemaining = 0;
                     }
-                    row.update(data);
+                    row.update(d);
 
-                    saveTargetToGoogleSheet(data.quarter, data.brand, data.productType, target);
+                    // Lưu trực tiếp vào MUC_TIEU_QUY
+                    saveTargetToGoogleSheet(d.quarter, d.brand, d.productType, target);
                 }
             },
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Quý / Brand", field: "quarter", width: 210, formatter: function(cell){
-                    return `<b>${cell.getRow().getData().quarter}</b><br><small class="text-primary">${cell.getRow().getData().brand} - ${cell.getRow().getData().productType}</small>`;
+                    let data = cell.getRow().getData();
+                    return `<b>${data.quarter}</b><br><small class="text-primary">${data.brand} - ${data.productType}</small>`;
                 }},
                 { 
                     title: "Mục tiêu doanh số", 
                     field: "targetAmount", 
                     hozAlign: "right", 
                     editor: "number",
-                    editorParams: { min: 0, step: "any" },
                     cssClass: "bg-light text-primary fw-bold",
                     bottomCalc: customSumCalc,
                     bottomCalcFormatter: function(cell) {
@@ -793,10 +705,9 @@
                     },
                     formatter: function(cell) {
                         let val = cell.getValue();
-                        if (val === null || val === undefined || val === '') return "-";
-                        let cleanNum = parseFloat(String(val).replace(/[,.]/g, ''));
-                        if (isNaN(cleanNum) || cleanNum <= 0) return "-";
-                        return cleanNum.toLocaleString('vi-VN');
+                        if (!val) return "-";
+                        let num = parseFloat(String(val).replace(/[,.]/g, ''));
+                        return isNaN(num) || num <= 0 ? "-" : num.toLocaleString('vi-VN');
                     }
                 },
                 { 
@@ -833,8 +744,7 @@
                     },
                     formatter: function(cell) {
                         let v = parseFloat(cell.getValue()) || 0;
-                        if (v === 0 && cell.getRow().getData().targetAmount === 0) return "-";
-                        return v.toLocaleString('vi-VN');
+                        return v === 0 && cell.getRow().getData().targetAmount === 0 ? "-" : v.toLocaleString('vi-VN');
                     }
                 },
                 { 
@@ -843,8 +753,7 @@
                     hozAlign: "right", 
                     formatter: function(cell) {
                         let v = parseFloat(cell.getValue()) || 0;
-                        if (v === 0 && cell.getRow().getData().targetAmount === 0) return "-";
-                        return v.toFixed(2) + "%";
+                        return v === 0 && cell.getRow().getData().targetAmount === 0 ? "-" : v.toFixed(2) + "%";
                     }
                 }
             ]
@@ -859,7 +768,6 @@
 
         var payloadData = {
             action: "updateTarget",
-            sheetName: "MUC_TIEU_QUY",
             quarter: quarter,
             brand: brand,
             productType: productType,
@@ -956,15 +864,7 @@
 
         let activeCols = getActiveColumns();
         let columnsConfig = [
-            { 
-                formatter: "rownum", 
-                hozAlign: "center", 
-                width: 60, 
-                headerSort: false, 
-                frozen: true, 
-                title: "STT",
-                bottomCalc: function() { return "TỔNG"; }
-            }
+            { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT", bottomCalc: function() { return "TỔNG"; } }
         ];
 
         columnsConfig.push({
@@ -972,21 +872,12 @@
             field: "_actionCol",
             formatter: function(cell) {
                 let rowData = cell.getRow().getData();
-                let isEditing = rowData._isEditing || false;
-                if (isEditing) {
-                    return `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>`;
-                } else {
-                    return `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
-                }
+                return rowData._isEditing ? `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>` : `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
             },
-            width: 95,
-            hozAlign: "center",
-            headerSort: false,
-            frozen: true,
+            width: 95, hozAlign: "center", headerSort: false, frozen: true,
             cellClick: function(e, cell) {
                 let row = cell.getRow();
                 let rowData = row.getData();
-                let activeCols = getActiveColumns();
                 let cellEl = cell.getElement();
                 let btn = cellEl.querySelector('button');
 
@@ -1007,7 +898,6 @@
                     let fullRowData = [];
                     activeCols.forEach((col, i) => {
                         let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
-                        
                         if (col.date && val) {
                             let d = new Date(val);
                             if (!isNaN(d.getTime())) {
@@ -1021,7 +911,6 @@
                     });
 
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
-
                     rowData._isEditing = false;
                     btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
                     btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
@@ -1040,13 +929,8 @@
                 editable: function(cell) {
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
-
-                    let allowedColumns = [
-                        'COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB',
-                        'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT', 'SL TON LUC DO', 'TEN CHUONG TRINH'
-                    ];
-                    let colLabel = col.label.trim().toUpperCase();
-                    return allowedColumns.includes(colLabel);
+                    let allowedColumns = ['COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB', 'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT', 'SL TON LUC DO', 'TEN CHUONG TRINH'];
+                    return allowedColumns.includes(col.label.trim().toUpperCase());
                 },
                 editorParams: { selectContents: true },
                 headerFilter: "input", 
@@ -1083,12 +967,7 @@
                     let val = cell.getValue();
                     if (!val) return '';
                     let d = new Date(val);
-                    if (typeof val === 'string' && val.includes('T')) {
-                        return !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
-                    } else if (!isNaN(d.getTime()) && isNaN(val)) {
-                        return d.toLocaleDateString('vi-VN');
-                    }
-                    return val;
+                    return !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
                 };
             }
 
@@ -1131,17 +1010,10 @@
             columnDefaults: { resizable: true },
             rowFormatter: function(row) {
                 let data = row.getData();
-                let activeCols = getActiveColumns();
-                let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
-                
+                let idxCheckGia = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
                 if (idxCheckGia !== -1) {
                     let checkVal = parseFloat(String(data["col_" + idxCheckGia]).replace(/[,.]/g, '')) || 0;
-                    let rowEl = row.getElement();
-                    if (checkVal < 0) {
-                        rowEl.style.backgroundColor = "#ffdddd";
-                    } else {
-                        rowEl.style.backgroundColor = "";
-                    }
+                    row.getElement().style.backgroundColor = checkVal < 0 ? "#ffdddd" : "";
                 }
             }
         });
@@ -1161,26 +1033,18 @@
         let kwCus = document.getElementById('customerFilterInput').value.toLowerCase();
 
         table.setFilter(function(data){
-            let matchGlobal = true;
-            let matchCus = true;
-
-            if (kw) {
-                matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
-            }
-
+            let matchGlobal = true, matchCus = true;
+            if (kw) matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
             if (kwCus) {
                 matchCus = Object.entries(data).some(([key, val]) => {
                     if (key.startsWith('col_')) {
                         let idx = parseInt(key.replace('col_', ''));
                         let col = getActiveColumns()[idx];
-                        if (col && (col.customer || col.ncc || col.code)) {
-                            return String(val).toLowerCase().includes(kwCus);
-                        }
+                        if (col && (col.customer || col.ncc || col.code)) return String(val).toLowerCase().includes(kwCus);
                     }
                     return false;
                 });
             }
-
             return matchGlobal && matchCus;
         });
     }
@@ -1196,14 +1060,7 @@
 
     function saveRowToSheet(sheetRowIndex, fullRowData) {
         showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
-        
-        var payloadData = {
-            action: "updateRow",
-            sheetName: currentMode.trim(),
-            rowIndex: sheetRowIndex,
-            rowData: fullRowData
-        };
-
+        var payloadData = { action: "updateRow", sheetName: currentMode.trim(), rowIndex: sheetRowIndex, rowData: fullRowData };
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -1212,9 +1069,7 @@
         .then(res => res.json())
         .then(resData => {
             showLoading(false);
-            if (resData.status !== 'success') {
-                alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
-            }
+            if (resData.status !== 'success') alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
         })
         .catch(err => {
             showLoading(false);
@@ -1225,15 +1080,8 @@
     function addRow() {
         var activeCols = getActiveColumns();
         var emptyRow = new Array(activeCols.length).fill('');
-
         showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
-
-        var payloadData = {
-            action: "appendRows",
-            sheetName: currentMode.trim(),
-            rows: [emptyRow]
-        };
-
+        var payloadData = { action: "appendRows", sheetName: currentMode.trim(), rows: [emptyRow] };
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -1242,11 +1090,8 @@
         .then(res => res.json())
         .then(resData => {
             showLoading(false);
-            if (resData.status === 'success') {
-                loadDataFromSheet();
-            } else {
-                alert("Lỗi khi thêm dòng: " + resData.message);
-            }
+            if (resData.status === 'success') loadDataFromSheet();
+            else alert("Lỗi khi thêm dòng: " + resData.message);
         })
         .catch(err => {
             showLoading(false);
@@ -1282,13 +1127,7 @@
             });
 
             showLoading(true, `Đang đẩy ${formattedRows.length} dòng vào Sheet '${currentMode}'...`);
-            
-            var payloadData = {
-                action: "appendRows",
-                sheetName: currentMode.trim(),
-                rows: formattedRows
-            };
-
+            var payloadData = { action: "appendRows", sheetName: currentMode.trim(), rows: formattedRows };
             fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
