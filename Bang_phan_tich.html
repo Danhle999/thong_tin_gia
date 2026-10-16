@@ -176,6 +176,7 @@
 
 <div class="container-fluid p-2 h-100">
     <div class="table-container">
+        <!-- HEADER TRANG & NÚT CHUYỂN TAB -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
                 <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu (Tabulator)</h4>
@@ -183,23 +184,48 @@
             </div>
             
             <div class="btn-group view-mode-btn-group flex-wrap gap-1" role="group">
-                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">LAPTOP</button>
-                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">PC</button>
-                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">LCD</button>
-                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">AIO</button>
-                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">MÁY IN / SCAN</button>
-                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">BÁN HÀNG</button>
-                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
-                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
-                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
-                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
-                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
-                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
+                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">
+                    <i class="fa-solid fa-laptop me-1"></i> LAPTOP
+                </button>
+                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">
+                    <i class="fa-solid fa-desktop me-1"></i> PC
+                </button>
+                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">
+                    <i class="fa-solid fa-tv me-1"></i> LCD
+                </button>
+                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">
+                    <i class="fa-solid fa-computer me-1"></i> AIO
+                </button>
+                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">
+                    <i class="fa-solid fa-print me-1"></i> MÁY IN / SCAN
+                </button>
+                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">
+                    <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
+                </button>
+                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">
+                    <i class="fa-solid fa-file-import me-1"></i> NHẬP KHO
+                </button>
+                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
+                    <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO
+                </button>
+                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">
+                    <i class="fa-solid fa-chart-pie me-1"></i> THỐNG KÊ QUÝ
+                </button>
+                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ DELL
+                </button>
+                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ HP
+                </button>
+                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ LENOVO
+                </button>
             </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
+        <!-- BỘ LỌC TOÀN CỤC PHÍA TRÊN -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -216,6 +242,7 @@
             </div>
         </div>
         
+        <!-- NÚT THAO TÁC -->
         <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
@@ -229,6 +256,7 @@
             </div>
         </div>
 
+        <!-- BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
         <!-- DASHBOARD & TABULATOR CHO THỐNG KÊ QUÝ -->
@@ -827,10 +855,11 @@
     }
 
     function saveTargetToGoogleSheet(quarter, brand, productType, targetAmount) {
-        showLoading(true, "Đang lưu mục tiêu doanh số vào Sheet NHAP_KHO...");
+        showLoading(true, "Đang lưu mục tiêu doanh số vào Sheet MUC_TIEU_QUY...");
 
         var payloadData = {
             action: "updateTarget",
+            sheetName: "MUC_TIEU_QUY",
             quarter: quarter,
             brand: brand,
             productType: productType,
