@@ -109,7 +109,6 @@
             padding-bottom: 3px !important;
         }
 
-        /* Định dạng nổi bật cho dòng tính tổng chân trang (Footer Bottom Calc) */
         .tabulator-footer .tabulator-calcs-holder {
             background-color: #e2e8f0 !important;
             border-top: 2px solid #0d6efd !important;
@@ -121,7 +120,6 @@
             border-right: 1px solid #cbd5e1 !important;
         }
 
-        /* Dashboard Styles */
         .dashboard-container {
             display: none;
             flex-direction: column;
@@ -169,7 +167,6 @@
 </head>
 <body>
 
-<!-- Loading Spinner -->
 <div id="loadingSpinner">
     <div class="text-center">
         <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
@@ -179,7 +176,6 @@
 
 <div class="container-fluid p-2 h-100">
     <div class="table-container">
-        <!-- HEADER TRANG & NÚT CHUYỂN TAB -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
                 <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu (Tabulator)</h4>
@@ -187,48 +183,23 @@
             </div>
             
             <div class="btn-group view-mode-btn-group flex-wrap gap-1" role="group">
-                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">
-                    <i class="fa-solid fa-laptop me-1"></i> LAPTOP
-                </button>
-                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">
-                    <i class="fa-solid fa-desktop me-1"></i> PC
-                </button>
-                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">
-                    <i class="fa-solid fa-tv me-1"></i> LCD
-                </button>
-                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">
-                    <i class="fa-solid fa-computer me-1"></i> AIO
-                </button>
-                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">
-                    <i class="fa-solid fa-print me-1"></i> MÁY IN / SCAN
-                </button>
-                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">
-                    <i class="fa-solid fa-cart-shopping me-1"></i> BÁN HÀNG
-                </button>
-                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">
-                    <i class="fa-solid fa-file-import me-1"></i> NHẬP KHO
-                </button>
-                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">
-                    <i class="fa-solid fa-warehouse me-1"></i> TỒN KHO
-                </button>
-                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">
-                    <i class="fa-solid fa-chart-pie me-1"></i> THỐNG KÊ QUÝ
-                </button>
-                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">
-                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ DELL
-                </button>
-                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">
-                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ HP
-                </button>
-                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">
-                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> BÁO GIÁ LENOVO
-                </button>
+                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">LAPTOP</button>
+                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">PC</button>
+                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">LCD</button>
+                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">AIO</button>
+                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">MÁY IN / SCAN</button>
+                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">BÁN HÀNG</button>
+                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
+                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
+                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
+                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
+                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
+                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
             </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BỘ LỌC TOÀN CỤC PHÍA TRÊN -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -245,7 +216,6 @@
             </div>
         </div>
         
-        <!-- NÚT THAO TÁC -->
         <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
@@ -259,10 +229,9 @@
             </div>
         </div>
 
-        <!-- KHUNG CHỨA BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
-        <!-- KHUNG CHỨA DASHBOARD & 2 TABULATOR (Dành riêng cho THỐNG KÊ QUÝ) -->
+        <!-- DASHBOARD & TABULATOR CHO THỐNG KÊ QUÝ -->
         <div id="dashboardView" class="dashboard-container">
             <div class="row g-2">
                 <div class="col-md-4">
@@ -416,31 +385,15 @@
             { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'SCAN_MAY_IN': [
-            { label: 'NCC' },
-            { label: '(SKU) NPP, Hãng' },
-            { label: 'Mã KTB' },
-            { label: 'GHI CHÚ' },
-            { label: 'Độ phân giải DPI' },
-            { label: 'Bộ nhớ' },
-            { label: 'FIRST PAGE' },
-            { label: 'printing speed' },
-            { label: 'connect' },
-            { label: '(Auto-Duplex) Duplex / Manual Duplex' },
-            { label: '(All-in-One) Scan, Copy, Fax' },
-            { label: 'page/month', numeric: true },
-            { label: 'SL NHAP TONG', numeric: true, width: 80 },
-            { label: 'So_Luong TON', numeric: true, width: 80 },
-            { label: 'SL bán ra từ ngày', numeric: true, width: 80 },
-            { label: 'Hàng gửi NPP', width: 80 },
-            { label: 'COST_KTB', numeric: true },
-            { label: 'GIÁ NHẬP CŨ', numeric: true },
-            { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true, width: 80 },
-            { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
-            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 },
-            { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 },
-            { label: 'NGÀY NHẬP CŨ', date: true },
-            { label: 'NGÀY NHẬP MỚI', date: true },
-            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+            { label: 'NCC' }, { label: '(SKU) NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'GHI CHÚ' },
+            { label: 'Độ phân giải DPI' }, { label: 'Bộ nhớ' }, { label: 'FIRST PAGE' }, { label: 'printing speed' },
+            { label: 'connect' }, { label: '(Auto-Duplex) Duplex / Manual Duplex' }, { label: '(All-in-One) Scan, Copy, Fax' },
+            { label: 'page/month', numeric: true }, { label: 'SL NHAP TONG', numeric: true, width: 80 },
+            { label: 'So_Luong TON', numeric: true, width: 80 }, { label: 'SL bán ra từ ngày', numeric: true, width: 80 },
+            { label: 'Hàng gửi NPP', width: 80 }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
+            { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
+            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 },
+            { label: 'NGÀY NHẬP CŨ', date: true }, { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
         'BAN_HANG': [
             { label: 'Tên khách hàng', customer: true }, { label: 'Số đơn hàng' }, { label: 'Ngày ghi sổ', date: true },
@@ -496,7 +449,7 @@
     let tableBrandSummary = null;
     let barChartInstance = null;
     let doughnutChartInstance = null;
-    let globalMucTieuData = []; // Lưu lại dữ liệu mục tiêu doanh số
+    let globalMucTieuData = [];
 
     function customSumCalc(values, data, calcParams) {
         let sum = 0;
@@ -559,24 +512,24 @@
     }
 
     function loadDataFromSheet() {
-        let targetSheet = (currentMode === 'THONG_KE_QUY') ? 'NHAP_KHO' : currentMode;
-        showLoading(true, `Đang tải dữ liệu Sheet ${targetSheet}...`);
-
-        // Nếu là Thống kê quý, tải đồng thời cả dữ liệu Nhập Kho và đọc Sheet Mục Tiêu
         if (currentMode === 'THONG_KE_QUY') {
-            Promise.all([
-                fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=NHAP_KHO`).then(res => res.json()),
-                fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=MUC_TIEU_QUY`).then(res => res.json()).catch(() => [])
-            ]).then(([nhapKhoData, mucTieuData]) => {
-                globalMucTieuData = Array.isArray(mucTieuData) ? mucTieuData : [];
-                processThongKeQuyData(nhapKhoData);
-                showLoading(false);
-            }).catch(err => {
-                showLoading(false);
-                alert("Lỗi tải dữ liệu Thống kê quý!");
-            });
+            showLoading(true, "Đang nạp dữ liệu Thống kê Quý...");
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=THONG_KE_QUY`)
+                .then(res => res.json())
+                .then(data => {
+                    showLoading(false);
+                    if (data && data.actuals) {
+                        globalMucTieuData = data.targets || [];
+                        processThongKeQuyData(data.actuals);
+                    }
+                })
+                .catch(err => {
+                    showLoading(false);
+                    alert("Lỗi tải dữ liệu Thống kê quý!");
+                });
         } else {
-            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(targetSheet)}`)
+            showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data && data.status === 'error') {
@@ -594,65 +547,13 @@
         }
     }
 
-    function processThongKeQuyData(rawData) {
-        if (!rawData || rawData.length <= 1) {
+    function processThongKeQuyData(actualsData) {
+        if (!actualsData || actualsData.length <= 1) {
             renderDashboardAndTables([]);
             return;
         }
-
-        let rows = rawData.slice(1);
-        let aggregatedMap = {};
-
-        rows.forEach(r => {
-            let ngayStr = r[0] || ''; 
-            let tenHang = String(r[7] || '').toLowerCase(); 
-            let soLuong = parseFloat(String(r[9] || '0').replace(/[,.]/g, '')) || 0; 
-            let thanhTien = parseFloat(String(r[11] || '0').replace(/[,.]/g, '')) || 0; 
-
-            if (!ngayStr) return;
-
-            let d = new Date(ngayStr);
-            if (isNaN(d.getTime())) return;
-            let month = d.getMonth() + 1;
-            let year = d.getFullYear();
-            let quarter = '';
-            if (month >= 1 && month <= 3) quarter = `Quý 1 / ${year}`;
-            else if (month >= 4 && month <= 6) quarter = `Quý 2 / ${year}`;
-            else if (month >= 7 && month <= 9) quarter = `Quý 3 / ${year}`;
-            else quarter = `Quý 4 / ${year}`;
-
-            let brand = 'Khác';
-            if (tenHang.includes('dell')) brand = 'Dell';
-            else if (tenHang.includes('hp') || tenHang.includes('hewlett')) brand = 'HP';
-            else if (tenHang.includes('lenovo')) brand = 'Lenovo';
-            else return; 
-
-            let productType = 'Khác';
-            if (tenHang.includes('laptop') || tenHang.includes('xách tay') || tenHang.includes('notebook')) {
-                productType = 'Máy tính xách tay';
-            } else if (tenHang.includes('thinkcentre') || tenHang.includes('desktop') || tenHang.includes('máy tính để bàn') || tenHang.includes('pc') || tenHang.includes('pro tower') || tenHang.includes('m70s')) {
-                productType = 'Máy tính để bàn';
-            } else if (tenHang.includes('lcd') || tenHang.includes('màn hình') || tenHang.includes('monitor') || tenHang.includes('se2225h')) {
-                productType = 'Màn hình';
-            } else {
-                return; 
-            }
-
-            let key = `${quarter}_${brand}_${productType}`;
-            if (!aggregatedMap[key]) {
-                aggregatedMap[key] = { quarter, brand, productType, totalQty: 0, totalAmount: 0 };
-            }
-            aggregatedMap[key].totalQty += soLuong;
-            aggregatedMap[key].totalAmount += thanhTien;
-        });
-
-        let detailDataArray = [];
-        for (let key in aggregatedMap) {
-            let item = aggregatedMap[key];
-            detailDataArray.push([item.quarter, item.brand, item.productType, item.totalQty, item.totalAmount]);
-        }
-
-        renderDashboardAndTables(detailDataArray);
+        let rows = actualsData.slice(1);
+        renderDashboardAndTables(rows);
     }
 
     function renderDashboardAndTables(detailArray) {
@@ -782,7 +683,6 @@
             ]
         });
 
-        // Xử lý dữ liệu Mục tiêu doanh số khớp với dữ liệu đã tải từ Sheet MUC_TIEU_QUY nếu có
         let targetTableData = detailArray.map((row, idx) => {
             let quarter = row[0];
             let brand = row[1];
@@ -790,9 +690,13 @@
             let actualAmount = row[4] || 0;
             let targetAmount = 0;
 
-            if (globalMucTieuData.length > 1) {
-                let foundRow = globalMucTieuData.slice(1).find(r => r[1] == quarter && r[2] == brand && r[3] == productType);
-                if (foundRow && foundRow[4] !== undefined && foundRow[4] !== '') {
+            if (globalMucTieuData && globalMucTieuData.length > 1) {
+                let foundRow = globalMucTieuData.slice(1).find(r => 
+                    String(r[0]).trim() === String(quarter).trim() && 
+                    String(r[1]).trim().toLowerCase() === String(brand).trim().toLowerCase() && 
+                    String(r[2]).trim().toLowerCase() === String(productType).trim().toLowerCase()
+                );
+                if (foundRow && foundRow[4] !== undefined) {
                     targetAmount = parseFloat(String(foundRow[4]).replace(/[,.]/g, '')) || 0;
                 }
             }
@@ -839,7 +743,6 @@
                     }
                     row.update(data);
 
-                    // Gọi hàm lưu mục tiêu doanh số lên Google Sheets
                     saveTargetToGoogleSheet(data.quarter, data.brand, data.productType, target);
                 }
             },
@@ -924,11 +827,10 @@
     }
 
     function saveTargetToGoogleSheet(quarter, brand, productType, targetAmount) {
-        showLoading(true, "Đang lưu mục tiêu doanh số lên Google Sheets...");
+        showLoading(true, "Đang lưu mục tiêu doanh số vào Sheet NHAP_KHO...");
 
         var payloadData = {
             action: "updateTarget",
-            sheetName: "MUC_TIEU_QUY",
             quarter: quarter,
             brand: brand,
             productType: productType,
@@ -944,7 +846,7 @@
         .then(resData => {
             showLoading(false);
             if (resData.status !== 'success') {
-                alert("Lỗi khi lưu mục tiêu vào Sheet: " + (resData.message || "Không thể cập nhật"));
+                alert("Lỗi khi lưu mục tiêu: " + (resData.message || "Không thể cập nhật"));
             }
         })
         .catch(err => {
