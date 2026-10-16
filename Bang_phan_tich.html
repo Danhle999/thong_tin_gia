@@ -788,7 +788,7 @@
         });
     }
 
-    function populateSelectOptions(selectId1, selectId2, setValues) {
+function populateSelectOptions(selectId1, selectId2, setValues) {
         let sel1 = document.getElementById(selectId1);
         let sel2 = document.getElementById(selectId2);
         let defaultText1 = sel1.options[0].text;
@@ -797,7 +797,9 @@
         sel1.innerHTML = `<option value="">${defaultText1}</option>`;
         sel2.innerHTML = `<option value="">${defaultText2}</option>`;
 
-        Array.from(setValues).sort().forEach(val => {
+        let sortedArray = Array.from(setValues).sort();
+
+        sortedArray.forEach(val => {
             let opt1 = document.createElement('option');
             opt1.value = val;
             opt1.text = val;
@@ -808,6 +810,7 @@
             opt2.text = val;
             sel2.appendChild(opt2);
         });
+
         // TỰ ĐỘNG CHỌN QUÝ MỚI NHẤT LÀM MẶC ĐỊNH
         if (selectId1 === 'filter1Quarter' && sortedArray.length > 0) {
             let latestQuarter = sortedArray[sortedArray.length - 1]; // Phần tử cuối cùng là Quý lớn nhất
