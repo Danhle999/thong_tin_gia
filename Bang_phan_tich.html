@@ -320,7 +320,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx6I7QaOCMxqwgIu4CWbjchm3UnLe610uVjF2d1weCvIePlO0RpLxS1gWDZqEO4L00i/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPyMv3siUxOrxeX4c9hH8U1VFwZcSsPLBFTVKezvrUxaJ2jo34NOEOjI-x93fYsI-2/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -811,7 +811,6 @@
             sel2.appendChild(opt2);
         });
 
-        // HIỂN THỊ TẤT CẢ LẦN ĐẦU (KHÔNG TỰ LỌC QUÝ CỐ ĐỊNH)
         sel1.value = "";
         sel2.value = "";
     }
@@ -940,7 +939,27 @@
                 headerFilterPlaceholder: "Lọc..."
             };
 
-            if (col.numeric) {
+            // TỰ ĐỘNG TÍNH CÔNG THỨC: % LỢI NHUẬN TIỀN MẶT = (GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI) / GIÁ NHẬP MỚI
+            if (col.label.trim().toUpperCase() === '% LỢI NHUẬN TIỀN MẶT' || col.label.trim().toUpperCase() === '% LOI NHUAN TIỀN MẶT') {
+                colDef.hozAlign = "right";
+                colDef.formatter = function(cell) {
+                    let rowData = cell.getRow().getData();
+                    let idxGiaBan = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
+                    let idxGiaNhap = getActiveColumns().findIndex(c => c.label.trim().toUpperCase().includes('GIÁ NHẬP'));
+
+                    if (idxGiaBan !== -1 && idxGiaNhap !== -1) {
+                        let giaBan = parseFloat(String(rowData["col_" + idxGiaBan] || 0).replace(/[,.]/g, '')) || 0;
+                        let giaNhap = parseFloat(String(rowData["col_" + idxGiaNhap] || 0).replace(/[,.]/g, '')) || 0;
+
+                        if (giaNhap > 0) {
+                            let pct = ((giaBan - giaNhap) / giaNhap) * 100;
+                            let color = pct < 0 ? '#dc3545' : '#198754';
+                            return `<span style="color: ${color}; font-weight: bold;">${pct.toFixed(2)}%</span>`;
+                        }
+                    }
+                    return cell.getValue() || "0.00%";
+                };
+            } else if (col.numeric) {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
@@ -981,7 +1000,6 @@
             rowsToProcess = rawData.slice(1);
         }
 
-        // ĐÃ SỬA: ĐẶT OFFSET CỐ ĐỊNH LÀ 2 (ĐÒNG 1 LÀ TIÊU ĐỀ SHEET) -> KHÔNG CẮT GIỚI HẠN DÒNG
         let startRowOffset = 2;
 
         let tableData = rowsToProcess.map((row, rowIndex) => {
