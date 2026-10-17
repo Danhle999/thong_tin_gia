@@ -567,31 +567,36 @@
         let typesSet = new Set();
 
         actualRows.forEach(item => {
-            let q = item[0], b = item[1], t = item[2];
+            let q = String(item[0] || '').trim();
+            let b = String(item[1] || '').trim();
+            let t = String(item[2] || '').trim();
             let qty = parseFloat(item[3]) || 0;
             let amt = parseFloat(item[4]) || 0;
 
             totalQty += qty;
             totalAmount += amt;
 
-            brandQtyMap[b] = (brandQtyMap[b] || 0) + qty;
-            typeAmountMap[t] = (typeAmountMap[t] || 0) + amt;
+            if (b) brandQtyMap[b] = (brandQtyMap[b] || 0) + qty;
+            if (t) typeAmountMap[t] = (typeAmountMap[t] || 0) + amt;
 
-            quartersSet.add(q);
-            brandsSet.add(b);
-            typesSet.add(t);
+            if (q) quartersSet.add(q);
+            if (b) brandsSet.add(b);
+            if (t) typesSet.add(t);
         });
 
         targetRows.forEach(item => {
-            if (item[0]) quartersSet.add(item[0]);
-            if (item[1]) brandsSet.add(item[1]);
-            if (item[2]) typesSet.add(item[2]);
+            if (item[0]) quartersSet.add(String(item[0]).trim());
+            if (item[1]) brandsSet.add(String(item[1]).trim());
+            if (item[2]) typesSet.add(String(item[2]).trim());
         });
 
         document.getElementById('statTotalQty').innerText = totalQty.toLocaleString('vi-VN');
         document.getElementById('statTotalAmount').innerText = totalAmount.toLocaleString('vi-VN') + ' VNĐ';
         document.getElementById('statTotalRecords').innerText = actualRows.length;
         document.getElementById('rowCountBadge').innerText = `Hiển thị: ${actualRows.length} mục`;
+
+        resetFilterTable1(false);
+        resetFilterTable2(false);
 
         populateSelectOptions('filter1Quarter', 'filter2Quarter', quartersSet);
         populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
@@ -621,7 +626,15 @@
         });
 
         // BẢNG 1: Chi Tiết Nhập Kho
-        let detailTableData = actualRows.map((r, idx) => ({ id: idx + 1, col_0: r[0], col_1: r[1], col_2: r[2], col_3: r[3], col_4: r[4] }));
+        let detailTableData = actualRows.map((r, idx) => ({ 
+            id: idx + 1, 
+            col_0: String(r[0] || '').trim(), 
+            col_1: String(r[1] || '').trim(), 
+            col_2: String(r[2] || '').trim(), 
+            col_3: parseFloat(r[3]) || 0, 
+            col_4: parseFloat(r[4]) || 0 
+        }));
+
         if (tableQuarterDetail) tableQuarterDetail.destroy();
         tableQuarterDetail = new Tabulator("#table-quarter-detail", {
             data: detailTableData,
@@ -641,8 +654,8 @@
 
         // BẢNG 2: Theo Dõi Mục Tiêu Doanh Số
         let summaryKeys = new Set();
-        actualRows.forEach(r => summaryKeys.add(`${r[0]}_${r[1]}_${r[2]}`));
-        targetRows.forEach(r => summaryKeys.add(`${r[0]}_${r[1]}_${r[2]}`));
+        actualRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
+        targetRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
 
         let summaryTableData = [];
         let idxCounter = 1;
@@ -815,7 +828,7 @@
         sel1.innerHTML = `<option value="">${defaultText1}</option>`;
         sel2.innerHTML = `<option value="">${defaultText2}</option>`;
 
-        let sortedArray = Array.from(setValues).sort();
+        let sortedArray = Array.from(setValues).filter(v => v !== null && v !== undefined && String(v).trim() !== '').sort();
 
         sortedArray.forEach(val => {
             let opt1 = document.createElement('option');
@@ -835,14 +848,19 @@
 
     function applyMultiFilterTable1() {
         if (!tableQuarterDetail) return;
-        let qVal = document.getElementById('filter1Quarter').value;
-        let bVal = document.getElementById('filter1Brand').value;
-        let tVal = document.getElementById('filter1Type').value;
+        let qVal = document.getElementById('filter1Quarter').value.trim();
+        let bVal = document.getElementById('filter1Brand').value.trim();
+        let tVal = document.getElementById('filter1Type').value.trim();
+
+        if (!qVal && !bVal && !tVal) {
+            tableQuarterDetail.clearFilter();
+            return;
+        }
 
         tableQuarterDetail.setFilter(function(data) {
-            let matchQ = !qVal || data.col_0 === qVal;
-            let matchB = !bVal || data.col_1 === bVal;
-            let matchT = !tVal || data.col_2 === tVal;
+            let matchQ = !qVal || String(data.col_0 || '').trim() === qVal;
+            let matchB = !bVal || String(data.col_1 || '').trim().toLowerCase() === bVal.toLowerCase();
+            let matchT = !tVal || String(data.col_2 || '').trim().toLowerCase() === tVal.toLowerCase();
             return matchQ && matchB && matchT;
         });
     }
@@ -856,14 +874,19 @@
 
     function applyMultiFilterTable2() {
         if (!tableBrandSummary) return;
-        let qVal = document.getElementById('filter2Quarter').value;
-        let bVal = document.getElementById('filter2Brand').value;
-        let tVal = document.getElementById('filter2Type').value;
+        let qVal = document.getElementById('filter2Quarter').value.trim();
+        let bVal = document.getElementById('filter2Brand').value.trim();
+        let tVal = document.getElementById('filter2Type').value.trim();
+
+        if (!qVal && !bVal && !tVal) {
+            tableBrandSummary.clearFilter();
+            return;
+        }
 
         tableBrandSummary.setFilter(function(data) {
-            let matchQ = !qVal || data.quarter === qVal;
-            let matchB = !bVal || data.brand === bVal;
-            let matchT = !tVal || data.productType === tVal;
+            let matchQ = !qVal || String(data.quarter || '').trim() === qVal;
+            let matchB = !bVal || String(data.brand || '').trim().toLowerCase() === bVal.toLowerCase();
+            let matchT = !tVal || String(data.productType || '').trim().toLowerCase() === tVal.toLowerCase();
             return matchQ && matchB && matchT;
         });
     }
