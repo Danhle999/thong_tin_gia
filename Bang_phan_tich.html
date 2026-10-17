@@ -757,7 +757,7 @@
             ]
         });
 
-        // TỰ ĐỘNG ÁP DỤNG BỘ LỌC QUÝ MỚI NHẤT DÀNH CHO CẢ 2 BẢNG
+        // Áp dụng bộ lọc Quý mới nhất
         applyMultiFilterTable1();
         applyMultiFilterTable2();
     }
@@ -812,9 +812,8 @@
             sel2.appendChild(opt2);
         });
 
-        // TỰ ĐỘNG CHỌN QUÝ MỚI NHẤT LÀM MẶC ĐỊNH
         if (selectId1 === 'filter1Quarter' && sortedArray.length > 0) {
-            let latestQuarter = sortedArray[sortedArray.length - 1]; // Phần tử cuối cùng là Quý lớn nhất
+            let latestQuarter = sortedArray[sortedArray.length - 1];
             sel1.value = latestQuarter;
             sel2.value = latestQuarter;
         }
@@ -1076,6 +1075,7 @@
         .then(resData => {
             showLoading(false);
             if (resData.status !== 'success') alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
+            else loadDataFromSheet(); // Tải lại dữ liệu sau khi sửa thành công để cập nhật lại các công thức đã tính toán
         })
         .catch(err => {
             showLoading(false);
