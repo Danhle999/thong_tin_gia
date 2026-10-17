@@ -939,25 +939,37 @@
                 headerFilterPlaceholder: "Lọc..."
             };
 
-            // TỰ ĐỘNG TÍNH CÔNG THỨC: % LỢI NHUẬN TIỀN MẶT = (GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI) / GIÁ NHẬP MỚI
+            // CÔNG THỨC CHÍNH XÁC: % LỢI NHUẬN TIỀN MẶT = (GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI) / GIÁ NHẬP MỚI
             if (col.label.trim().toUpperCase() === '% LỢI NHUẬN TIỀN MẶT' || col.label.trim().toUpperCase() === '% LOI NHUAN TIỀN MẶT') {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
                     let rowData = cell.getRow().getData();
+                    
+                    // Lấy chính xác vị trí Cột GIÁ BÁN TIỀN MẶT và Cột GIÁ NHẬP MỚI
                     let idxGiaBan = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                    let idxGiaNhap = getActiveColumns().findIndex(c => c.label.trim().toUpperCase().includes('GIÁ NHẬP'));
+                    let idxGiaNhapMoi = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI');
 
-                    if (idxGiaBan !== -1 && idxGiaNhap !== -1) {
+                    if (idxGiaBan !== -1 && idxGiaNhapMoi !== -1) {
                         let giaBan = parseFloat(String(rowData["col_" + idxGiaBan] || 0).replace(/[,.]/g, '')) || 0;
-                        let giaNhap = parseFloat(String(rowData["col_" + idxGiaNhap] || 0).replace(/[,.]/g, '')) || 0;
+                        let giaNhapMoi = parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
 
-                        if (giaNhap > 0) {
-                            let pct = ((giaBan - giaNhap) / giaNhap) * 100;
+                        // Tính chuẩn nếu Giá Nhập Mới hợp lệ (> 0)
+                        if (giaNhapMoi > 0) {
+                            let pct = ((giaBan - giaNhapMoi) / giaNhapMoi) * 100;
                             let color = pct < 0 ? '#dc3545' : '#198754';
                             return `<span style="color: ${color}; font-weight: bold;">${pct.toFixed(2)}%</span>`;
                         }
                     }
-                    return cell.getValue() || "0.00%";
+
+                    // Nếu không tự tính được từ 2 ô trên, chuẩn hóa hiển thị số liệu sẵn có (x100 nếu là dạng thập phân 0.2434...)
+                    let val = cell.getValue();
+                    if (val === null || val === undefined || val === '') return '0.00%';
+                    let num = parseFloat(String(val).replace('%', '').trim());
+                    if (isNaN(num)) return val;
+                    
+                    let finalPct = (num <= 1 && num >= -1 && num !== 0) ? num * 100 : num;
+                    let color = finalPct < 0 ? '#dc3545' : '#198754';
+                    return `<span style="color: ${color}; font-weight: bold;">${finalPct.toFixed(2)}%</span>`;
                 };
             } else if (col.numeric) {
                 colDef.hozAlign = "right";
