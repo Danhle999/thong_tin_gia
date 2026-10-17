@@ -171,7 +171,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
                 <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu (Tabulator)</h4>
-                <!-- THÔNG TIN TÊN TAB VÀ NGÀY CẬP NHẬT GẦN NHẤT -->
+                <!-- THÔNG TIN TÊN TAB VÀ NGÀY CẬP NHẬT GẦN NHẤT TỪ AG1 -->
                 <small class="text-muted fs-6" id="modeDescription">Đang hiển thị Trang tính: LAPTOP</small>
             </div>
             
@@ -531,7 +531,7 @@
                 .then(resObj => {
                     showLoading(false);
                     
-                    // HIỂN THỊ TÊN TAB + NGÀY CẬP NHẬT GẦN NHẤT LÊN HEADER
+                    // HIỂN THỊ TÊN TAB + NGÀY CẬP NHẬT GẦN NHẤT LÊN HEADER (LẤY TỪ AG1)
                     let cols = getActiveColumns();
                     let updateText = resObj.lastUpdated ? ` | ${resObj.lastUpdated}` : '';
                     document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${currentMode} (${cols.length} Cột)${updateText}`;
@@ -1093,7 +1093,7 @@
             if (resData.status !== 'success') {
                 alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
             } else {
-                // Tải lại dữ liệu sau khi sửa để lấy ngày/giờ cập nhật mới nhất và các ô công thức tính lại
+                // Tải lại dữ liệu sau khi sửa để lấy ngày/giờ cập nhật mới nhất từ ô AG1
                 loadDataFromSheet();
             }
         })
@@ -1126,7 +1126,7 @@
         });
     }
 
-    // TẢI FILE EXCEL VÀI SHEET
+    // TẢI FILE EXCEL VÀO SHEET
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
