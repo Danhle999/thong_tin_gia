@@ -213,7 +213,7 @@
         <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
-                <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet()"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
+                <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2" id="excelUploadContainer">
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
@@ -320,7 +320,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPyMv3siUxOrxeX4c9hH8U1VFwZcSsPLBFTVKezvrUxaJ2jo34NOEOjI-x93fYsI-2/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzwa3cxHrFh2sLkTzwm7k_AxqNqkEF8IPVipojxouIx43d91ptfGfSslXZ6ooj0LD2/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -497,7 +497,7 @@
         document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
 
         resetAllFilters(false);
-        loadDataFromSheet();
+        loadDataFromSheet(true);
     }
 
     function showLoading(show, text = "Đang nạp dữ liệu từ Google Sheets...") {
@@ -505,10 +505,12 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    function loadDataFromSheet() {
+    // LOAD DỮ LIỆU CÓ THÊM MÃ BỎ CACHE ĐỂ LẤY NGAY DỮ LIỆU MỚI TỪ GOOGLE SHEET
+    function loadDataFromSheet(bypassCache = true) {
+        let timeStamp = new Date().getTime();
         if (currentMode === 'THONG_KE_QUY') {
             showLoading(true, "Đang tải dữ liệu Thống kê Quý...");
-            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=THONG_KE_QUY`)
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=THONG_KE_QUY&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
                     showLoading(false);
@@ -522,7 +524,7 @@
                 });
         } else {
             showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
-            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}`)
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
                     showLoading(false);
@@ -534,6 +536,22 @@
                 });
         }
     }
+
+    // TỰ ĐỘNG CẬP NHẬT NGẦM TỪ SHEET LÊN HTML MỖI 30 GIÂY
+    setInterval(() => {
+        if (table && currentMode !== 'THONG_KE_QUY') {
+            let isEditing = table.getData().some(r => r._isEditing);
+            if (!isEditing) {
+                let timeStamp = new Date().getTime();
+                fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}&nocache=true&t=${timeStamp}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        buildTabulatorTable(data);
+                    })
+                    .catch(e => console.log("Auto refresh silent error:", e));
+            }
+        }
+    }, 30000);
 
     function renderThongKeQuyTab() {
         let actualRows = globalActualData.length > 1 ? globalActualData.slice(1) : [];
@@ -1243,7 +1261,7 @@
         .then(res => res.json())
         .then(resData => {
             showLoading(false);
-            if (resData.status === 'success') loadDataFromSheet();
+            if (resData.status === 'success') loadDataFromSheet(true);
             else alert("Lỗi khi thêm dòng: " + resData.message);
         })
         .catch(err => {
@@ -1291,7 +1309,7 @@
                 showLoading(false);
                 if (resData.status === 'success') {
                     alert(`Đã hoàn tất tải lên ${formattedRows.length} dòng vào Sheet '${currentMode}'!`);
-                    loadDataFromSheet();
+                    loadDataFromSheet(true);
                 } else {
                     alert("Lỗi khi tải file Excel: " + resData.message);
                 }
@@ -1307,7 +1325,7 @@
     }
 
     window.onload = function() {
-        loadDataFromSheet();
+        loadDataFromSheet(true);
     };
 </script>
 
