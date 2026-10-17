@@ -911,11 +911,50 @@
                         fullRowData.push(val);
                     });
 
+                    // 1. Lưu dữ liệu lên Google Sheets
                     saveRowToSheet(rowData.sheetRowIndex, fullRowData);
+                    
+                    // 2. TẮT TRẠNG THÁI SỬA VÀ TỰ ĐỘNG CẬP NHẬT LẠI TOÀN BỘ CÔNG THỨC TRÊN FRONTEND LẬP TỨC
                     rowData._isEditing = false;
-                    btn.className = "btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action";
-                    btn.innerHTML = `<i class="fa-solid fa-pen-to-square me-1"></i>Sửa`;
+                    
+                    // Lấy vị trí các cột công thức chính
+                    let idxGiaBanTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
+                    let idxGiaBanCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN CÔNG NỢ');
+                    let idxGiaNhapMoi = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
+                    let idxGiaNhapCu = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP CŨ' || c.label.trim().toUpperCase() === 'GIÁ NHẬP TRƯỚC');
+
+                    let giaBanTM = idxGiaBanTM !== -1 ? parseFloat(String(rowData["col_" + idxGiaBanTM] || 0).replace(/[,.]/g, '')) || 0 : 0;
+                    let giaBanCN = idxGiaBanCN !== -1 ? parseFloat(String(rowData["col_" + idxGiaBanCN] || 0).replace(/[,.]/g, '')) || 0 : 0;
+                    let giaNhapMoi = idxGiaNhapMoi !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0 : 0;
+                    let giaNhapCu = idxGiaNhapCu !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapCu] || 0).replace(/[,.]/g, '')) || 0 : 0;
+
+                    // Tính lại % Lợi Nhuận Tiền Mặt
+                    let idxPcLnTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN TIỀN MẶT' || c.label.trim().toUpperCase() === '% LOI NHUAN TIỀN MẶT');
+                    if (idxPcLnTM !== -1 && giaNhapMoi > 0) {
+                        rowData["col_" + idxPcLnTM] = ((giaBanTM - giaNhapMoi) / giaNhapMoi);
+                    }
+
+                    // Tính lại % Lợi Nhuận Công Nợ
+                    let idxPcLnCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN CÔNG NỢ' || c.label.trim().toUpperCase() === '% LOI NHUAN CÔNG NỢ');
+                    if (idxPcLnCN !== -1 && giaNhapMoi > 0) {
+                        rowData["col_" + idxPcLnCN] = ((giaBanCN - giaNhapMoi) / giaNhapMoi);
+                    }
+
+                    // Tính lại % Giá Nhập Lệch
+                    let idxPcGiaLech = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% GIÁ NHẬP LỆCH' || c.label.trim().toUpperCase() === '% GIÁ LỆCH TRƯỚC' || c.label.trim().toUpperCase() === '% CHÊNH LỆCH NHẬP TRƯỚC');
+                    if (idxPcGiaLech !== -1 && giaNhapCu > 0) {
+                        rowData["col_" + idxPcGiaLech] = ((giaNhapMoi - giaNhapCu) / giaNhapCu);
+                    }
+
+                    // Tính lại Check Giá Bán
+                    let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
+                    if (idxCheckGia !== -1) {
+                        rowData["col_" + idxCheckGia] = giaBanTM - giaNhapMoi;
+                    }
+
+                    // Ép Tabulator vẽ lại dòng ngay tức thì
                     row.update(rowData);
+                    row.reformat();
                 }
             }
         });
@@ -1125,6 +1164,8 @@
                     let giaNhapMoi = parseFloat(String(data["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
                     if (giaBan - giaNhapMoi < 0) {
                         row.getElement().style.backgroundColor = "#ffdddd"; // Tô màu đỏ cảnh báo nếu lỗ
+                    } else {
+                        row.getElement().style.backgroundColor = "";
                     }
                 }
             }
