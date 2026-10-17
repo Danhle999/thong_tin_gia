@@ -320,7 +320,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFyELPxH6mtT49VW60n7yE1B4OCsjB1YV7uZ420zUI0jv-dSC14cIICbm14Fa8SEx9/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzwa3cxHrFh2sLkTzwm7k_AxqNqkEF8IPVipojxouIx43d91ptfGfSslXZ6ooj0LD2/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -788,8 +788,8 @@
             ]
         });
 
-        applyMultiFilterTable1();
-        applyMultiFilterTable2();
+        resetFilterTable1(true);
+        resetFilterTable2(true);
     }
 
     function saveTargetToGoogleSheet(quarter, brand, productType, targetAmount) {
