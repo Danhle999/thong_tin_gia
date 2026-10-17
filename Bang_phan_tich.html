@@ -811,7 +811,7 @@
             sel2.appendChild(opt2);
         });
 
-        // BỎ KHÓA MẶC ĐỊNH LỌC THEO QUÝ MỚI NHẤT -> HIỂN THỊ TẤT CẢ DỮ LIỆU
+        // HIỂN THỊ TẤT CẢ LẦN ĐẦU (KHÔNG TỰ LỌC QUÝ CỐ ĐỊNH)
         sel1.value = "";
         sel2.value = "";
     }
@@ -981,7 +981,7 @@
             rowsToProcess = rawData.slice(1);
         }
 
-        // ĐÃ SỬA: BỎ TOÀN BỘ LOGIC CẮT TRỪ OFFSET - ĐẢM BẢO CHỈ SỐ DÒNG LUÔN CHÍNH XÁC 100%
+        // ĐÃ SỬA: ĐẶT OFFSET CỐ ĐỊNH LÀ 2 (ĐÒNG 1 LÀ TIÊU ĐỀ SHEET) -> KHÔNG CẮT GIỚI HẠN DÒNG
         let startRowOffset = 2;
 
         let tableData = rowsToProcess.map((row, rowIndex) => {
