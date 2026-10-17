@@ -171,7 +171,6 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
                 <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu (Tabulator)</h4>
-                <!-- THÔNG TIN TÊN TAB VÀ NGÀY CẬP NHẬT GẦN NHẤT TỪ AG1 -->
                 <small class="text-muted fs-6" id="modeDescription">Đang hiển thị Trang tính: LAPTOP</small>
             </div>
             
@@ -323,7 +322,6 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyPyMv3siUxOrxeX4c9hH8U1VFwZcSsPLBFTVKezvrUxaJ2jo34NOEOjI-x93fYsI-2/exec";
     
-    // ĐỊNH NGHĨA CẤU TRÚC CỘT CỦA TỪNG TAB
     const SHEET_CONFIGS = {
         'LAPTOP': [
             { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã KTB' },
@@ -462,7 +460,6 @@
 
     function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
 
-    // ĐỔI TAB DỮ LIỆU
     function switchTableMode(mode) {
         currentMode = mode;
         
@@ -508,7 +505,6 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    // NẠP DỮ LIỆU TỪ BACKEND APPS SCRIPT
     function loadDataFromSheet() {
         if (currentMode === 'THONG_KE_QUY') {
             showLoading(true, "Đang tải dữ liệu Thống kê Quý...");
@@ -528,16 +524,9 @@
             showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}`)
                 .then(res => res.json())
-                .then(resObj => {
+                .then(data => {
                     showLoading(false);
-                    
-                    // HIỂN THỊ TÊN TAB + NGÀY CẬP NHẬT GẦN NHẤT LÊN HEADER (LẤY TỪ AG1)
-                    let cols = getActiveColumns();
-                    let updateText = resObj.lastUpdated ? ` | ${resObj.lastUpdated}` : '';
-                    document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${currentMode} (${cols.length} Cột)${updateText}`;
-
-                    // Dữ liệu bảng nằm ở resObj.data
-                    buildTabulatorTable(resObj.data || []);
+                    buildTabulatorTable(data);
                 })
                 .catch(err => {
                     showLoading(false);
@@ -546,7 +535,6 @@
         }
     }
 
-    // DỰNG DASHBOARD THỐNG KÊ QUÝ
     function renderThongKeQuyTab() {
         let actualRows = globalActualData.length > 1 ? globalActualData.slice(1) : [];
         let targetRows = globalTargetData.length > 1 ? globalTargetData.slice(1) : [];
@@ -591,7 +579,7 @@
         populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
         populateSelectOptions('filter1Type', 'filter2Type', typesSet);
 
-        // Biểu đồ Cột
+        // Biểu đồ
         let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
         if (barChartInstance) barChartInstance.destroy();
         barChartInstance = new Chart(ctxBar, {
@@ -603,7 +591,6 @@
             options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng' }, legend: { display: false } } }
         });
 
-        // Biểu đồ Tròn
         let ctxDoughnut = document.getElementById('doughnutChartType').getContext('2d');
         if (doughnutChartInstance) doughnutChartInstance.destroy();
         doughnutChartInstance = new Chart(ctxDoughnut, {
@@ -770,6 +757,7 @@
             ]
         });
 
+        // TỰ ĐỘNG ÁP DỤNG BỘ LỌC QUÝ MỚI NHẤT DÀNH CHO CẢ 2 BẢNG
         applyMultiFilterTable1();
         applyMultiFilterTable2();
     }
@@ -824,8 +812,9 @@
             sel2.appendChild(opt2);
         });
 
+        // TỰ ĐỘNG CHỌN QUÝ MỚI NHẤT LÀM MẶC ĐỊNH
         if (selectId1 === 'filter1Quarter' && sortedArray.length > 0) {
-            let latestQuarter = sortedArray[sortedArray.length - 1];
+            let latestQuarter = sortedArray[sortedArray.length - 1]; // Phần tử cuối cùng là Quý lớn nhất
             sel1.value = latestQuarter;
             sel2.value = latestQuarter;
         }
@@ -873,7 +862,6 @@
         if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
     }
 
-    // XÂY DỰNG BẢNG TABULATOR
     function buildTabulatorTable(rawData) {
         if (!rawData || rawData.length === 0) {
             if (table) table.clearData();
@@ -885,7 +873,6 @@
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT", bottomCalc: function() { return "TỔNG"; } }
         ];
 
-        // Nút bấm Thao Tác (Sửa / Lưu)
         columnsConfig.push({
             title: "Thao tác",
             field: "_actionCol",
@@ -938,7 +925,6 @@
             }
         });
 
-        // Tạo cấu hình cho các cột dữ liệu
         activeCols.forEach((col, index) => {
             let colDef = {
                 title: col.label,
@@ -1078,7 +1064,6 @@
         }
     }
 
-    // LƯU CẬP NHẬT DÒNG VÀO SHEET TƯƠNG ỨNG
     function saveRowToSheet(sheetRowIndex, fullRowData) {
         showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
         var payloadData = { action: "updateRow", sheetName: currentMode.trim(), rowIndex: sheetRowIndex, rowData: fullRowData };
@@ -1090,12 +1075,7 @@
         .then(res => res.json())
         .then(resData => {
             showLoading(false);
-            if (resData.status !== 'success') {
-                alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
-            } else {
-                // Tải lại dữ liệu sau khi sửa để lấy ngày/giờ cập nhật mới nhất từ ô AG1
-                loadDataFromSheet();
-            }
+            if (resData.status !== 'success') alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
         })
         .catch(err => {
             showLoading(false);
@@ -1103,7 +1083,6 @@
         });
     }
 
-    // THÊM DÒNG MỚI
     function addRow() {
         var activeCols = getActiveColumns();
         var emptyRow = new Array(activeCols.length).fill('');
@@ -1126,7 +1105,6 @@
         });
     }
 
-    // TẢI FILE EXCEL VÀO SHEET
     function handleExcelUpload(event) {
         var file = event.target.files[0];
         if (!file) return;
