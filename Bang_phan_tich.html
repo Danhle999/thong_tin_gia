@@ -514,7 +514,6 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    // LOAD DỮ LIỆU CÓ THÊM MÃ BỎ CACHE ĐỂ LẤY NGAY DỮ LIỆU MỚI TỪ GOOGLE SHEET
     function loadDataFromSheet(bypassCache = true) {
         let timeStamp = new Date().getTime();
         if (currentMode === 'THONG_KE_QUY') {
@@ -550,7 +549,6 @@
         }
     }
 
-    // TỰ ĐỘNG CẬP NHẬT NGẦM TỪ SHEET LÊN HTML MỖI 30 GIÂY
     setInterval(() => {
         if (table && currentMode !== 'THONG_KE_QUY') {
             let isEditing = table.getData().some(r => r._isEditing);
@@ -615,7 +613,6 @@
         populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
         populateSelectOptions('filter1Type', 'filter2Type', typesSet);
 
-        // Biểu đồ
         let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
         if (barChartInstance) barChartInstance.destroy();
         barChartInstance = new Chart(ctxBar, {
@@ -638,7 +635,6 @@
             options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại' }, legend: { position: 'bottom' } } }
         });
 
-        // BẢNG 1: Chi Tiết Nhập Kho
         let detailTableData = actualRows.map((r, idx) => ({ 
             id: idx + 1, 
             col_0: String(r[0] || '').trim(), 
@@ -665,7 +661,6 @@
             ]
         });
 
-        // BẢNG 2: Theo Dõi Mục Tiêu Doanh Số
         let summaryKeys = new Set();
         actualRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
         targetRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
@@ -966,13 +961,10 @@
                             fullRowData.push(val);
                         });
 
-                        // 1. Lưu dữ liệu lên Google Sheets
                         saveRowToSheet(rowData.sheetRowIndex, fullRowData);
                         
-                        // 2. TẮT TRẠNG THÁI SỬA VÀ TỰ ĐỘNG CẬP NHẬT LẠI TOÀN BỘ CÔNG THỨC TRÊN FRONTEND LẬP TỨC
                         rowData._isEditing = false;
                         
-                        // Lấy vị trí các cột công thức chính
                         let idxGiaBanTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
                         let idxGiaBanCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN CÔNG NỢ');
                         let idxGiaNhapMoi = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
@@ -983,31 +975,26 @@
                         let giaNhapMoi = idxGiaNhapMoi !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0 : 0;
                         let giaNhapCu = idxGiaNhapCu !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapCu] || 0).replace(/[,.]/g, '')) || 0 : 0;
 
-                        // Tính lại % Lợi Nhuận Tiền Mặt
                         let idxPcLnTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN TIỀN MẶT' || c.label.trim().toUpperCase() === '% LOI NHUAN TIỀN MẶT');
                         if (idxPcLnTM !== -1 && giaNhapMoi > 0) {
                             rowData["col_" + idxPcLnTM] = ((giaBanTM - giaNhapMoi) / giaNhapMoi);
                         }
 
-                        // Tính lại % Lợi Nhuận Công NỢ
                         let idxPcLnCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN CÔNG NỢ' || c.label.trim().toUpperCase() === '% LOI NHUAN CÔNG NỢ');
                         if (idxPcLnCN !== -1 && giaNhapMoi > 0) {
                             rowData["col_" + idxPcLnCN] = ((giaBanCN - giaNhapMoi) / giaNhapMoi);
                         }
 
-                        // Tính lại % Giá Nhập Lệch
                         let idxPcGiaLech = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% GIÁ NHẬP LỆCH' || c.label.trim().toUpperCase() === '% GIÁ LỆCH TRƯỚC' || c.label.trim().toUpperCase() === '% CHÊNH LỆCH NHẬP TRƯỚC');
                         if (idxPcGiaLech !== -1 && giaNhapCu > 0) {
                             rowData["col_" + idxPcGiaLech] = ((giaNhapMoi - giaNhapCu) / giaNhapCu);
                         }
 
-                        // Tính lại Check Giá Bán
                         let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
                         if (idxCheckGia !== -1) {
                             rowData["col_" + idxCheckGia] = giaBanTM - giaNhapMoi;
                         }
 
-                        // Ép Tabulator vẽ lại dòng ngay tức thì
                         row.update(rowData);
                         row.reformat();
                     }
@@ -1037,7 +1024,6 @@
                 headerFilterPlaceholder: "Lọc..."
             };
 
-            // 1. TỰ ĐỘNG TÍNH: % LỢI NHUẬN TIỀN MẶT = (GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI) / GIÁ NHẬP MỚI
             if (colNameUpper === '% LỢI NHUẬN TIỀN MẶT' || colNameUpper === '% LOI NHUAN TIỀN MẶT') {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
@@ -1065,7 +1051,6 @@
                     return `<span style="color: ${color}; font-weight: bold;">${finalPct.toFixed(2)}%</span>`;
                 };
 
-            // 2. TỰ ĐỘNG TÍNH: % LỢI NHUẬN CÔNG NỢ = (GIÁ BÁN CÔNG NỢ - GIÁ NHẬP MỚI) / GIÁ NHẬP MỚI
             } else if (colNameUpper === '% LỢI NHUẬN CÔNG NỢ' || colNameUpper === '% LOI NHUAN CÔNG NỢ') {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
@@ -1093,7 +1078,6 @@
                     return `<span style="color: ${color}; font-weight: bold;">${finalPct.toFixed(2)}%</span>`;
                 };
 
-            // 3. TỰ ĐỘNG TÍNH: % GIÁ LỆCH TRƯỚC (NHẬP LỆCH) = (GIÁ NHẬP MỚI / GIÁ NHẬP CŨ) - 1
             } else if (colNameUpper === '% GIÁ NHẬP LỆCH' || colNameUpper === '% GIÁ LỆCH TRƯỚC' || colNameUpper === '% CHÊNH LỆCH NHẬP TRƯỚC') {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
@@ -1120,7 +1104,6 @@
                     return `<span style="font-weight: bold;">${finalPct.toFixed(2)}%</span>`;
                 };
 
-            // 4. TỰ ĐỘNG TÍNH: CHECK GIÁ BÁN = GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI
             } else if (colNameUpper === 'CHECK GIÁ BÁN') {
                 colDef.hozAlign = "right";
                 colDef.bottomCalc = customSumCalc;
@@ -1218,7 +1201,7 @@
                     if (idxLoiNhuan !== -1) {
                         let loiNhuan = parseFloat(String(data["col_" + idxLoiNhuan] || 0).replace(/[,.]/g, '')) || 0;
                         if (loiNhuan < 0) {
-                            row.getElement().style.backgroundColor = "#ffdddd"; // Đỏ nhạt nếu bán lỗ
+                            row.getElement().style.backgroundColor = "#ffdddd";
                         }
                     }
                 } else {
