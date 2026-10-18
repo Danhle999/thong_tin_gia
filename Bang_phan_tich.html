@@ -187,6 +187,7 @@
                 <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
                 <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
                 <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
+                <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
             </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
@@ -435,6 +436,17 @@
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
             { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
             { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
+        ],
+        'BAO_CAO_LOI_NHUAN': [
+            { label: 'Khách Hàng', customer: true },
+            { label: 'Ngày Bán', date: true },
+            { label: 'Mã Hàng Hóa', code: true },
+            { label: 'Tên Sản Phẩm' },
+            { label: 'SL Bán', numeric: true },
+            { label: 'Doanh Thu (VNĐ)', numeric: true },
+            { label: 'Giá Vốn (VNĐ)', numeric: true },
+            { label: 'Lợi Nhuận Gộp (VNĐ)', numeric: true },
+            { label: '% Lãi Gộp', numeric: true, percent: true }
         ]
     };
 
