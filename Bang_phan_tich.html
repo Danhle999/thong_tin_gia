@@ -184,10 +184,10 @@
                 <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
                 <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
                 <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
+                <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
                 <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
                 <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
                 <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
-                <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
             </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
@@ -422,6 +422,13 @@
             { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 },
             { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
         ],
+        'BAO_CAO_LOI_NHUAN': [
+            { label: 'Khách Hàng', customer: true }, { label: 'Ngày Bán', date: true },
+            { label: 'Mã Hàng Hóa', code: true }, { label: 'Tên Sản Phẩm' },
+            { label: 'SL Bán', numeric: true }, { label: 'Doanh Thu (VNĐ)', numeric: true },
+            { label: 'Giá Vốn (VNĐ)', numeric: true }, { label: 'Lợi Nhuận Gộp (VNĐ)', numeric: true },
+            { label: '% Lãi Gộp', numeric: true, percent: true }
+        ],
         'BANG_GIA_DELL': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
             { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
@@ -436,17 +443,6 @@
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
             { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
             { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
-        ],
-        'BAO_CAO_LOI_NHUAN': [
-            { label: 'Khách Hàng', customer: true },
-            { label: 'Ngày Bán', date: true },
-            { label: 'Mã Hàng Hóa', code: true },
-            { label: 'Tên Sản Phẩm' },
-            { label: 'SL Bán', numeric: true },
-            { label: 'Doanh Thu (VNĐ)', numeric: true },
-            { label: 'Giá Vốn (VNĐ)', numeric: true },
-            { label: 'Lợi Nhuận Gộp (VNĐ)', numeric: true },
-            { label: '% Lãi Gộp', numeric: true, percent: true }
         ]
     };
 
@@ -489,6 +485,7 @@
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
             'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
             'THONG_KE_QUY': { id: 'btnModeThongKeQuy', cls: 'btn-dark' },
+            'BAO_CAO_LOI_NHUAN': { id: 'btnModeLoiNhuan', cls: 'btn-success' },
             'BANG_GIA_DELL': { id: 'btnModeBaoGia1', cls: 'btn-warning' },
             'BANG_GIA_HP': { id: 'btnModeBaoGia2', cls: 'btn-warning' },
             'BANG_GIA_LENOVO': { id: 'btnModeBaoGia3', cls: 'btn-warning' }
@@ -540,6 +537,10 @@
                 .then(res => res.json())
                 .then(data => {
                     showLoading(false);
+                    if (data && data.status === "error") {
+                        alert("Lỗi từ server: " + data.message);
+                        return;
+                    }
                     buildTabulatorTable(data);
                 })
                 .catch(err => {
@@ -921,96 +922,98 @@
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT", bottomCalc: function() { return "TỔNG"; } }
         ];
 
-        columnsConfig.push({
-            title: "Thao tác",
-            field: "_actionCol",
-            formatter: function(cell) {
-                let rowData = cell.getRow().getData();
-                return rowData._isEditing ? `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>` : `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
-            },
-            width: 95, hozAlign: "center", headerSort: false, frozen: true,
-            cellClick: function(e, cell) {
-                let row = cell.getRow();
-                let rowData = row.getData();
-                let cellEl = cell.getElement();
-                let btn = cellEl.querySelector('button');
+        if (currentMode !== 'BAO_CAO_LOI_NHUAN') {
+            columnsConfig.push({
+                title: "Thao tác",
+                field: "_actionCol",
+                formatter: function(cell) {
+                    let rowData = cell.getRow().getData();
+                    return rowData._isEditing ? `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>` : `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
+                },
+                width: 95, hozAlign: "center", headerSort: false, frozen: true,
+                cellClick: function(e, cell) {
+                    let row = cell.getRow();
+                    let rowData = row.getData();
+                    let cellEl = cell.getElement();
+                    let btn = cellEl.querySelector('button');
 
-                if (!rowData._isEditing) {
-                    rowData._isEditing = true;
-                    btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
-                    btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
-                    row.update(rowData);
+                    if (!rowData._isEditing) {
+                        rowData._isEditing = true;
+                        btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
+                        btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
+                        row.update(rowData);
 
-                    let cells = row.getCells();
-                    for (let c of cells) {
-                        if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
-                            c.edit();
-                            break;
-                        }
-                    }
-                } else {
-                    let fullRowData = [];
-                    activeCols.forEach((col, i) => {
-                        let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
-                        if (col.date && val) {
-                            let d = new Date(val);
-                            if (!isNaN(d.getTime())) {
-                                let yyyy = d.getFullYear();
-                                let mm = String(d.getMonth() + 1).padStart(2, '0');
-                                let dd = String(d.getDate()).padStart(2, '0');
-                                val = `${yyyy}-${mm}-${dd}`;
+                        let cells = row.getCells();
+                        for (let c of cells) {
+                            if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
+                                c.edit();
+                                break;
                             }
                         }
-                        fullRowData.push(val);
-                    });
+                    } else {
+                        let fullRowData = [];
+                        activeCols.forEach((col, i) => {
+                            let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
+                            if (col.date && val) {
+                                let d = new Date(val);
+                                if (!isNaN(d.getTime())) {
+                                    let yyyy = d.getFullYear();
+                                    let mm = String(d.getMonth() + 1).padStart(2, '0');
+                                    let dd = String(d.getDate()).padStart(2, '0');
+                                    val = `${yyyy}-${mm}-${dd}`;
+                                }
+                            }
+                            fullRowData.push(val);
+                        });
 
-                    // 1. Lưu dữ liệu lên Google Sheets
-                    saveRowToSheet(rowData.sheetRowIndex, fullRowData);
-                    
-                    // 2. TẮT TRẠNG THÁI SỬA VÀ TỰ ĐỘNG CẬP NHẬT LẠI TOÀN BỘ CÔNG THỨC TRÊN FRONTEND LẬP TỨC
-                    rowData._isEditing = false;
-                    
-                    // Lấy vị trí các cột công thức chính
-                    let idxGiaBanTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                    let idxGiaBanCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN CÔNG NỢ');
-                    let idxGiaNhapMoi = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
-                    let idxGiaNhapCu = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP CŨ' || c.label.trim().toUpperCase() === 'GIÁ NHẬP TRƯỚC');
+                        // 1. Lưu dữ liệu lên Google Sheets
+                        saveRowToSheet(rowData.sheetRowIndex, fullRowData);
+                        
+                        // 2. TẮT TRẠNG THÁI SỬA VÀ TỰ ĐỘNG CẬP NHẬT LẠI TOÀN BỘ CÔNG THỨC TRÊN FRONTEND LẬP TỨC
+                        rowData._isEditing = false;
+                        
+                        // Lấy vị trí các cột công thức chính
+                        let idxGiaBanTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
+                        let idxGiaBanCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN CÔNG NỢ');
+                        let idxGiaNhapMoi = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
+                        let idxGiaNhapCu = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP CŨ' || c.label.trim().toUpperCase() === 'GIÁ NHẬP TRƯỚC');
 
-                    let giaBanTM = idxGiaBanTM !== -1 ? parseFloat(String(rowData["col_" + idxGiaBanTM] || 0).replace(/[,.]/g, '')) || 0 : 0;
-                    let giaBanCN = idxGiaBanCN !== -1 ? parseFloat(String(rowData["col_" + idxGiaBanCN] || 0).replace(/[,.]/g, '')) || 0 : 0;
-                    let giaNhapMoi = idxGiaNhapMoi !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0 : 0;
-                    let giaNhapCu = idxGiaNhapCu !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapCu] || 0).replace(/[,.]/g, '')) || 0 : 0;
+                        let giaBanTM = idxGiaBanTM !== -1 ? parseFloat(String(rowData["col_" + idxGiaBanTM] || 0).replace(/[,.]/g, '')) || 0 : 0;
+                        let giaBanCN = idxGiaBanCN !== -1 ? parseFloat(String(rowData["col_" + idxGiaBanCN] || 0).replace(/[,.]/g, '')) || 0 : 0;
+                        let giaNhapMoi = idxGiaNhapMoi !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0 : 0;
+                        let giaNhapCu = idxGiaNhapCu !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapCu] || 0).replace(/[,.]/g, '')) || 0 : 0;
 
-                    // Tính lại % Lợi Nhuận Tiền Mặt
-                    let idxPcLnTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN TIỀN MẶT' || c.label.trim().toUpperCase() === '% LOI NHUAN TIỀN MẶT');
-                    if (idxPcLnTM !== -1 && giaNhapMoi > 0) {
-                        rowData["col_" + idxPcLnTM] = ((giaBanTM - giaNhapMoi) / giaNhapMoi);
+                        // Tính lại % Lợi Nhuận Tiền Mặt
+                        let idxPcLnTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN TIỀN MẶT' || c.label.trim().toUpperCase() === '% LOI NHUAN TIỀN MẶT');
+                        if (idxPcLnTM !== -1 && giaNhapMoi > 0) {
+                            rowData["col_" + idxPcLnTM] = ((giaBanTM - giaNhapMoi) / giaNhapMoi);
+                        }
+
+                        // Tính lại % Lợi Nhuận Công NỢ
+                        let idxPcLnCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN CÔNG NỢ' || c.label.trim().toUpperCase() === '% LOI NHUAN CÔNG NỢ');
+                        if (idxPcLnCN !== -1 && giaNhapMoi > 0) {
+                            rowData["col_" + idxPcLnCN] = ((giaBanCN - giaNhapMoi) / giaNhapMoi);
+                        }
+
+                        // Tính lại % Giá Nhập Lệch
+                        let idxPcGiaLech = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% GIÁ NHẬP LỆCH' || c.label.trim().toUpperCase() === '% GIÁ LỆCH TRƯỚC' || c.label.trim().toUpperCase() === '% CHÊNH LỆCH NHẬP TRƯỚC');
+                        if (idxPcGiaLech !== -1 && giaNhapCu > 0) {
+                            rowData["col_" + idxPcGiaLech] = ((giaNhapMoi - giaNhapCu) / giaNhapCu);
+                        }
+
+                        // Tính lại Check Giá Bán
+                        let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
+                        if (idxCheckGia !== -1) {
+                            rowData["col_" + idxCheckGia] = giaBanTM - giaNhapMoi;
+                        }
+
+                        // Ép Tabulator vẽ lại dòng ngay tức thì
+                        row.update(rowData);
+                        row.reformat();
                     }
-
-                    // Tính lại % Lợi Nhuận Công Nợ
-                    let idxPcLnCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN CÔNG NỢ' || c.label.trim().toUpperCase() === '% LOI NHUAN CÔNG NỢ');
-                    if (idxPcLnCN !== -1 && giaNhapMoi > 0) {
-                        rowData["col_" + idxPcLnCN] = ((giaBanCN - giaNhapMoi) / giaNhapMoi);
-                    }
-
-                    // Tính lại % Giá Nhập Lệch
-                    let idxPcGiaLech = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% GIÁ NHẬP LỆCH' || c.label.trim().toUpperCase() === '% GIÁ LỆCH TRƯỚC' || c.label.trim().toUpperCase() === '% CHÊNH LỆCH NHẬP TRƯỚC');
-                    if (idxPcGiaLech !== -1 && giaNhapCu > 0) {
-                        rowData["col_" + idxPcGiaLech] = ((giaNhapMoi - giaNhapCu) / giaNhapCu);
-                    }
-
-                    // Tính lại Check Giá Bán
-                    let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
-                    if (idxCheckGia !== -1) {
-                        rowData["col_" + idxCheckGia] = giaBanTM - giaNhapMoi;
-                    }
-
-                    // Ép Tabulator vẽ lại dòng ngay tức thì
-                    row.update(rowData);
-                    row.reformat();
                 }
-            }
-        });
+            });
+        }
 
         activeCols.forEach((col, index) => {
             let colNameUpper = col.label.trim().toUpperCase();
@@ -1020,8 +1023,9 @@
                 field: "col_" + index,
                 width: col.width || undefined, 
                 minWidth: 80, 
-                editor: "input",
+                editor: currentMode === 'BAO_CAO_LOI_NHUAN' ? false : "input",
                 editable: function(cell) {
+                    if (currentMode === 'BAO_CAO_LOI_NHUAN') return false;
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
                     let allowedColumns = ['COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB', 'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT', 'SL TON LUC DO', 'TEN CHUONG TRINH'];
@@ -1209,16 +1213,26 @@
             columnDefaults: { resizable: true },
             rowFormatter: function(row) {
                 let data = row.getData();
-                let idxGiaBan = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                let idxGiaNhapMoi = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
+                if (currentMode === 'BAO_CAO_LOI_NHUAN') {
+                    let idxLoiNhuan = getActiveColumns().findIndex(c => c.label.includes('Lợi Nhuận Gộp'));
+                    if (idxLoiNhuan !== -1) {
+                        let loiNhuan = parseFloat(String(data["col_" + idxLoiNhuan] || 0).replace(/[,.]/g, '')) || 0;
+                        if (loiNhuan < 0) {
+                            row.getElement().style.backgroundColor = "#ffdddd"; // Đỏ nhạt nếu bán lỗ
+                        }
+                    }
+                } else {
+                    let idxGiaBan = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
+                    let idxGiaNhapMoi = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
 
-                if (idxGiaBan !== -1 && idxGiaNhapMoi !== -1) {
-                    let giaBan = parseFloat(String(data["col_" + idxGiaBan] || 0).replace(/[,.]/g, '')) || 0;
-                    let giaNhapMoi = parseFloat(String(data["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
-                    if (giaBan - giaNhapMoi < 0) {
-                        row.getElement().style.backgroundColor = "#ffdddd"; // Tô màu đỏ cảnh báo nếu lỗ
-                    } else {
-                        row.getElement().style.backgroundColor = "";
+                    if (idxGiaBan !== -1 && idxGiaNhapMoi !== -1) {
+                        let giaBan = parseFloat(String(data["col_" + idxGiaBan] || 0).replace(/[,.]/g, '')) || 0;
+                        let giaNhapMoi = parseFloat(String(data["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
+                        if (giaBan - giaNhapMoi < 0) {
+                            row.getElement().style.backgroundColor = "#ffdddd"; 
+                        } else {
+                            row.getElement().style.backgroundColor = "";
+                        }
                     }
                 }
             }
