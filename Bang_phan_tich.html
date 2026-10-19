@@ -193,7 +193,7 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BỘ LỌC TOÀN CỤC CHO CÁC SHEET THƯỜNG -->
+        <!-- BỘ LỌC TOÀN CỤC CHO CÁC TAB BẢNG THƯỜNG -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -210,7 +210,7 @@
             </div>
         </div>
         
-        <!-- NÚT THAO TÁC -->
+        <!-- NÚT THAO TÁC THƯỜNG -->
         <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
@@ -227,8 +227,28 @@
         <!-- BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
-        <!-- DASHBOARD BÁO CÁO LỢI NHUẬN (GỒM 2 BẢNG TỔNG HỢP VÀ CHI TIẾT) -->
+        <!-- DASHBOARD BÁO CÁO LỢI NHUẬN (GỒM BỘ LỌC NGÀY VÀ 2 BẢNG TỔNG HỢP + CHI TIẾT) -->
         <div id="profitReportView" class="dashboard-container">
+            <!-- KHUNG BỘ LỌC THEO KHOẢNG NGÀY BÁN -->
+            <div class="filter-card">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small text-primary"><i class="fa-solid fa-calendar-days me-1"></i>Từ Ngày Bán:</label>
+                        <input type="date" id="profitFromDate" class="form-control form-control-sm fs-6">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small text-primary"><i class="fa-solid fa-calendar-check me-1"></i>Đến Ngày Bán:</label>
+                        <input type="date" id="profitToDate" class="form-control form-control-sm fs-6">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-filter me-1"></i>Lọc Theo Khoảng Ngày</button>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetProfitDateFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Xem Tất Cả Ngày</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- BẢNG 1: TỔNG HỢP VTHH -->
             <div>
                 <div class="table-section-header">
@@ -250,7 +270,7 @@
                         <input type="text" id="filterDetailCustomerInput" class="form-control form-control-sm fs-6" placeholder="Lọc Khách Hàng hoặc Số Đơn Hàng..." onkeyup="filterProfitDetails()">
                     </div>
                     <div class="col-md-2">
-                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearProfitDetailFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Bỏ Lọc</button>
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearProfitDetailFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Bỏ Lọc Chi Tiết</button>
                     </div>
                 </div>
                 <div id="table-profit-details" style="height: 380px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
@@ -351,7 +371,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZ1IjlzZbiVrZ5SjfJtHO-rFbtAVEn2vAVlLcpwnPBVKa9sIbxsFUVnAS2PZz3wUyI/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxQppjQ_r9NxDy34e5jkv5i-udG_8tWYUUiubqU_tLbYN2gtxfK1zQiuR1e6JvAI6D/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -559,8 +579,11 @@
                     alert("Lỗi tải dữ liệu Thống kê quý!");
                 });
         } else if (currentMode === 'BAO_CAO_LOI_NHUAN') {
-            showLoading(true, "Đang tải Báo cáo lợi nhuận tổng hợp & chi tiết...");
-            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAO_CAO_LOI_NHUAN&nocache=${bypassCache}&t=${timeStamp}`)
+            let fromDate = document.getElementById('profitFromDate').value;
+            let toDate = document.getElementById('profitToDate').value;
+
+            showLoading(true, "Đang tính toán Báo cáo Lợi Nhuận theo ngày...");
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAO_CAO_LOI_NHUAN&fromDate=${encodeURIComponent(fromDate)}&toDate=${encodeURIComponent(toDate)}&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
                     showLoading(false);
@@ -587,6 +610,13 @@
                     alert("Lỗi kết nối đến Google Sheets!");
                 });
         }
+    }
+
+    function resetProfitDateFilter() {
+        document.getElementById('profitFromDate').value = '';
+        document.getElementById('profitToDate').value = '';
+        clearProfitDetailFilter();
+        loadDataFromSheet(true);
     }
 
     // VẼ 2 BẢNG TRONG BÁO CÁO LỢI NHUẬN
@@ -654,7 +684,6 @@
                     }
                 }
             ],
-            // Bấm vào 1 mã trên bảng 1 sẽ tự động lọc Bảng 2 bên dưới
             rowClick: function(e, row) {
                 let rowData = row.getData();
                 if (rowData && rowData.code) {
@@ -717,7 +746,6 @@
         });
     }
 
-    // BỘ LỌC CHO BẢNG CHI TIẾT LỢI NHUẬN BẢNG 2
     function filterProfitDetails() {
         if (!tableProfitDetails) return;
         let codeKw = document.getElementById('filterDetailCodeInput').value.trim().toLowerCase();
