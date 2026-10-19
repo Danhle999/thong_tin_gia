@@ -651,7 +651,7 @@
             selectableRows: 1,
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-                { title: "Mã Hàng Hóa", field: "code", width: 170, headerFilter: "input" },
+                { title: "Mã Hàng Hóa", field: "code", width: 300, headerFilter: "input" },
                 { title: "Tên Hàng Hóa", field: "name", width: 280, headerFilter: "input" },
                 { title: "Tổng SL Nhập", field: "importQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng Giá Nhập (VNĐ)", field: "importAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
