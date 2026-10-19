@@ -68,7 +68,7 @@
             flex-shrink: 0;
         }
 
-        .view-mode-btn-group .btn { font-weight: 600; font-size: 0.95rem; }
+        .view-mode-btn-group .btn { font-weight: 600; font-size: 0.88rem; }
         .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
         
         .tabulator { font-size: 0.95rem; }
@@ -184,7 +184,11 @@
                 <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
                 <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
                 <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
-                <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
+                
+                <!-- TABS BÁO CÁO MỚI -->
+                <button type="button" id="btnModeBaoCaoChung" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_CHUNG')"><i class="fa-solid fa-chart-pie me-1"></i>BÁO CÁO CHUNG</button>
+                <button type="button" id="btnModeBaoCaoRieng" class="btn btn-outline-primary" onclick="switchTableMode('BAO_CAO_RIENG')"><i class="fa-solid fa-magnifying-glass-chart me-1"></i>BÁO CÁO RIÊNG</button>
+
                 <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
                 <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
                 <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
@@ -224,8 +228,55 @@
             </div>
         </div>
 
-        <!-- BẢNG TABULATOR THƯỜNG -->
+        <!-- BẢNG TABULATOR THƯỜNG / BÁO CÁO CHUNG -->
         <div id="example-table"></div>
+
+        <!-- VIEW BÁO CÁO RIÊNG (TÌM MÃ HÀNG HÓA VÀ XEM ĐƠN BÁN CHI TIẾT) -->
+        <div id="baoCaoRiengView" class="dashboard-container">
+            <div class="filter-card mb-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold mb-0 text-primary fs-6"><i class="fa-solid fa-barcode me-1"></i>Nhập Mã Hàng Hóa để tra cứu chi tiết:</label>
+                        <input type="text" id="inputItemCodeRieng" class="form-control form-control-sm fs-6 text-uppercase" placeholder="Ví dụ: LCD HP V24i G5_65P59AA..." onkeypress="if(event.key==='Enter') fetchBaoCaoRieng()">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="fetchBaoCaoRieng()"><i class="fa-solid fa-magnifying-glass me-1"></i>Tra Cứu Dữ Liệu</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-2">
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #0d6efd;">
+                        <span class="text-muted small fw-bold">TỔNG SL NHẬP KHO</span>
+                        <h5 class="text-primary fw-bold mt-1 mb-0" id="riengStatImportQty">0</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #17a2b8;">
+                        <span class="text-muted small fw-bold">TỔNG GIÁ TRỊ NHẬP</span>
+                        <h5 class="text-info fw-bold mt-1 mb-0" id="riengStatImportAmt">0 VNĐ</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #ffc107;">
+                        <span class="text-muted small fw-bold">TỔNG SL BÁN RA</span>
+                        <h5 class="text-warning fw-bold mt-1 mb-0" id="riengStatSellQty">0</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #28a745;">
+                        <span class="text-muted small fw-bold">TỔNG DOANH THU BÁN</span>
+                        <h5 class="text-success fw-bold mt-1 mb-0" id="riengStatSellAmt">0 VNĐ</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-section-header">
+                <div class="table-section-title"><i class="fa-solid fa-list-check me-1"></i> Chi Tiết Các Đơn Hàng Bán Sản Phẩm</div>
+            </div>
+            <div id="table-bao-cao-rieng" style="flex: 1 1 auto; height: 380px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+        </div>
 
         <!-- DASHBOARD & TABULATOR CHO THỐNG KÊ QUÝ -->
         <div id="dashboardView" class="dashboard-container">
@@ -422,12 +473,16 @@
             { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 },
             { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
         ],
-        'BAO_CAO_LOI_NHUAN': [
-            { label: 'Khách Hàng', customer: true }, { label: 'Ngày Bán', date: true },
-            { label: 'Mã Hàng Hóa', code: true }, { label: 'Tên Sản Phẩm' },
-            { label: 'SL Bán', numeric: true }, { label: 'Doanh Thu (VNĐ)', numeric: true },
-            { label: 'Giá Vốn (VNĐ)', numeric: true }, { label: 'Lợi Nhuận Gộp (VNĐ)', numeric: true },
-            { label: '% Lãi Gộp', numeric: true, percent: true }
+        'BAO_CAO_CHUNG': [
+            { label: 'Mã Hàng Hóa', code: true, width: 160 }, 
+            { label: 'Tên Hàng Hóa', width: 300 },
+            { label: 'Tổng SL Nhập', numeric: true, width: 120 }, 
+            { label: 'Tổng Giá Nhập (VNĐ)', numeric: true, width: 160 },
+            { label: 'Tổng SL Bán', numeric: true, width: 120 }, 
+            { label: 'Tổng Giá Bán (VNĐ)', numeric: true, width: 160 },
+            { label: 'Giá Vốn Bình Quân (VNĐ)', numeric: true, width: 180 },
+            { label: 'Lợi Nhuận Gộp (VNĐ)', numeric: true, width: 180 },
+            { label: '% Lãi Gộp', numeric: true, percent: true, width: 110 }
         ],
         'BANG_GIA_DELL': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
@@ -450,6 +505,7 @@
     let table = null;
     let tableQuarterDetail = null;
     let tableBrandSummary = null;
+    let tableBaoCaoRieng = null;
     let barChartInstance = null;
     let doughnutChartInstance = null;
     let globalActualData = [];
@@ -485,7 +541,8 @@
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
             'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
             'THONG_KE_QUY': { id: 'btnModeThongKeQuy', cls: 'btn-dark' },
-            'BAO_CAO_LOI_NHUAN': { id: 'btnModeLoiNhuan', cls: 'btn-success' },
+            'BAO_CAO_CHUNG': { id: 'btnModeBaoCaoChung', cls: 'btn-success' },
+            'BAO_CAO_RIENG': { id: 'btnModeBaoCaoRieng', cls: 'btn-primary' },
             'BANG_GIA_DELL': { id: 'btnModeBaoGia1', cls: 'btn-warning' },
             'BANG_GIA_HP': { id: 'btnModeBaoGia2', cls: 'btn-warning' },
             'BANG_GIA_LENOVO': { id: 'btnModeBaoGia3', cls: 'btn-warning' }
@@ -500,13 +557,20 @@
         document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${mode} (${cols.length} Cột)`;
         
         let isThongKe = (mode === 'THONG_KE_QUY');
-        document.getElementById('actionButtonsRow').style.display = isThongKe ? 'none' : 'flex';
-        document.getElementById('globalFilterCard').style.display = isThongKe ? 'none' : 'block';
-        document.getElementById('example-table').style.display = isThongKe ? 'none' : 'block';
+        let isBaoCaoRieng = (mode === 'BAO_CAO_RIENG');
+
+        document.getElementById('actionButtonsRow').style.display = (isThongKe || isBaoCaoRieng) ? 'none' : 'flex';
+        document.getElementById('globalFilterCard').style.display = (isThongKe || isBaoCaoRieng) ? 'none' : 'block';
+        document.getElementById('example-table').style.display = (isThongKe || isBaoCaoRieng) ? 'none' : 'block';
         document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
+        document.getElementById('baoCaoRiengView').style.display = isBaoCaoRieng ? 'flex' : 'none';
 
         resetAllFilters(false);
-        loadDataFromSheet(true);
+        if (isBaoCaoRieng) {
+            fetchBaoCaoRieng();
+        } else {
+            loadDataFromSheet(true);
+        }
     }
 
     function showLoading(show, text = "Đang nạp dữ liệu từ Google Sheets...") {
@@ -549,20 +613,65 @@
         }
     }
 
-    setInterval(() => {
-        if (table && currentMode !== 'THONG_KE_QUY') {
-            let isEditing = table.getData().some(r => r._isEditing);
-            if (!isEditing) {
-                let timeStamp = new Date().getTime();
-                fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}&nocache=true&t=${timeStamp}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        buildTabulatorTable(data);
-                    })
-                    .catch(e => console.log("Auto refresh silent error:", e));
-            }
-        }
-    }, 500000);
+    // TRA CỨU BÁO CÁO RIÊNG KHU NHẬP MÃ HÀNG HÓA
+    function fetchBaoCaoRieng() {
+        let itemCode = document.getElementById('inputItemCodeRieng').value.trim();
+        showLoading(true, "Đang tra cứu Báo cáo riêng...");
+        let timeStamp = new Date().getTime();
+
+        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAO_CAO_RIENG&itemCode=${encodeURIComponent(itemCode)}&nocache=true&t=${timeStamp}`)
+            .then(res => res.json())
+            .then(data => {
+                showLoading(false);
+                let summary = data.summary || {};
+                let details = data.details || [];
+
+                document.getElementById('riengStatImportQty').innerText = (summary.totalImportQty || 0).toLocaleString('vi-VN');
+                document.getElementById('riengStatImportAmt').innerText = (summary.totalImportAmt || 0).toLocaleString('vi-VN') + ' VNĐ';
+                document.getElementById('riengStatSellQty').innerText = (summary.totalSellQty || 0).toLocaleString('vi-VN');
+                document.getElementById('riengStatSellAmt').innerText = (summary.totalSellAmt || 0).toLocaleString('vi-VN') + ' VNĐ';
+
+                let rowsToProcess = details.length > 1 ? details.slice(1) : [];
+                document.getElementById('rowCountBadge').innerText = `Hiển thị: ${rowsToProcess.length} đơn hàng`;
+
+                let tableData = rowsToProcess.map((r, idx) => ({
+                    id: idx + 1,
+                    code: r[0],
+                    name: r[1],
+                    date: r[2],
+                    customer: r[3],
+                    orderNo: r[4],
+                    qty: parseFloat(r[5]) || 0,
+                    price: parseFloat(r[6]) || 0,
+                    total: parseFloat(r[7]) || 0
+                }));
+
+                if (tableBaoCaoRieng) tableBaoCaoRieng.destroy();
+
+                tableBaoCaoRieng = new Tabulator("#table-bao-cao-rieng", {
+                    data: tableData,
+                    layout: "fitColumns",
+                    height: "380px",
+                    pagination: "local",
+                    paginationSize: 20,
+                    columns: [
+                        { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
+                        { title: "Mã Hàng Hóa", field: "code", width: 180 },
+                        { title: "Tên Sản Phẩm", field: "name", width: 250 },
+                        { title: "Ngày Bán", field: "date", hozAlign: "center", width: 110 },
+                        { title: "Khách Hàng", field: "customer", width: 220 },
+                        { title: "Số Đơn Hàng", field: "orderNo", width: 140 },
+                        { title: "SL Bán", field: "qty", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                        { title: "Đơn Giá Bán (VNĐ)", field: "price", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                        { title: "Thành Tiền Bán (VNĐ)", field: "total", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
+                    ]
+                });
+            })
+            .catch(err => {
+                showLoading(false);
+                alert("Lỗi tra cứu báo cáo riêng!");
+            });
+    }
 
     function renderThongKeQuyTab() {
         let actualRows = globalActualData.length > 1 ? globalActualData.slice(1) : [];
@@ -613,6 +722,7 @@
         populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
         populateSelectOptions('filter1Type', 'filter2Type', typesSet);
 
+        // Biểu đồ
         let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
         if (barChartInstance) barChartInstance.destroy();
         barChartInstance = new Chart(ctxBar, {
@@ -635,6 +745,7 @@
             options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại' }, legend: { position: 'bottom' } } }
         });
 
+        // BẢNG 1: Chi Tiết Nhập Kho
         let detailTableData = actualRows.map((r, idx) => ({ 
             id: idx + 1, 
             col_0: String(r[0] || '').trim(), 
@@ -661,6 +772,7 @@
             ]
         });
 
+        // BẢNG 2: Theo Dõi Mục Tiêu Doanh Số
         let summaryKeys = new Set();
         actualRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
         targetRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
@@ -801,7 +913,7 @@
     }
 
     function saveTargetToGoogleSheet(quarter, brand, productType, targetAmount) {
-        showLoading(true, "Đang lưu mục tiêu doanh số vào Sheet MUC_TIEU_QUY...");
+        showLoading(true, "Đang lưu mục tiêu doanh số...");
 
         var payloadData = {
             action: "updateTarget",
@@ -917,7 +1029,9 @@
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT", bottomCalc: function() { return "TỔNG"; } }
         ];
 
-        if (currentMode !== 'BAO_CAO_LOI_NHUAN') {
+        let isReadonlyTab = (currentMode === 'BAO_CAO_CHUNG');
+
+        if (!isReadonlyTab) {
             columnsConfig.push({
                 title: "Thao tác",
                 field: "_actionCol",
@@ -962,39 +1076,7 @@
                         });
 
                         saveRowToSheet(rowData.sheetRowIndex, fullRowData);
-                        
                         rowData._isEditing = false;
-                        
-                        let idxGiaBanTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                        let idxGiaBanCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN CÔNG NỢ');
-                        let idxGiaNhapMoi = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
-                        let idxGiaNhapCu = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP CŨ' || c.label.trim().toUpperCase() === 'GIÁ NHẬP TRƯỚC');
-
-                        let giaBanTM = idxGiaBanTM !== -1 ? parseFloat(String(rowData["col_" + idxGiaBanTM] || 0).replace(/[,.]/g, '')) || 0 : 0;
-                        let giaBanCN = idxGiaBanCN !== -1 ? parseFloat(String(rowData["col_" + idxGiaBanCN] || 0).replace(/[,.]/g, '')) || 0 : 0;
-                        let giaNhapMoi = idxGiaNhapMoi !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0 : 0;
-                        let giaNhapCu = idxGiaNhapCu !== -1 ? parseFloat(String(rowData["col_" + idxGiaNhapCu] || 0).replace(/[,.]/g, '')) || 0 : 0;
-
-                        let idxPcLnTM = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN TIỀN MẶT' || c.label.trim().toUpperCase() === '% LOI NHUAN TIỀN MẶT');
-                        if (idxPcLnTM !== -1 && giaNhapMoi > 0) {
-                            rowData["col_" + idxPcLnTM] = ((giaBanTM - giaNhapMoi) / giaNhapMoi);
-                        }
-
-                        let idxPcLnCN = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% LỢI NHUẬN CÔNG NỢ' || c.label.trim().toUpperCase() === '% LOI NHUAN CÔNG NỢ');
-                        if (idxPcLnCN !== -1 && giaNhapMoi > 0) {
-                            rowData["col_" + idxPcLnCN] = ((giaBanCN - giaNhapMoi) / giaNhapMoi);
-                        }
-
-                        let idxPcGiaLech = activeCols.findIndex(c => c.label.trim().toUpperCase() === '% GIÁ NHẬP LỆCH' || c.label.trim().toUpperCase() === '% GIÁ LỆCH TRƯỚC' || c.label.trim().toUpperCase() === '% CHÊNH LỆCH NHẬP TRƯỚC');
-                        if (idxPcGiaLech !== -1 && giaNhapCu > 0) {
-                            rowData["col_" + idxPcGiaLech] = ((giaNhapMoi - giaNhapCu) / giaNhapCu);
-                        }
-
-                        let idxCheckGia = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
-                        if (idxCheckGia !== -1) {
-                            rowData["col_" + idxCheckGia] = giaBanTM - giaNhapMoi;
-                        }
-
                         row.update(rowData);
                         row.reformat();
                     }
@@ -1010,9 +1092,9 @@
                 field: "col_" + index,
                 width: col.width || undefined, 
                 minWidth: 80, 
-                editor: currentMode === 'BAO_CAO_LOI_NHUAN' ? false : "input",
+                editor: isReadonlyTab ? false : "input",
                 editable: function(cell) {
-                    if (currentMode === 'BAO_CAO_LOI_NHUAN') return false;
+                    if (isReadonlyTab) return false;
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
                     let allowedColumns = ['COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB', 'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT', 'SL TON LUC DO', 'TEN CHUONG TRINH'];
@@ -1024,112 +1106,7 @@
                 headerFilterPlaceholder: "Lọc..."
             };
 
-            if (colNameUpper === '% LỢI NHUẬN TIỀN MẶT' || colNameUpper === '% LOI NHUAN TIỀN MẶT') {
-                colDef.hozAlign = "right";
-                colDef.formatter = function(cell) {
-                    let rowData = cell.getRow().getData();
-                    let idxGiaBan = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                    let idxGiaNhapMoi = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
-
-                    if (idxGiaBan !== -1 && idxGiaNhapMoi !== -1) {
-                        let giaBan = parseFloat(String(rowData["col_" + idxGiaBan] || 0).replace(/[,.]/g, '')) || 0;
-                        let giaNhapMoi = parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
-
-                        if (giaNhapMoi > 0) {
-                            let pct = ((giaBan - giaNhapMoi) / giaNhapMoi) * 100;
-                            let color = pct < 0 ? '#dc3545' : '#198754';
-                            return `<span style="color: ${color}; font-weight: bold;">${pct.toFixed(2)}%</span>`;
-                        }
-                    }
-
-                    let val = cell.getValue();
-                    if (val === null || val === undefined || val === '') return '0.00%';
-                    let num = parseFloat(String(val).replace('%', '').trim());
-                    if (isNaN(num)) return val;
-                    let finalPct = (num <= 1 && num >= -1 && num !== 0) ? num * 100 : num;
-                    let color = finalPct < 0 ? '#dc3545' : '#198754';
-                    return `<span style="color: ${color}; font-weight: bold;">${finalPct.toFixed(2)}%</span>`;
-                };
-
-            } else if (colNameUpper === '% LỢI NHUẬN CÔNG NỢ' || colNameUpper === '% LOI NHUAN CÔNG NỢ') {
-                colDef.hozAlign = "right";
-                colDef.formatter = function(cell) {
-                    let rowData = cell.getRow().getData();
-                    let idxGiaBanCN = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN CÔNG NỢ');
-                    let idxGiaNhapMoi = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
-
-                    if (idxGiaBanCN !== -1 && idxGiaNhapMoi !== -1) {
-                        let giaBanCN = parseFloat(String(rowData["col_" + idxGiaBanCN] || 0).replace(/[,.]/g, '')) || 0;
-                        let giaNhapMoi = parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
-
-                        if (giaNhapMoi > 0) {
-                            let pct = ((giaBanCN - giaNhapMoi) / giaNhapMoi) * 100;
-                            let color = pct < 0 ? '#dc3545' : '#198754';
-                            return `<span style="color: ${color}; font-weight: bold;">${pct.toFixed(2)}%</span>`;
-                        }
-                    }
-
-                    let val = cell.getValue();
-                    if (val === null || val === undefined || val === '') return '0.00%';
-                    let num = parseFloat(String(val).replace('%', '').trim());
-                    if (isNaN(num)) return val;
-                    let finalPct = (num <= 1 && num >= -1 && num !== 0) ? num * 100 : num;
-                    let color = finalPct < 0 ? '#dc3545' : '#198754';
-                    return `<span style="color: ${color}; font-weight: bold;">${finalPct.toFixed(2)}%</span>`;
-                };
-
-            } else if (colNameUpper === '% GIÁ NHẬP LỆCH' || colNameUpper === '% GIÁ LỆCH TRƯỚC' || colNameUpper === '% CHÊNH LỆCH NHẬP TRƯỚC') {
-                colDef.hozAlign = "right";
-                colDef.formatter = function(cell) {
-                    let rowData = cell.getRow().getData();
-                    let idxGiaNhapMoi = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
-                    let idxGiaNhapCu = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP CŨ' || c.label.trim().toUpperCase() === 'GIÁ NHẬP TRƯỚC');
-
-                    if (idxGiaNhapMoi !== -1 && idxGiaNhapCu !== -1) {
-                        let giaNhapMoi = parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
-                        let giaNhapCu = parseFloat(String(rowData["col_" + idxGiaNhapCu] || 0).replace(/[,.]/g, '')) || 0;
-
-                        if (giaNhapCu > 0 && giaNhapMoi > 0) {
-                            let pct = ((giaNhapMoi - giaNhapCu) / giaNhapCu) * 100;
-                            let color = pct < 0 ? '#198754' : (pct > 0 ? '#dc3545' : '#6c757d');
-                            return `<span style="color: ${color}; font-weight: bold;">${pct.toFixed(2)}%</span>`;
-                        }
-                    }
-
-                    let val = cell.getValue();
-                    if (val === null || val === undefined || val === '' || String(val).includes('#VALUE')) return '0.00%';
-                    let num = parseFloat(String(val).replace('%', '').trim());
-                    if (isNaN(num)) return val;
-                    let finalPct = (num <= 1 && num >= -1 && num !== 0) ? num * 100 : num;
-                    return `<span style="font-weight: bold;">${finalPct.toFixed(2)}%</span>`;
-                };
-
-            } else if (colNameUpper === 'CHECK GIÁ BÁN') {
-                colDef.hozAlign = "right";
-                colDef.bottomCalc = customSumCalc;
-                colDef.bottomCalcFormatter = function(cell) {
-                    let val = cell.getValue();
-                    return val ? val.toLocaleString('vi-VN') : "0";
-                };
-                colDef.formatter = function(cell) {
-                    let rowData = cell.getRow().getData();
-                    let idxGiaBan = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                    let idxGiaNhapMoi = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
-
-                    let checkVal = 0;
-                    if (idxGiaBan !== -1 && idxGiaNhapMoi !== -1) {
-                        let giaBan = parseFloat(String(rowData["col_" + idxGiaBan] || 0).replace(/[,.]/g, '')) || 0;
-                        let giaNhapMoi = parseFloat(String(rowData["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
-                        checkVal = giaBan - giaNhapMoi;
-                    } else {
-                        checkVal = parseFloat(String(cell.getValue() || 0).replace(/[,.]/g, '')) || 0;
-                    }
-
-                    let color = checkVal < 0 ? '#dc3545' : '#198754';
-                    return `<span style="color: ${color}; font-weight: bold;">${checkVal.toLocaleString('vi-VN')}</span>`;
-                };
-
-            } else if (col.numeric) {
+            if (col.numeric) {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
@@ -1193,32 +1170,7 @@
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { resizable: true },
-            rowFormatter: function(row) {
-                let data = row.getData();
-                if (currentMode === 'BAO_CAO_LOI_NHUAN') {
-                    let idxLoiNhuan = getActiveColumns().findIndex(c => c.label.includes('Lợi Nhuận Gộp'));
-                    if (idxLoiNhuan !== -1) {
-                        let loiNhuan = parseFloat(String(data["col_" + idxLoiNhuan] || 0).replace(/[,.]/g, '')) || 0;
-                        if (loiNhuan < 0) {
-                            row.getElement().style.backgroundColor = "#ffdddd";
-                        }
-                    }
-                } else {
-                    let idxGiaBan = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT');
-                    let idxGiaNhapMoi = getActiveColumns().findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI' || c.label.trim().toUpperCase() === 'GIÁ NHẬP');
-
-                    if (idxGiaBan !== -1 && idxGiaNhapMoi !== -1) {
-                        let giaBan = parseFloat(String(data["col_" + idxGiaBan] || 0).replace(/[,.]/g, '')) || 0;
-                        let giaNhapMoi = parseFloat(String(data["col_" + idxGiaNhapMoi] || 0).replace(/[,.]/g, '')) || 0;
-                        if (giaBan - giaNhapMoi < 0) {
-                            row.getElement().style.backgroundColor = "#ffdddd"; 
-                        } else {
-                            row.getElement().style.backgroundColor = "";
-                        }
-                    }
-                }
-            }
+            columnDefaults: { resizable: true }
         });
 
         table.on("dataFiltered", function(filters, rows){
