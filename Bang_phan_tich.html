@@ -193,7 +193,7 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BỘ LỌC TOÀN CỤC CHO CÁC TAB BẢNG THƯỜNG -->
+        <!-- BỘ LỌC TOÀN CỤC CHO CÁC SHEET THƯỜNG -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -210,7 +210,7 @@
             </div>
         </div>
         
-        <!-- NÚT THAO TÁC THƯỜNG -->
+        <!-- NÚT THAO TÁC -->
         <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
@@ -227,28 +227,8 @@
         <!-- BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
-        <!-- DASHBOARD BÁO CÁO LỢI NHUẬN (GỒM BỘ LỌC NGÀY VÀ 2 BẢNG TỔNG HỢP + CHI TIẾT) -->
+        <!-- DASHBOARD BÁO CÁO LỢI NHUẬN (GỒM 2 BẢNG TỔNG HỢP VÀ CHI TIẾT) -->
         <div id="profitReportView" class="dashboard-container">
-            <!-- KHUNG BỘ LỌC THEO KHOẢNG NGÀY BÁN -->
-            <div class="filter-card">
-                <div class="row g-2 align-items-center">
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold mb-0 small text-primary"><i class="fa-solid fa-calendar-days me-1"></i>Từ Ngày Bán:</label>
-                        <input type="date" id="profitFromDate" class="form-control form-control-sm fs-6">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold mb-0 small text-primary"><i class="fa-solid fa-calendar-check me-1"></i>Đến Ngày Bán:</label>
-                        <input type="date" id="profitToDate" class="form-control form-control-sm fs-6">
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-filter me-1"></i>Lọc Theo Khoảng Ngày</button>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetProfitDateFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Xem Tất Cả Ngày</button>
-                    </div>
-                </div>
-            </div>
-
             <!-- BẢNG 1: TỔNG HỢP VTHH -->
             <div>
                 <div class="table-section-header">
@@ -270,7 +250,7 @@
                         <input type="text" id="filterDetailCustomerInput" class="form-control form-control-sm fs-6" placeholder="Lọc Khách Hàng hoặc Số Đơn Hàng..." onkeyup="filterProfitDetails()">
                     </div>
                     <div class="col-md-2">
-                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearProfitDetailFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Bỏ Lọc Chi Tiết</button>
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearProfitDetailFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Bỏ Lọc</button>
                     </div>
                 </div>
                 <div id="table-profit-details" style="height: 380px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
@@ -371,7 +351,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbweimautx030_kBGs7U_VMVlydAka8LHQ1Zsg2-aCTCu6xo4ROzAiOc3veYsAmlmu-7/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZ1IjlzZbiVrZ5SjfJtHO-rFbtAVEn2vAVlLcpwnPBVKa9sIbxsFUVnAS2PZz3wUyI/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -579,11 +559,8 @@
                     alert("Lỗi tải dữ liệu Thống kê quý!");
                 });
         } else if (currentMode === 'BAO_CAO_LOI_NHUAN') {
-            let fromDate = document.getElementById('profitFromDate').value;
-            let toDate = document.getElementById('profitToDate').value;
-
-            showLoading(true, "Đang tính toán Báo cáo Lợi Nhuận theo ngày...");
-            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAO_CAO_LOI_NHUAN&fromDate=${encodeURIComponent(fromDate)}&toDate=${encodeURIComponent(toDate)}&nocache=${bypassCache}&t=${timeStamp}`)
+            showLoading(true, "Đang tải Báo cáo lợi nhuận tổng hợp & chi tiết...");
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAO_CAO_LOI_NHUAN&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
                     showLoading(false);
@@ -612,13 +589,6 @@
         }
     }
 
-    function resetProfitDateFilter() {
-        document.getElementById('profitFromDate').value = '';
-        document.getElementById('profitToDate').value = '';
-        clearProfitDetailFilter();
-        loadDataFromSheet(true);
-    }
-
     // VẼ 2 BẢNG TRONG BÁO CÁO LỢI NHUẬN
     function renderProfitReportTab(data) {
         let summaryRows = (data && data.summary && data.summary.length > 1) ? data.summary.slice(1) : [];
@@ -637,7 +607,8 @@
             sellAmt: parseFloat(r[5]) || 0,
             avgCost: parseFloat(r[6]) || 0,
             grossProfit: parseFloat(r[7]) || 0,
-            profitMargin: parseFloat(r[8]) || 0
+            profitMargin: parseFloat(r[8]) || 0,
+            importDateRange: r[9] || "N/A"
         }));
 
         if (tableProfitSummary) tableProfitSummary.destroy();
@@ -651,8 +622,11 @@
             selectableRows: 1,
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-                { title: "Mã Hàng Hóa", field: "code", width: 300, headerFilter: "input" },
-                { title: "Tên Hàng Hóa", field: "name", width: 280, headerFilter: "input" },
+                { title: "Mã Hàng Hóa", field: "code", width: 170, headerFilter: "input" },
+                { title: "Tên Hàng Hóa", field: "name", width: 250, headerFilter: "input" },
+                { title: "Khoảng Ngày Nhập Kho", field: "importDateRange", hozAlign: "center", width: 160, formatter: function(cell){
+                    return `<span class="badge bg-secondary text-white fw-normal">${cell.getValue()}</span>`;
+                }},
                 { title: "Tổng SL Nhập", field: "importQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng Giá Nhập (VNĐ)", field: "importAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng SL Bán", field: "sellQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
@@ -705,7 +679,8 @@
             unitPrice: parseFloat(r[6]) || 0,
             revenue: parseFloat(r[7]) || 0,
             cost: parseFloat(r[8]) || 0,
-            profit: parseFloat(r[9]) || 0
+            profit: parseFloat(r[9]) || 0,
+            importDateRange: r[10] || "N/A"
         }));
 
         if (tableProfitDetails) tableProfitDetails.destroy();
@@ -720,19 +695,22 @@
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Mã Hàng Hóa", field: "code", width: 170 },
-                { title: "Tên Sản Phẩm", field: "name", width: 250 },
+                { title: "Tên Sản Phẩm", field: "name", width: 230 },
+                { title: "Khoảng Ngày Nhập Kho", field: "importDateRange", hozAlign: "center", width: 160, formatter: function(cell){
+                    return `<span class="badge bg-info text-dark fw-normal">${cell.getValue()}</span>`;
+                }},
                 { title: "Ngày Bán", field: "date", hozAlign: "center", width: 110 },
-                { title: "Khách Hàng", field: "customer", width: 220 },
-                { title: "Số Đơn Hàng", field: "orderNo", width: 130 },
+                { title: "Khách Hàng", field: "customer", width: 200 },
+                { title: "Số Đơn Hàng", field: "orderNo", width: 120 },
                 { title: "SL Bán", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Giá Vốn BQ (VNĐ)", field: "cost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { 
                     title: "Lợi Nhuận (VNĐ)", 
                     field: "profit", 
                     hozAlign: "right", 
-                    width: 150, 
+                    width: 140, 
                     bottomCalc: customSumCalc, 
                     bottomCalcFormatter: "money", 
                     bottomCalcFormatterParams: { precision: 0, thousand: "." },
@@ -746,6 +724,7 @@
         });
     }
 
+    // BỘ LỌC CHO BẢNG CHI TIẾT LỢI NHUẬN BẢNG 2
     function filterProfitDetails() {
         if (!tableProfitDetails) return;
         let codeKw = document.getElementById('filterDetailCodeInput').value.trim().toLowerCase();
