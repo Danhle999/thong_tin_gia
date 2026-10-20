@@ -183,6 +183,7 @@
                 <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">BÁN HÀNG</button>
                 <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
                 <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
+                <button type="button" id="btnModeWebsite" class="btn btn-outline-primary" onclick="switchTableMode('WEBSITE')"><i class="fa-solid fa-globe me-1"></i>WEBSITE</button>
                 <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
                 <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
                 <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
@@ -193,10 +194,15 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BẢNG THÔNG BÁO MÃ TỒN KHO CHƯA CÓ TRONG TAB HIỆN TẠI -->
-        <div id="missingFromTabAlert" class="alert alert-warning py-2 px-3 mb-2 small d-none" style="flex-shrink: 0;">
-            <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
-            <span id="missingAlertText"></span>
+        <!-- BẢNG THÔNG BÁO MÃ CHƯA CÓ / THIẾU TRONG TỒN KHO -->
+        <div id="missingFromTabAlert" class="alert alert-warning py-2 px-3 mb-2 small d-none d-flex justify-content-between align-items-center" style="flex-shrink: 0;">
+            <div>
+                <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
+                <span id="missingAlertText"></span>
+            </div>
+            <div id="websiteFilterBtnContainer" class="d-none">
+                <button class="btn btn-sm btn-danger fw-bold ms-2" onclick="toggleOnlyMissingWebsiteFilter()"><i class="fa-solid fa-filter me-1"></i>Chỉ hiện mã thiếu trong Tồn Kho</button>
+            </div>
         </div>
 
         <!-- BỘ LỌC TOÀN CỤC CHO CÁC SHEET THƯỜNG -->
@@ -449,6 +455,17 @@
             { label: 'Đơn giá bán 1', numeric: true },  { label: 'Đơn giá bán sàn', numeric: true }, { label: 'Giá trị tồn kho', numeric: true },
             { label: 'Đơn vị tính', numeric: true }
         ],
+        'WEBSITE': [
+            { label: 'Mã Sản Phẩm Website', code: true, width: 220 },
+            { label: 'Tên Sản Phẩm Website', desc: true, width: 350 },
+            { label: 'Thương Hiệu (Brand)', width: 140 },
+            { label: 'Loại Hàng', width: 150 },
+            { label: 'Giá Niêm Yết', numeric: true, width: 140 },
+            { label: 'Giá Khuyến Mãi', numeric: true, width: 140 },
+            { label: 'Trạng Thái Website', width: 150 },
+            { label: 'Link Website', width: 250 },
+            { label: 'Ghi Chú Website', width: 200 }
+        ],
         'THONG_KE_QUY': [
             { label: 'Quý / Thời gian', width: 140 },
             { label: 'Hãng (Brand)', width: 130 },
@@ -483,6 +500,7 @@
     let doughnutChartInstance = null;
     let globalActualData = [];
     let globalTargetData = [];
+    let onlyMissingWebsiteActive = false;
     
     // MẢNG ĐỐI TƯỢNG ĐẦY ĐỦ TỪ TAB TON_KHO: { type, code, name }
     let rawTonKhoItems = [];
@@ -502,6 +520,7 @@
 
     function switchTableMode(mode) {
         currentMode = mode;
+        onlyMissingWebsiteActive = false;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
             btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
@@ -516,6 +535,7 @@
             'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
             'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
+            'WEBSITE': { id: 'btnModeWebsite', cls: 'btn-primary' },
             'THONG_KE_QUY': { id: 'btnModeThongKeQuy', cls: 'btn-dark' },
             'BAO_CAO_LOI_NHUAN': { id: 'btnModeLoiNhuan', cls: 'btn-success' },
             'BANG_GIA_DELL': { id: 'btnModeBaoGia1', cls: 'btn-warning' },
@@ -622,11 +642,48 @@
         }
     }
 
-    // HÀM KIỂM TRA MÃ CHƯA CÓ TRONG TAB HIỆN TẠI (LOẠI BỎ TRIỆT ĐỂ CHỮ AIO KHỎI TAB PC)
+    // HÀM KIỂM TRA MÃ TRÊN TAB WEBSITE THIẾU TRONG TỒN KHO HOẶC THIẾU TRONG TAB THIẾT BỊ
     function checkMissingTonKhoItems(tabRows) {
         let alertEl = document.getElementById('missingFromTabAlert');
         let textEl = document.getElementById('missingAlertText');
+        let filterContainer = document.getElementById('websiteFilterBtnContainer');
 
+        if (filterContainer) filterContainer.classList.add('d-none');
+
+        // LỰA CHỌN 1: NẾU ĐANG Ở TAB WEBSITE -> SO SÁNH MÃ WEBSITE VỚI MÃ TỒN KHO
+        if (currentMode === 'WEBSITE') {
+            let activeCols = getActiveColumns();
+            let codeColIdx = activeCols.findIndex(c => {
+                let l = c.label.trim().toUpperCase();
+                return l.includes('MÃ SẢN PHẨM') || l.includes('MÃ HÀNG HÓA') || l.includes('SKU');
+            });
+
+            if (codeColIdx === -1) codeColIdx = 0;
+
+            let tonKhoCodesSet = new Set(
+                rawTonKhoItems.map(item => item.code.toUpperCase())
+            );
+
+            let missingWebsiteCodes = [];
+
+            tabRows.forEach(r => {
+                let webCode = String(r[codeColIdx] || '').trim().toUpperCase();
+                if (webCode && !tonKhoCodesSet.has(webCode)) {
+                    missingWebsiteCodes.push(webCode);
+                }
+            });
+
+            if (missingWebsiteCodes.length > 0) {
+                alertEl.classList.remove('d-none');
+                textEl.innerHTML = `Phát hiện <b>${missingWebsiteCodes.length}</b> mã trên <b>WEBSITE</b> chưa có trong bảng <b>TỒN KHO</b>: <strong class="text-danger">${missingWebsiteCodes.join(', ')}</strong>`;
+                if (filterContainer) filterContainer.classList.remove('d-none');
+            } else {
+                alertEl.classList.add('d-none');
+            }
+            return;
+        }
+
+        // LỰA CHỌN 2: CÁC TAB THIẾT BỊ KHÁC
         if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
             alertEl.classList.add('d-none');
             return;
@@ -643,7 +700,6 @@
             return;
         }
 
-        // Tạo danh sách Mã hiện có trong tab thiết bị này
         let currentTabCodesSet = new Set(
             tabRows.map(r => String(r[codeColIdx] || '').trim().toUpperCase()).filter(c => c !== '')
         );
@@ -655,35 +711,24 @@
             let itemCodeUpper = item.code.toUpperCase();
             let itemNameUpper = item.name.toUpperCase();
 
-            // Kiểm tra xem dòng Tồn Kho này có bất kỳ dấu vết nào của AIO hay không (Loại, Mã hoặc Tên)
             let hasAioKeywords = itemTypeUpper.includes('AIO') || itemTypeUpper.includes('ALL-IN-ONE') || itemTypeUpper.includes('ALL IN ONE') ||
                                 itemCodeUpper.includes('AIO') || itemNameUpper.includes('AIO');
 
             let isTargetType = false;
 
-            // 1. LAPTOP
             if (currentMode === 'LAPTOP') {
                 isTargetType = itemTypeUpper.includes('MÁY TÍNH XÁCH TAY') || itemTypeUpper.includes('LAPTOP');
-            } 
-            // 2. PC (MÁY TÍNH ĐỂ BÀN) - NẾU CÓ CHỮ AIO TRONG LOẠI, MÃ, HOẶC TÊN THÌ LOẠI BỎ NAY LẬP TỨC
-            else if (currentMode === 'PC') {
+            } else if (currentMode === 'PC') {
                 let isDesktop = itemTypeUpper.includes('MÁY TÍNH ĐỂ BÀN') || itemTypeUpper.includes('DESKTOP') || itemTypeUpper.includes('PC');
                 isTargetType = isDesktop && !hasAioKeywords;
-            } 
-            // 3. LCD
-            else if (currentMode === 'LCD') {
+            } else if (currentMode === 'LCD') {
                 isTargetType = itemTypeUpper.includes('MÀN HÌNH MÁY TÍNH') || itemTypeUpper.includes('MÀN HÌNH') || itemTypeUpper.includes('MONITOR') || itemTypeUpper.includes('LCD');
-            } 
-            // 4. AIO - CHỈ LẤY CÁC MÃ CÓ DẤU VẾT CỦA AIO
-            else if (currentMode === 'AIO') {
+            } else if (currentMode === 'AIO') {
                 isTargetType = hasAioKeywords;
-            } 
-            // 5. MÁY IN / SCAN
-            else if (currentMode === 'SCAN_MAY_IN') {
+            } else if (currentMode === 'SCAN_MAY_IN') {
                 isTargetType = itemTypeUpper.includes('MÁY IN') || itemTypeUpper.includes('MÁY SCAN') || itemTypeUpper.includes('SCAN') || itemTypeUpper.includes('PRINTER');
             }
 
-            // Nếu thuộc đúng loại hàng hóa nhưng chưa xuất hiện trong tab hiện tại
             if (isTargetType && !currentTabCodesSet.has(itemCodeUpper)) {
                 missingCodes.push(item.code);
             }
@@ -694,6 +739,24 @@
             textEl.innerHTML = `Có <b>${missingCodes.length}</b> mã tồn kho thuộc nhóm này chưa có trong Tab <b>${currentMode}</b>: <strong class="text-danger">${missingCodes.join(', ')}</strong>`;
         } else {
             alertEl.classList.add('d-none');
+        }
+    }
+
+    function toggleOnlyMissingWebsiteFilter() {
+        if (!table || currentMode !== 'WEBSITE') return;
+        onlyMissingWebsiteActive = !onlyMissingWebsiteActive;
+
+        let tonKhoCodesSet = new Set(
+            rawTonKhoItems.map(item => item.code.toUpperCase())
+        );
+
+        if (onlyMissingWebsiteActive) {
+            table.setFilter(function(data) {
+                let code = String(data.col_0 || '').trim().toUpperCase();
+                return code !== '' && !tonKhoCodesSet.has(code);
+            });
+        } else {
+            table.clearFilter();
         }
     }
 
@@ -1270,8 +1333,7 @@
                 editable: function(cell) {
                     let rowData = cell.getRow().getData();
                     if (!rowData._isEditing) return false;
-                    let allowedColumns = ['COST_KTB', 'GIÁ COST', 'GIÁ BÁN TIỀN MẶT', 'GIÁ BÁN CÔNG NỢ', 'GIÁ BÁN KTB', 'SELL IN HÃNG', 'SELL OUT HÃNG', 'CHIẾT KHẤU', 'SELL IN NPP', 'SELL OUT NPP', 'SL SELL OUT HÃNG SUPPORT', 'SL TON LUC DO', 'TEN CHUONG TRINH'];
-                    return allowedColumns.includes(colNameUpper);
+                    return true;
                 },
                 editorParams: { selectContents: true },
                 headerFilter: "input", 
@@ -1320,7 +1382,7 @@
             rowsToProcess = rawData.slice(1);
         }
 
-        // KIỂM TRA MÃ CÒN THIẾU TỪ TỒN KHO VÀ HIỂN THỊ THÔNG BÁO TẠI ĐÂY
+        // KIỂM TRA MÃ CÒN THIẾU VÀ HIỂN THỊ THÔNG BÁO TẠI ĐÂY
         checkMissingTonKhoItems(rowsToProcess);
 
         let startRowOffset = 2;
@@ -1383,6 +1445,7 @@
     function resetAllFilters(reload = true) {
         document.getElementById('globalSearchInput').value = '';
         document.getElementById('customerFilterInput').value = '';
+        onlyMissingWebsiteActive = false;
         if (table) {
             table.clearFilter(true);
             table.clearHeaderFilter();
