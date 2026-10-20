@@ -193,6 +193,12 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
+        <!-- BẢNG THÔNG BÁO MÃ TỒN KHO CHƯA CÓ TRONG TAB HIỆN TẠI -->
+        <div id="missingFromTabAlert" class="alert alert-warning py-2 px-3 mb-2 small d-none" style="flex-shrink: 0;">
+            <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
+            <span id="missingAlertText"></span>
+        </div>
+
         <!-- BỘ LỌC TOÀN CỤC CHO CÁC SHEET THƯỜNG -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
@@ -227,9 +233,8 @@
         <!-- BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
-        <!-- DASHBOARD BÁO CÁO LỢI NHUẬN (GỒM 2 BẢNG TỔNG HỢP VÀ CHI TIẾT) -->
+        <!-- DASHBOARD BÁO CÁO LỢI NHUẬN -->
         <div id="profitReportView" class="dashboard-container">
-            <!-- BẢNG 1: TỔNG HỢP VTHH -->
             <div>
                 <div class="table-section-header">
                     <div class="table-section-title text-success"><i class="fa-solid fa-chart-pie me-1"></i> 1. Báo Cáo Tổng Hợp Doanh Thu & Lợi Nhuận Lãi Gộp Theo Vật Tư Hàng Hóa (FIFO)</div>
@@ -237,7 +242,6 @@
                 <div id="table-profit-summary" style="height: 280px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
 
-            <!-- BẢNG 2: CHI TIẾT LỊCH SỬ BÁN HÀNG THEO MÃ HÀNG -->
             <div>
                 <div class="table-section-header">
                     <div class="table-section-title text-primary"><i class="fa-solid fa-list-check me-1"></i> 2. Báo Cáo Chi Tiết Lịch Sử Bán Hàng & Giá Vốn Trừ Dần Từng Lô Hàng (FIFO)</div>
@@ -480,8 +484,8 @@
     let globalActualData = [];
     let globalTargetData = [];
     
-    // BIẾN BỘ NHỚ ĐỆM LƯU TẤT CẢ MÃ HÀNG HÓA TRONG TAB TỒN KHO
-    let tonKhoCodeSet = new Set();
+    // MẢNG CÁC ĐỐI TƯỢNG { type: "Máy tính xách tay", code: "LAP123" } TỪ TAB TON_KHO
+    let rawTonKhoItems = [];
 
     function customSumCalc(values) {
         let sum = 0;
@@ -548,14 +552,17 @@
     function loadDataFromSheet(bypassCache = true) {
         let timeStamp = new Date().getTime();
 
-        // TỰ ĐỘNG NẠP BỘ NHỚ ĐỆM TỒN KHO NẾU CHƯA CÓ ĐỂ ĐỐI CHIẾU CHÉO
-        if (tonKhoCodeSet.size === 0 && currentMode !== 'TON_KHO') {
+        // NẠP TRƯỚC DỮ LIỆU TỒN KHO NẾU CHƯA CÓ
+        if (rawTonKhoItems.length === 0 && currentMode !== 'TON_KHO') {
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=TON_KHO&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data) && data.length > 1) {
-                        // Cột Mã Hàng Hóa ở tab TON_KHO nằm ở vị trí index 1 (cột thứ 2)
-                        tonKhoCodeSet = new Set(data.slice(1).map(r => String(r[1] || '').trim().toUpperCase()));
+                        // Tồn kho: Cột 0 = Loại Hàng Hóa, Cột 1 = Mã Hàng Hóa
+                        rawTonKhoItems = data.slice(1).map(r => ({
+                            type: String(r[0] || '').trim(),
+                            code: String(r[1] || '').trim()
+                        })).filter(x => x.code !== '');
                     }
                 })
                 .catch(err => console.error("Lỗi nạp bộ nhớ Tồn Kho:", err));
@@ -598,9 +605,11 @@
                         return;
                     }
 
-                    // NẾU LÀ TAB TỒN KHO THÌ CẬP NHẬT LẠI SET
                     if (currentMode === 'TON_KHO' && Array.isArray(data) && data.length > 1) {
-                        tonKhoCodeSet = new Set(data.slice(1).map(r => String(r[1] || '').trim().toUpperCase()));
+                        rawTonKhoItems = data.slice(1).map(r => ({
+                            type: String(r[0] || '').trim(),
+                            code: String(r[1] || '').trim()
+                        })).filter(x => x.code !== '');
                     }
 
                     buildTabulatorTable(data);
@@ -612,14 +621,68 @@
         }
     }
 
+    // HÀM KIỂM TRA MÃ TRONG TỒN KHO MÀ CHƯA CÓ TRONG TAB HIỆN TẠI
+    function checkMissingTonKhoItems(tabRows) {
+        let alertEl = document.getElementById('missingFromTabAlert');
+        let textEl = document.getElementById('missingAlertText');
+
+        if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
+            alertEl.classList.add('d-none');
+            return;
+        }
+
+        let activeCols = getActiveColumns();
+        let codeColIdx = activeCols.findIndex(c => {
+            let l = c.label.trim().toUpperCase();
+            return l === 'MÃ HÀNG HÓA' || l === 'MÃ KTB';
+        });
+
+        if (codeColIdx === -1) {
+            alertEl.classList.add('d-none');
+            return;
+        }
+
+        // Tạo danh sách Mã hiện có trong tab thiết bị này
+        let currentTabCodesSet = new Set(
+            tabRows.map(r => String(r[codeColIdx] || '').trim().toUpperCase()).filter(c => c !== '')
+        );
+
+        // Lọc mã Tồn Kho theo nhóm sản phẩm tương ứng với Tab
+        let targetTypeKeywords = [];
+        if (currentMode === 'LAPTOP') targetTypeKeywords = ['MÁY TÍNH XÁCH TAY', 'LAPTOP'];
+        else if (currentMode === 'PC') targetTypeKeywords = ['MÁY TÍNH ĐỂ BÀN', 'DESKTOP', 'PC'];
+        else if (currentMode === 'LCD') targetTypeKeywords = ['MÀN HÌNH MÁY TÍNH', 'MÀN HÌNH', 'MONITOR', 'LCD'];
+        else if (currentMode === 'AIO') targetTypeKeywords = ['ALL-IN-ONE', 'AIO', 'MÁY TÍNH ALL IN ONE'];
+        else if (currentMode === 'SCAN_MAY_IN') targetTypeKeywords = ['MÁY IN', 'MÁY SCAN', 'SCAN', 'PRINTER'];
+
+        let missingCodes = [];
+        rawTonKhoItems.forEach(item => {
+            let itemTypeUpper = item.type.toUpperCase();
+            let matchesType = targetTypeKeywords.some(kw => itemTypeUpper.includes(kw));
+
+            if (matchesType) {
+                if (!currentTabCodesSet.has(item.code.toUpperCase())) {
+                    missingCodes.push(item.code);
+                }
+            }
+        });
+
+        if (missingCodes.length > 0) {
+            alertEl.classList.remove('d-none');
+            textEl.innerHTML = `Có <b>${missingCodes.length}</b> mã tồn kho thuộc nhóm này chưa có trong Tab <b>${currentMode}</b>: <strong class="text-danger">${missingCodes.join(', ')}</strong>`;
+        } else {
+            alertEl.classList.add('d-none');
+        }
+    }
+
     // VẼ 2 BẢNG TRONG BÁO CÁO LỢI NHUẬN (THEO NGUYÊN TẮC FIFO)
     function renderProfitReportTab(data) {
+        document.getElementById('missingFromTabAlert').classList.add('d-none');
         let summaryRows = (data && data.summary && data.summary.length > 1) ? data.summary.slice(1) : [];
         let detailRows = (data && data.details && data.details.length > 1) ? data.details.slice(1) : [];
 
         document.getElementById('rowCountBadge').innerText = `TỔNG: ${summaryRows.length} mã VTHH | ${detailRows.length} đơn hàng`;
 
-        // 1. TẠO BẢNG TỔNG HỢP VTHH
         let summaryTableData = summaryRows.map((r, idx) => ({
             id: idx + 1,
             code: r[0],
@@ -690,7 +753,6 @@
             }
         });
 
-        // 2. TẠO BẢNG 2: CHI TIẾT ĐƠN BÁN HÀNG
         let detailTableData = detailRows.map((r, idx) => ({
             id: idx + 1,
             code: r[0],
@@ -747,7 +809,6 @@
         });
     }
 
-    // BỘ LỌC CHO BẢNG CHI TIẾT LỢI NHUẬN BẢNG 2
     function filterProfitDetails() {
         if (!tableProfitDetails) return;
         let codeKw = document.getElementById('filterDetailCodeInput').value.trim().toLowerCase();
@@ -767,6 +828,7 @@
     }
 
     function renderThongKeQuyTab() {
+        document.getElementById('missingFromTabAlert').classList.add('d-none');
         let actualRows = globalActualData.length > 1 ? globalActualData.slice(1) : [];
         let targetRows = globalTargetData.length > 1 ? globalTargetData.slice(1) : [];
 
@@ -1114,6 +1176,7 @@
     function buildTabulatorTable(rawData) {
         if (!rawData || rawData.length === 0) {
             if (table) table.clearData();
+            document.getElementById('missingFromTabAlert').classList.add('d-none');
             return;
         }
 
@@ -1194,26 +1257,6 @@
                 headerFilterPlaceholder: "Lọc..."
             };
 
-            // --- ĐỐI CHIẾU MÃ HÀNG HÓA / MÃ KTB VỚI TAB TỒN KHO CHO LAPTOP, PC, LCD, AIO, SCAN_MAY_IN ---
-            let isCodeColumn = (colNameUpper === 'MÃ HÀNG HÓA' || colNameUpper === 'MÃ KTB');
-            let isDeviceTab = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode);
-
-            if (isCodeColumn && isDeviceTab) {
-                colDef.formatter = function(cell) {
-                    let val = String(cell.getValue() || '').trim();
-                    if (!val) return '';
-                    
-                    let existsInTonKho = tonKhoCodeSet.has(val.toUpperCase());
-
-                    if (!existsInTonKho) {
-                        return `<span>${val}</span> <span class="badge bg-danger ms-1" title="Mã này chưa có trong Tab Tồn Kho"><i class="fa-solid fa-triangle-exclamation me-1"></i>Chưa có tồn kho</span>`;
-                    } else {
-                        return `<span>${val}</span> <span class="badge bg-success ms-1" style="font-size: 0.7em;" title="Đã có trong tồn kho"><i class="fa-solid fa-check"></i></span>`;
-                    }
-                };
-            }
-            // ------------------------------------------------------------------------------------------
-
             if (col.numeric) {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
@@ -1254,6 +1297,9 @@
         if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
             rowsToProcess = rawData.slice(1);
         }
+
+        // KIỂM TRA MÃ CÒN THIẾU TỪ TỒN KHO VÀ HIỂN THỊ THÔNG BÁO TẠI ĐÂY
+        checkMissingTonKhoItems(rowsToProcess);
 
         let startRowOffset = 2;
 
