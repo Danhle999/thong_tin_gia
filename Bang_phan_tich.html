@@ -479,6 +479,9 @@
     let doughnutChartInstance = null;
     let globalActualData = [];
     let globalTargetData = [];
+    
+    // BIẾN BỘ NHỚ ĐỆM LƯU TẤT CẢ MÃ HÀNG HÓA TRONG TAB TỒN KHO
+    let tonKhoCodeSet = new Set();
 
     function customSumCalc(values) {
         let sum = 0;
@@ -544,6 +547,20 @@
 
     function loadDataFromSheet(bypassCache = true) {
         let timeStamp = new Date().getTime();
+
+        // TỰ ĐỘNG NẠP BỘ NHỚ ĐỆM TỒN KHO NẾU CHƯA CÓ ĐỂ ĐỐI CHIẾU CHÉO
+        if (tonKhoCodeSet.size === 0 && currentMode !== 'TON_KHO') {
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=TON_KHO&nocache=${bypassCache}&t=${timeStamp}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 1) {
+                        // Cột Mã Hàng Hóa ở tab TON_KHO nằm ở vị trí index 1 (cột thứ 2)
+                        tonKhoCodeSet = new Set(data.slice(1).map(r => String(r[1] || '').trim().toUpperCase()));
+                    }
+                })
+                .catch(err => console.error("Lỗi nạp bộ nhớ Tồn Kho:", err));
+        }
+
         if (currentMode === 'THONG_KE_QUY') {
             showLoading(true, "Đang tải dữ liệu Thống kê Quý...");
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=THONG_KE_QUY&nocache=${bypassCache}&t=${timeStamp}`)
@@ -580,6 +597,12 @@
                         alert("Lỗi từ server: " + data.message);
                         return;
                     }
+
+                    // NẾU LÀ TAB TỒN KHO THÌ CẬP NHẬT LẠI SET
+                    if (currentMode === 'TON_KHO' && Array.isArray(data) && data.length > 1) {
+                        tonKhoCodeSet = new Set(data.slice(1).map(r => String(r[1] || '').trim().toUpperCase()));
+                    }
+
                     buildTabulatorTable(data);
                 })
                 .catch(err => {
@@ -1170,6 +1193,26 @@
                 headerFilterFunc: "like", 
                 headerFilterPlaceholder: "Lọc..."
             };
+
+            // --- ĐỐI CHIẾU MÃ HÀNG HÓA / MÃ KTB VỚI TAB TỒN KHO CHO LAPTOP, PC, LCD, AIO, SCAN_MAY_IN ---
+            let isCodeColumn = (colNameUpper === 'MÃ HÀNG HÓA' || colNameUpper === 'MÃ KTB');
+            let isDeviceTab = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode);
+
+            if (isCodeColumn && isDeviceTab) {
+                colDef.formatter = function(cell) {
+                    let val = String(cell.getValue() || '').trim();
+                    if (!val) return '';
+                    
+                    let existsInTonKho = tonKhoCodeSet.has(val.toUpperCase());
+
+                    if (!existsInTonKho) {
+                        return `<span>${val}</span> <span class="badge bg-danger ms-1" title="Mã này chưa có trong Tab Tồn Kho"><i class="fa-solid fa-triangle-exclamation me-1"></i>Chưa có tồn kho</span>`;
+                    } else {
+                        return `<span>${val}</span> <span class="badge bg-success ms-1" style="font-size: 0.7em;" title="Đã có trong tồn kho"><i class="fa-solid fa-check"></i></span>`;
+                    }
+                };
+            }
+            // ------------------------------------------------------------------------------------------
 
             if (col.numeric) {
                 colDef.hozAlign = "right";
