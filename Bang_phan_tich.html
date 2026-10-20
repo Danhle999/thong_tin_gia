@@ -232,7 +232,7 @@
             <!-- BẢNG 1: TỔNG HỢP VTHH -->
             <div>
                 <div class="table-section-header">
-                    <div class="table-section-title text-success"><i class="fa-solid fa-chart-pie me-1"></i> 1. Báo Cáo Tổng Hợp Doanh Thu & Lợi Nhuận Lãi Gộp Theo Vật Tư Hàng Hóa (VTHH)</div>
+                    <div class="table-section-title text-success"><i class="fa-solid fa-chart-pie me-1"></i> 1. Báo Cáo Tổng Hợp Doanh Thu & Lợi Nhuận Lãi Gộp Theo Vật Tư Hàng Hóa (FIFO)</div>
                 </div>
                 <div id="table-profit-summary" style="height: 280px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
@@ -240,7 +240,7 @@
             <!-- BẢNG 2: CHI TIẾT LỊCH SỬ BÁN HÀNG THEO MÃ HÀNG -->
             <div>
                 <div class="table-section-header">
-                    <div class="table-section-title text-primary"><i class="fa-solid fa-list-check me-1"></i> 2. Báo Cáo Chi Tiết Lịch Sử Bán Hàng & Đơn Hàng Từng Mã Hàng</div>
+                    <div class="table-section-title text-primary"><i class="fa-solid fa-list-check me-1"></i> 2. Báo Cáo Chi Tiết Lịch Sử Bán Hàng & Giá Vốn Trừ Dần Từng Lô Hàng (FIFO)</div>
                 </div>
                 <div class="row g-2 mb-2 p-2 bg-light border rounded align-items-center">
                     <div class="col-md-5">
@@ -351,7 +351,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzMeBd88jTbrB-c1v6sFvvkYjFrlLiX9hc958j5BkNGj1apj3p7OoqZPij-PhFp8JH9/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZ1IjlzZbiVrZ5SjfJtHO-rFbtAVEn2vAVlLcpwnPBVKa9sIbxsFUVnAS2PZz3wUyI/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -559,7 +559,7 @@
                     alert("Lỗi tải dữ liệu Thống kê quý!");
                 });
         } else if (currentMode === 'BAO_CAO_LOI_NHUAN') {
-            showLoading(true, "Đang tải Báo cáo lợi nhuận tổng hợp & chi tiết...");
+            showLoading(true, "Đang tính toán Báo cáo Lợi nhuận FIFO từ các lô nhập kho...");
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAO_CAO_LOI_NHUAN&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
@@ -589,7 +589,7 @@
         }
     }
 
-    // VẼ 2 BẢNG TRONG BÁO CÁO LỢI NHUẬN
+    // VẼ 2 BẢNG TRONG BÁO CÁO LỢI NHUẬN (THEO NGUYÊN TẮC FIFO)
     function renderProfitReportTab(data) {
         let summaryRows = (data && data.summary && data.summary.length > 1) ? data.summary.slice(1) : [];
         let detailRows = (data && data.details && data.details.length > 1) ? data.details.slice(1) : [];
@@ -605,7 +605,7 @@
             importAmt: parseFloat(r[3]) || 0,
             sellQty: parseFloat(r[4]) || 0,
             sellAmt: parseFloat(r[5]) || 0,
-            avgCost: parseFloat(r[6]) || 0,
+            cogsFifo: parseFloat(r[6]) || 0,
             grossProfit: parseFloat(r[7]) || 0,
             profitMargin: parseFloat(r[8]) || 0,
             importDateRange: r[9] || "N/A"
@@ -631,7 +631,7 @@
                 { title: "Tổng Giá Nhập (VNĐ)", field: "importAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng SL Bán", field: "sellQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng Doanh Thu (VNĐ)", field: "sellAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Giá Vốn BQ (VNĐ)", field: "avgCost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Vốn FIFO (VNĐ)", field: "cogsFifo", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { 
                     title: "Lợi Nhuận Gộp (VNĐ)", 
                     field: "grossProfit", 
@@ -705,7 +705,7 @@
                 { title: "SL Bán", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Giá Vốn BQ (VNĐ)", field: "cost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Giá Vốn FIFO (VNĐ)", field: "cost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { 
                     title: "Lợi Nhuận (VNĐ)", 
                     field: "profit", 
