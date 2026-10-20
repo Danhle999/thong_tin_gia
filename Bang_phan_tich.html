@@ -484,7 +484,7 @@
     let globalActualData = [];
     let globalTargetData = [];
     
-    // MẢNG CÁC ĐỐI TƯỢNG { type: "Máy tính xách tay", code: "LAP123" } TỪ TAB TON_KHO
+    // MẢNG ĐỐI TƯỢNG ĐẦY ĐỦ TỪ TAB TON_KHO: { type, code, name }
     let rawTonKhoItems = [];
 
     function customSumCalc(values) {
@@ -552,16 +552,16 @@
     function loadDataFromSheet(bypassCache = true) {
         let timeStamp = new Date().getTime();
 
-        // NẠP TRƯỚC DỮ LIỆU TỒN KHO NẾU CHƯA CÓ
+        // NẠP TRƯỚC DỮ LIỆU TỒN KHO NẾU CHƯA CÓ (Cột 0: Loại, Cột 1: Mã, Cột 2: Tên)
         if (rawTonKhoItems.length === 0 && currentMode !== 'TON_KHO') {
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=TON_KHO&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data) && data.length > 1) {
-                        // Tồn kho: Cột 0 = Loại Hàng Hóa, Cột 1 = Mã Hàng Hóa
                         rawTonKhoItems = data.slice(1).map(r => ({
                             type: String(r[0] || '').trim(),
-                            code: String(r[1] || '').trim()
+                            code: String(r[1] || '').trim(),
+                            name: String(r[2] || '').trim()
                         })).filter(x => x.code !== '');
                     }
                 })
@@ -608,7 +608,8 @@
                     if (currentMode === 'TON_KHO' && Array.isArray(data) && data.length > 1) {
                         rawTonKhoItems = data.slice(1).map(r => ({
                             type: String(r[0] || '').trim(),
-                            code: String(r[1] || '').trim()
+                            code: String(r[1] || '').trim(),
+                            name: String(r[2] || '').trim()
                         })).filter(x => x.code !== '');
                     }
 
@@ -621,7 +622,7 @@
         }
     }
 
-    // HÀM KIỂM TRA MÃ TRONG TỒN KHO MÀ CHƯA CÓ TRONG TAB HIỆN TẠI (ĐÃ TỐI ƯU TÁCH MÃ PC VÀ AIO)
+    // HÀM KIỂM TRA MÃ CHƯA CÓ TRONG TAB HIỆN TẠI (LOẠI BỎ TRIỆT ĐỂ CHỮ AIO KHỎI TAB PC)
     function checkMissingTonKhoItems(tabRows) {
         let alertEl = document.getElementById('missingFromTabAlert');
         let textEl = document.getElementById('missingAlertText');
@@ -651,26 +652,31 @@
 
         rawTonKhoItems.forEach(item => {
             let itemTypeUpper = item.type.toUpperCase();
+            let itemCodeUpper = item.code.toUpperCase();
+            let itemNameUpper = item.name.toUpperCase();
+
+            // Kiểm tra xem dòng Tồn Kho này có bất kỳ dấu vết nào của AIO hay không (Loại, Mã hoặc Tên)
+            let hasAioKeywords = itemTypeUpper.includes('AIO') || itemTypeUpper.includes('ALL-IN-ONE') || itemTypeUpper.includes('ALL IN ONE') ||
+                                itemCodeUpper.includes('AIO') || itemNameUpper.includes('AIO');
+
             let isTargetType = false;
 
             // 1. LAPTOP
             if (currentMode === 'LAPTOP') {
                 isTargetType = itemTypeUpper.includes('MÁY TÍNH XÁCH TAY') || itemTypeUpper.includes('LAPTOP');
             } 
-            // 2. PC (MÁY TÍNH ĐỂ BÀN) - Loại bỏ hoàn toàn các loại có chứa All-In-One / AIO
+            // 2. PC (MÁY TÍNH ĐỂ BÀN) - NẾU CÓ CHỮ AIO TRONG LOẠI, MÃ, HOẶC TÊN THÌ LOẠI BỎ NAY LẬP TỨC
             else if (currentMode === 'PC') {
-                let isAio = itemTypeUpper.includes('ALL-IN-ONE') || itemTypeUpper.includes('ALL IN ONE') || itemTypeUpper.includes('AIO');
                 let isDesktop = itemTypeUpper.includes('MÁY TÍNH ĐỂ BÀN') || itemTypeUpper.includes('DESKTOP') || itemTypeUpper.includes('PC');
-                
-                isTargetType = isDesktop && !isAio; // Chỉ lấy PC thuần, không lấy AIO
+                isTargetType = isDesktop && !hasAioKeywords;
             } 
             // 3. LCD
             else if (currentMode === 'LCD') {
                 isTargetType = itemTypeUpper.includes('MÀN HÌNH MÁY TÍNH') || itemTypeUpper.includes('MÀN HÌNH') || itemTypeUpper.includes('MONITOR') || itemTypeUpper.includes('LCD');
             } 
-            // 4. AIO (ALL-IN-ONE)
+            // 4. AIO - CHỈ LẤY CÁC MÃ CÓ DẤU VẾT CỦA AIO
             else if (currentMode === 'AIO') {
-                isTargetType = itemTypeUpper.includes('ALL-IN-ONE') || itemTypeUpper.includes('ALL IN ONE') || itemTypeUpper.includes('AIO');
+                isTargetType = hasAioKeywords;
             } 
             // 5. MÁY IN / SCAN
             else if (currentMode === 'SCAN_MAY_IN') {
@@ -678,7 +684,7 @@
             }
 
             // Nếu thuộc đúng loại hàng hóa nhưng chưa xuất hiện trong tab hiện tại
-            if (isTargetType && !currentTabCodesSet.has(item.code.toUpperCase())) {
+            if (isTargetType && !currentTabCodesSet.has(itemCodeUpper)) {
                 missingCodes.push(item.code);
             }
         });
