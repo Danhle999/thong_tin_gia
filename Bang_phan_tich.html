@@ -194,14 +194,11 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BẢNG THÔNG BÁO MÃ CHƯA CÓ / THIẾU TRONG TỒN KHO -->
+        <!-- BẢNG THÔNG BÁO MÃ CHƯA CÓ / THIẾU TRÊN WEBSITE -->
         <div id="missingFromTabAlert" class="alert alert-warning py-2 px-3 mb-2 small d-none d-flex justify-content-between align-items-center" style="flex-shrink: 0;">
             <div>
                 <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
                 <span id="missingAlertText"></span>
-            </div>
-            <div id="websiteFilterBtnContainer" class="d-none">
-                <button class="btn btn-sm btn-danger fw-bold ms-2" onclick="toggleOnlyMissingWebsiteFilter()"><i class="fa-solid fa-filter me-1"></i>Chỉ hiện mã thiếu trong Tồn Kho</button>
             </div>
         </div>
 
@@ -456,13 +453,11 @@
             { label: 'Đơn vị tính', numeric: true }
         ],
         'WEBSITE': [
-            { label: 'STT', code: true, width: 220 },
-            { label: 'Danh Mục Cấp 1', desc: true, width: 350 },
+            { label: 'Danh Mục Cấp 1', width: 150 },
             { label: 'Danh mục 2', width: 140 },
             { label: 'Thương hiệu', width: 150 },
-            { label: 'Mã sản phẩm', width: 150 },
-            { label: 'Tên Sản phẩm', width: 150 }
-
+            { label: 'Mã sản phẩm', width: 350 },
+            { label: 'Tên Sản phẩm', width: 450 }
         ],
         'THONG_KE_QUY': [
             { label: 'Quý / Thời gian', width: 140 },
@@ -498,7 +493,6 @@
     let doughnutChartInstance = null;
     let globalActualData = [];
     let globalTargetData = [];
-    let onlyMissingWebsiteActive = false;
     
     // MẢNG ĐỐI TƯỢNG ĐẦY ĐỦ TỪ TAB TON_KHO: { type, code, name }
     let rawTonKhoItems = [];
@@ -518,7 +512,6 @@
 
     function switchTableMode(mode) {
         currentMode = mode;
-        onlyMissingWebsiteActive = false;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
             btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
@@ -640,15 +633,12 @@
         }
     }
 
-    // HÀM KIỂM TRA MÃ TRÊN TAB WEBSITE THIẾU TRONG TỒN KHO HOẶC THIẾU TRONG TAB THIẾT BỊ
+    // HÀM KIỂM TRA MÃ TỒN KHO CHƯA CÓ / THIẾU TRÊN TAB WEBSITE HOẶC CÁC TAB THIẾT BỊ KHÁC
     function checkMissingTonKhoItems(tabRows) {
         let alertEl = document.getElementById('missingFromTabAlert');
         let textEl = document.getElementById('missingAlertText');
-        let filterContainer = document.getElementById('websiteFilterBtnContainer');
 
-        if (filterContainer) filterContainer.classList.add('d-none');
-
-        // LỰA CHỌN 1: NẾU ĐANG Ở TAB WEBSITE -> SO SÁNH MÃ WEBSITE VỚI MÃ TỒN KHO
+        // LỰA CHỌN 1: NẾU ĐANG Ở TAB WEBSITE -> KIỂM TRA XEM MÃ TỒN KHO NÀO CHƯA CÓ TRÊN WEBSITE
         if (currentMode === 'WEBSITE') {
             let activeCols = getActiveColumns();
             let codeColIdx = activeCols.findIndex(c => {
@@ -658,30 +648,31 @@
 
             if (codeColIdx === -1) codeColIdx = 0;
 
-            let tonKhoCodesSet = new Set(
-                rawTonKhoItems.map(item => item.code.toUpperCase())
+            // Tạo danh sách Mã hiện đang có trên Website
+            let currentWebsiteCodesSet = new Set(
+                tabRows.map(r => String(r[codeColIdx] || '').trim().toUpperCase()).filter(c => c !== '')
             );
 
-            let missingWebsiteCodes = [];
+            let missingTonKhoOnWebsite = [];
 
-            tabRows.forEach(r => {
-                let webCode = String(r[codeColIdx] || '').trim().toUpperCase();
-                if (webCode && !tonKhoCodesSet.has(webCode)) {
-                    missingWebsiteCodes.push(webCode);
+            // Duyệt danh sách TỒN KHO để tìm các mã CHƯA CÓ trên Website
+            rawTonKhoItems.forEach(item => {
+                let itemCodeUpper = item.code.toUpperCase();
+                if (itemCodeUpper && !currentWebsiteCodesSet.has(itemCodeUpper)) {
+                    missingTonKhoOnWebsite.push(item.code);
                 }
             });
 
-            if (missingWebsiteCodes.length > 0) {
+            if (missingTonKhoOnWebsite.length > 0) {
                 alertEl.classList.remove('d-none');
-                textEl.innerHTML = `Phát hiện <b>${missingWebsiteCodes.length}</b> mã trên <b>WEBSITE</b> chưa có trong bảng <b>TỒN KHO</b>: <strong class="text-danger">${missingWebsiteCodes.join(', ')}</strong>`;
-                if (filterContainer) filterContainer.classList.remove('d-none');
+                textEl.innerHTML = `Phát hiện <b>${missingTonKhoOnWebsite.length}</b> mã trong <b>TỒN KHO</b> chưa được đăng lên <b>WEBSITE</b>: <strong class="text-danger">${missingTonKhoOnWebsite.join(', ')}</strong>`;
             } else {
                 alertEl.classList.add('d-none');
             }
             return;
         }
 
-        // LỰA CHỌN 2: CÁC TAB THIẾT BỊ KHÁC
+        // LỰA CHỌN 2: CÁC TAB THIẾT BỊ KHÁC (LAPTOP, PC, LCD, AIO, SCAN_MAY_IN)
         if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
             alertEl.classList.add('d-none');
             return;
@@ -737,24 +728,6 @@
             textEl.innerHTML = `Có <b>${missingCodes.length}</b> mã tồn kho thuộc nhóm này chưa có trong Tab <b>${currentMode}</b>: <strong class="text-danger">${missingCodes.join(', ')}</strong>`;
         } else {
             alertEl.classList.add('d-none');
-        }
-    }
-
-    function toggleOnlyMissingWebsiteFilter() {
-        if (!table || currentMode !== 'WEBSITE') return;
-        onlyMissingWebsiteActive = !onlyMissingWebsiteActive;
-
-        let tonKhoCodesSet = new Set(
-            rawTonKhoItems.map(item => item.code.toUpperCase())
-        );
-
-        if (onlyMissingWebsiteActive) {
-            table.setFilter(function(data) {
-                let code = String(data.col_0 || '').trim().toUpperCase();
-                return code !== '' && !tonKhoCodesSet.has(code);
-            });
-        } else {
-            table.clearFilter();
         }
     }
 
@@ -1443,7 +1416,6 @@
     function resetAllFilters(reload = true) {
         document.getElementById('globalSearchInput').value = '';
         document.getElementById('customerFilterInput').value = '';
-        onlyMissingWebsiteActive = false;
         if (table) {
             table.clearFilter(true);
             table.clearHeaderFilter();
