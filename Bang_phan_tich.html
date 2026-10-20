@@ -456,8 +456,8 @@
             { label: 'Danh Mục Cấp 1', width: 150 },
             { label: 'Danh mục 2', width: 140 },
             { label: 'Thương hiệu', width: 150 },
-            { label: 'Mã sản phẩm', width: 350 },
-            { label: 'Tên Sản phẩm', width: 450 }
+            { label: 'Mã sản phẩm', code: true, width: 350 },
+            { label: 'Tên Sản phẩm', desc: true, width: 450 }
         ],
         'THONG_KE_QUY': [
             { label: 'Quý / Thời gian', width: 140 },
@@ -641,12 +641,13 @@
         // LỰA CHỌN 1: NẾU ĐANG Ở TAB WEBSITE -> KIỂM TRA XEM MÃ TỒN KHO NÀO CHƯA CÓ TRÊN WEBSITE
         if (currentMode === 'WEBSITE') {
             let activeCols = getActiveColumns();
+            // Lấy chỉ số cột Mã Sản Phẩm (Mã sản phẩm là cột số 3 trong cấu trúc mới)
             let codeColIdx = activeCols.findIndex(c => {
                 let l = c.label.trim().toUpperCase();
-                return l.includes('MÃ SẢN PHẨM') || l.includes('MÃ HÀNG HÓA') || l.includes('SKU');
+                return l === 'MÃ SẢN PHẨM' || l === 'MÃ HÀNG HÓA' || l === 'SKU';
             });
 
-            if (codeColIdx === -1) codeColIdx = 0;
+            if (codeColIdx === -1) codeColIdx = 3; 
 
             // Tạo danh sách Mã hiện đang có trên Website
             let currentWebsiteCodesSet = new Set(
