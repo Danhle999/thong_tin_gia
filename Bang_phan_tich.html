@@ -154,6 +154,13 @@
             color: #334155;
             margin: 0;
         }
+
+        /* Class màu đỏ cho giá bán âm */
+        .cell-negative-price {
+            background-color: #f8d7da !important;
+            color: #dc3545 !important;
+            font-weight: bold !important;
+        }
     </style>
 </head>
 <body>
@@ -1340,13 +1347,26 @@
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
                     if (val === null || val === undefined || val === '') return '';
+
                     if (col.percent) {
                         let cleanVal = String(val).replace('%', '').trim();
                         let num = parseFloat(cleanVal);
                         if (isNaN(num)) return val;
                         return num > 1 ? num.toFixed(2) + '%' : (num * 100).toFixed(2) + '%';
                     }
-                    let num = parseFloat(String(val).replace(/[,.]/g, ''));
+
+                    let cleanValStr = String(val).replace(/[,.]/g, '');
+                    let num = parseFloat(cleanValStr);
+
+                    // KIỂM TRA MÃ/TÊN CỘT "CHECK GIÁ BÁN" VÀ TÔ MÀU ĐỎ KHI SỐ ÂM (< 0)
+                    let isCheckPriceCol = colNameUpper.includes('CHECK GIÁ BÁN') || colNameUpper.includes('CHECK GIÁ') || colNameUpper.includes('GIÁ BÁN');
+                    
+                    if (!isNaN(num) && num < 0 && isCheckPriceCol) {
+                        cell.getElement().classList.add("cell-negative-price");
+                    } else {
+                        cell.getElement().classList.remove("cell-negative-price");
+                    }
+
                     return isNaN(num) ? val : num.toLocaleString('vi-VN');
                 };
 
