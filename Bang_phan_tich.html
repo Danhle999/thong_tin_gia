@@ -243,16 +243,24 @@
             </div>
         </div>
 
-        <!-- BỘ LỌC TOÀN CỤC CHO CÁC SHEET THƯỜNG -->
+        <!-- BỘ LỌC TOÀN CỤC CHO CÁC SHEET THƯỜNG (CÓ LỌC NGÀY CHO TAB BÁN HÀNG) -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh toàn bảng:</label>
                     <input type="text" id="globalSearchInput" class="form-control form-control-sm fs-6" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyGlobalSearch()">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
                     <input type="text" id="customerFilterInput" class="form-control form-control-sm fs-6" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyGlobalSearch()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-day me-1"></i>Từ ngày:</label>
+                    <input type="date" id="dateFromInput" class="form-control form-control-sm fs-6" onchange="applyGlobalSearch()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-check me-1"></i>Đến ngày:</label>
+                    <input type="date" id="dateToInput" class="form-control form-control-sm fs-6" onchange="applyGlobalSearch()">
                 </div>
                 <div class="col-md-3 d-flex align-items-end gap-2">
                     <button class="btn btn-sm btn-secondary w-100" onclick="resetAllFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc</button>
@@ -344,7 +352,7 @@
             <div class="row g-2">
                 <div class="col-md-8">
                     <div class="scenario-card h-100">
-                        <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-table-cells me-2"></i>2. Cơ Cấu Phân Bổ Giá Bán & Số Lượng Theo Nhóm Khách Hang</h6>
+                        <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-table-cells me-2"></i>2. Cơ Cấu Phân Bổ Giá Bán & Số Lượng Theo Nhóm Khách Hàng</h6>
                         <div class="table-responsive">
                             <table class="table table-bordered table-sm align-middle text-center mb-0" style="font-size:0.9rem;">
                                 <thead class="table-light">
@@ -1865,27 +1873,58 @@
         if (!table) return;
         let kw = document.getElementById('globalSearchInput').value.toLowerCase();
         let kwCus = document.getElementById('customerFilterInput').value.toLowerCase();
+        let dateFromVal = document.getElementById('dateFromInput').value;
+        let dateToVal = document.getElementById('dateToInput').value;
+
+        let dateFrom = dateFromVal ? new Date(dateFromVal) : null;
+        let dateTo = dateToVal ? new Date(dateToVal) : null;
+        if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+        let activeCols = getActiveColumns();
 
         table.setFilter(function(data){
-            let matchGlobal = true, matchCus = true;
+            let matchGlobal = true, matchCus = true, matchDate = true;
+
             if (kw) matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
+
             if (kwCus) {
                 matchCus = Object.entries(data).some(([key, val]) => {
                     if (key.startsWith('col_')) {
                         let idx = parseInt(key.replace('col_', ''));
-                        let col = getActiveColumns()[idx];
+                        let col = activeCols[idx];
                         if (col && (col.customer || col.ncc || col.code)) return String(val).toLowerCase().includes(kwCus);
                     }
                     return false;
                 });
             }
-            return matchGlobal && matchCus;
+
+            if (dateFrom || dateTo) {
+                matchDate = Object.entries(data).some(([key, val]) => {
+                    if (key.startsWith('col_')) {
+                        let idx = parseInt(key.replace('col_', ''));
+                        let col = activeCols[idx];
+                        if (col && col.date && val) {
+                            let cellDate = new Date(val);
+                            if (!isNaN(cellDate.getTime())) {
+                                if (dateFrom && cellDate < dateFrom) return false;
+                                if (dateTo && cellDate > dateTo) return false;
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                });
+            }
+
+            return matchGlobal && matchCus && matchDate;
         });
     }
 
     function resetAllFilters(reload = true) {
         document.getElementById('globalSearchInput').value = '';
         document.getElementById('customerFilterInput').value = '';
+        document.getElementById('dateFromInput').value = '';
+        document.getElementById('dateToInput').value = '';
         if (table) {
             table.clearFilter(true);
             table.clearHeaderFilter();
