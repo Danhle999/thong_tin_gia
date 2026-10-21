@@ -178,6 +178,21 @@
             line-height: 1.35;
             color: #000;
         }
+
+        /* CSS cho Tab Kịch Bản Bán Hàng */
+        .scenario-card {
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            padding: 12px 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+        .scenario-input-group label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 2px;
+        }
     </style>
 </head>
 <body>
@@ -210,6 +225,7 @@
                 <button type="button" id="btnModeWebsite" class="btn btn-outline-primary" onclick="switchTableMode('WEBSITE')"><i class="fa-solid fa-globe me-1"></i>WEBSITE</button>
                 <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
                 <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
+                <button type="button" id="btnModeKichBan" class="btn btn-outline-danger" onclick="switchTableMode('KICH_BAN_BAN_HANG')"><i class="fa-solid fa-calculator me-1"></i>KỊCH BẢN BÁN HÀNG</button>
                 <button type="button" id="btnModeBangLenGia" class="btn btn-outline-danger" onclick="switchTableMode('BANG_LEN_GIA')"><i class="fa-solid fa-tags me-1"></i>BẢNG LÊN GIÁ</button>
                 <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
                 <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
@@ -260,6 +276,150 @@
 
         <!-- BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
+
+        <!-- TAB KỊCH BẢN BÁN HÀNG (MÔ PHỎNG LỢI NHUẬN & PHÂN BỔ) -->
+        <div id="kichBanView" class="dashboard-container">
+            <!-- 1. THÔNG SỐ ĐẦU VÀO -->
+            <div class="scenario-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-danger m-0"><i class="fa-solid fa-sliders me-2"></i>1. Nhập Thông Số Sản Phẩm & Mục Tiêu Tài Chính</h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="autoBalanceScenario()"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Tự Động Phân Bổ Tối Ưu</button>
+                </div>
+                <div class="row g-2 scenario-input-group">
+                    <div class="col-md-3">
+                        <label>Tên / Mã Sản Phẩm:</label>
+                        <input type="text" id="scProductName" class="form-control form-control-sm fw-bold text-primary" value="LCD LENOVO L24-4e 23.8INCH (68C2KAC1VN)">
+                    </div>
+                    <div class="col-md-2">
+                        <label>Giá Cost Thực Tế (VNĐ):</label>
+                        <input type="number" id="scCostPrice" class="form-control form-control-sm text-end fw-bold text-danger" value="1785000" oninput="calculateScenario()">
+                    </div>
+                    <div class="col-md-2">
+                        <label>Giá Hóa Đơn/Nhập (VNĐ):</label>
+                        <input type="number" id="scInvoicePrice" class="form-control form-control-sm text-end" value="1885200" oninput="calculateScenario()">
+                    </div>
+                    <div class="col-md-2">
+                        <label>Target SL / Tháng (Cái):</label>
+                        <input type="number" id="scTargetQty" class="form-control form-control-sm text-end fw-bold text-success" value="177" oninput="calculateScenario()">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Lợi Nhuận Mong Muốn (%):</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="scTargetMargin" class="form-control text-end fw-bold" value="2.55" step="0.1" oninput="calculateScenario()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. THỐNG KÊ TỔNG QUAN -->
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <span class="text-muted small fw-bold">TỔNG VỐN NHẬP (COST)</span>
+                        <h5 class="text-dark fw-bold mt-1 mb-0" id="scTotalCost">0 VNĐ</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #198754;">
+                        <span class="text-muted small fw-bold">TỔNG DOANH THU DỰ KIẾN</span>
+                        <h5 class="text-success fw-bold mt-1 mb-0" id="scTotalRevenue">0 VNĐ</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #dc3545;">
+                        <span class="text-muted small fw-bold">TỔNG LỢI NHUẬN GỘP</span>
+                        <h5 class="text-danger fw-bold mt-1 mb-0" id="scTotalProfit">0 VNĐ</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #0dcaf0;">
+                        <span class="text-muted small fw-bold">BIÊN LỢI NHUẬN ĐẠT ĐƯỢC</span>
+                        <h5 class="text-info fw-bold mt-1 mb-0" id="scAchievedMargin">0.00 %</h5>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. BẢNG PHÂN BỔ SẢN LƯỢNG & BIỂU ĐỒ -->
+            <div class="row g-2">
+                <div class="col-md-8">
+                    <div class="scenario-card h-100">
+                        <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-table-cells me-2"></i>2. Cơ Cấu Phân Bổ Giá Bán & Số Lượng Theo Nhóm Khách Hang</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm align-middle text-center mb-0" style="font-size:0.9rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nhóm Khách Hàng</th>
+                                        <th style="width: 110px;">SL Bán (Cái)</th>
+                                        <th style="width: 140px;">Giá Bán Đề Xuất</th>
+                                        <th>Lãi / Chiếc</th>
+                                        <th>Tổng Doanh Thu</th>
+                                        <th>Tổng Lãi Gộp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-start fw-bold text-dark">1. Khách lẻ / Công ty (&lt; 5c)</td>
+                                        <td><input type="number" id="scQty1" class="form-control form-control-sm text-center fw-bold" value="20" oninput="calculateScenario()"></td>
+                                        <td><input type="number" id="scPrice1" class="form-control form-control-sm text-end fw-bold" value="1910000" oninput="calculateScenario()"></td>
+                                        <td id="scMarginUnit1" class="text-end fw-bold text-success">0</td>
+                                        <td id="scRev1" class="text-end">0</td>
+                                        <td id="scProf1" class="text-end fw-bold text-success">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold text-dark">2. Đại lý nhỏ / Dự án (5 - 20c)</td>
+                                        <td><input type="number" id="scQty2" class="form-control form-control-sm text-center fw-bold" value="40" oninput="calculateScenario()"></td>
+                                        <td><input type="number" id="scPrice2" class="form-control form-control-sm text-end fw-bold" value="1880000" oninput="calculateScenario()"></td>
+                                        <td id="scMarginUnit2" class="text-end fw-bold text-success">0</td>
+                                        <td id="scRev2" class="text-end">0</td>
+                                        <td id="scProf2" class="text-end fw-bold text-success">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold text-dark">3. Đại lý lớn / Bao lô (&gt; 50c)</td>
+                                        <td><input type="number" id="scQty3" class="form-control form-control-sm text-center fw-bold text-primary" value="117" oninput="calculateScenario()"></td>
+                                        <td><input type="number" id="scPrice3" class="form-control form-control-sm text-end fw-bold text-primary" value="1800000" oninput="calculateScenario()"></td>
+                                        <td id="scMarginUnit3" class="text-end fw-bold text-primary">0</td>
+                                        <td id="scRev3" class="text-end">0</td>
+                                        <td id="scProf3" class="text-end fw-bold text-primary">0</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="table-secondary fw-bold">
+                                    <tr>
+                                        <td class="text-start">TỔNG CỘNG</td>
+                                        <td id="scTotalQtySum" class="text-center">177</td>
+                                        <td id="scAvgPrice" class="text-end text-primary">0</td>
+                                        <td>-</td>
+                                        <td id="scTotalRevSum" class="text-end">0</td>
+                                        <td id="scTotalProfSum" class="text-end text-danger">0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="scenario-card h-100 d-flex flex-column justify-content-center align-items-center">
+                        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.9rem;">Tỷ Trọng Số Lượng Bán Theo Nhóm</h6>
+                        <div style="height: 180px; width: 100%;">
+                            <canvas id="scenarioChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. KHUNG BẢN NHÁP GỬI ZALO/SALES & XUẤT FILE -->
+            <div class="scenario-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-success m-0"><i class="fa-solid fa-comment-dots me-2"></i>3. Bản Nháp Kịch Bản Gửi Zalo / Khách Hàng / Kinh Doanh (Có thể chỉnh sửa trực tiếp)</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-success" onclick="copyScenarioZaloText()"><i class="fa-solid fa-copy me-1"></i>Copy Tin Nhắn Zalo</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportScenarioExcel()"><i class="fa-solid fa-file-excel me-1"></i>Xuất Excel Kịch Bản</button>
+                    </div>
+                </div>
+                <!-- KHUNG CHỈNH SỬA TEXT TRỰC TIẾP -->
+                <textarea id="scenarioZaloText" class="form-control font-monospace" rows="8" style="font-size: 0.88rem; background-color: #f8fafc; border: 1px solid #94a3b8;"></textarea>
+            </div>
+        </div>
 
         <!-- DASHBOARD BÁO CÁO LỢI NHUẬN -->
         <div id="profitReportView" class="dashboard-container">
@@ -383,7 +543,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4RALYMvR8ixaVYZVdEuyqPjTzvgwzHbwM-komNRQ3tJVezaJR_DrrkmmwG4ZbLvVO/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0EKP2aXgnY6XunWZeh9ZFoVXv4O_7vktC0w0UoxilNzOr2Yi5p6ziSdcpFssfIyZQ/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -493,12 +653,12 @@
         ],
         'BANG_LEN_GIA': [
             { label: 'Mã hàng hóa', code: true, width: 180 },
-            { label: 'Tên Hàng', desc: true, width: 350 },
+            { label: 'Tên Hàng', desc: true, width: 380 },
             { label: 'Giá tiền mặt', cashPrice: true, width: 180 },
             { label: 'Giá công nợ', creditPrice: true, width: 180 },
-            { label: 'Trạng thái', statusIcon: true, width: 110 },
+            { label: 'Trạng thái', statusIcon: true, width: 90 },
             { label: 'NGÀY LÊN GIÁ', date: true, width: 120 },
-            { label: 'GIÁ TRÊN ZALO', zaloFormat: true, width: 520 },
+            { label: 'GIÁ TRÊN ZALO', zaloFormat: true, width: 420 },
             { label: 'Ghi chú / Tình trạng', width: 120 },
             { label: 'SL TỒN', numeric: true, width: 90 },
             { label: 'SL BÁN', numeric: true, width: 90 }
@@ -528,6 +688,7 @@
     let tableProfitDetails = null;
     let barChartInstance = null;
     let doughnutChartInstance = null;
+    let scenarioChartInstance = null;
     let globalActualData = [];
     let globalTargetData = [];
     
@@ -565,6 +726,7 @@
             'WEBSITE': { id: 'btnModeWebsite', cls: 'btn-primary' },
             'THONG_KE_QUY': { id: 'btnModeThongKeQuy', cls: 'btn-dark' },
             'BAO_CAO_LOI_NHUAN': { id: 'btnModeLoiNhuan', cls: 'btn-success' },
+            'KICH_BAN_BAN_HANG': { id: 'btnModeKichBan', cls: 'btn-danger' },
             'BANG_LEN_GIA': { id: 'btnModeBangLenGia', cls: 'btn-danger' },
             'BANG_GIA_DELL': { id: 'btnModeBaoGia1', cls: 'btn-warning' },
             'BANG_GIA_HP': { id: 'btnModeBaoGia2', cls: 'btn-warning' },
@@ -581,20 +743,190 @@
         
         let isThongKe = (mode === 'THONG_KE_QUY');
         let isLoiNhuan = (mode === 'BAO_CAO_LOI_NHUAN');
+        let isKichBan = (mode === 'KICH_BAN_BAN_HANG');
 
-        document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan) ? 'none' : 'flex';
-        document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan) ? 'none' : 'block';
-        document.getElementById('example-table').style.display = (isThongKe || isLoiNhuan) ? 'none' : 'block';
+        document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
+        document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
+        document.getElementById('example-table').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
         document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
         document.getElementById('profitReportView').style.display = isLoiNhuan ? 'flex' : 'none';
+        document.getElementById('kichBanView').style.display = isKichBan ? 'flex' : 'none';
 
-        resetAllFilters(false);
-        loadDataFromSheet(true);
+        if (isKichBan) {
+            calculateScenario();
+            document.getElementById('missingFromTabAlert').classList.add('d-none');
+        } else {
+            resetAllFilters(false);
+            loadDataFromSheet(true);
+        }
     }
 
     function showLoading(show, text = "Đang nạp dữ liệu từ Google Sheets...") {
         document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
         document.getElementById('spinnerText').innerText = text;
+    }
+
+    /* logic Kịch bản bán hàng */
+    function calculateScenario() {
+        let productName = document.getElementById('scProductName').value.trim();
+        let costPrice = parseFloat(document.getElementById('scCostPrice').value) || 0;
+        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
+        let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
+
+        let qty1 = parseFloat(document.getElementById('scQty1').value) || 0;
+        let price1 = parseFloat(document.getElementById('scPrice1').value) || 0;
+        
+        let qty2 = parseFloat(document.getElementById('scQty2').value) || 0;
+        let price2 = parseFloat(document.getElementById('scPrice2').value) || 0;
+
+        let qty3 = parseFloat(document.getElementById('scQty3').value) || 0;
+        let price3 = parseFloat(document.getElementById('scPrice3').value) || 0;
+
+        let totalCost = targetQty * costPrice;
+        
+        let marginUnit1 = price1 - costPrice;
+        let rev1 = qty1 * price1;
+        let prof1 = qty1 * marginUnit1;
+
+        let marginUnit2 = price2 - costPrice;
+        let rev2 = qty2 * price2;
+        let prof2 = qty2 * marginUnit2;
+
+        let marginUnit3 = price3 - costPrice;
+        let rev3 = qty3 * price3;
+        let prof3 = qty3 * marginUnit3;
+
+        let totalQtySum = qty1 + qty2 + qty3;
+        let totalRevSum = rev1 + rev2 + rev3;
+        let totalProfSum = prof1 + prof2 + prof3;
+        let achievedMargin = totalCost > 0 ? (totalProfSum / totalCost) * 100 : 0;
+        let avgPrice = totalQtySum > 0 ? totalRevSum / totalQtySum : 0;
+
+        document.getElementById('scMarginUnit1').innerText = marginUnit1.toLocaleString('vi-VN');
+        document.getElementById('scRev1').innerText = rev1.toLocaleString('vi-VN');
+        document.getElementById('scProf1').innerText = prof1.toLocaleString('vi-VN');
+
+        document.getElementById('scMarginUnit2').innerText = marginUnit2.toLocaleString('vi-VN');
+        document.getElementById('scRev2').innerText = rev2.toLocaleString('vi-VN');
+        document.getElementById('scProf2').innerText = prof2.toLocaleString('vi-VN');
+
+        document.getElementById('scMarginUnit3').innerText = marginUnit3.toLocaleString('vi-VN');
+        document.getElementById('scRev3').innerText = rev3.toLocaleString('vi-VN');
+        document.getElementById('scProf3').innerText = prof3.toLocaleString('vi-VN');
+
+        document.getElementById('scTotalCost').innerText = totalCost.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('scTotalRevenue').innerText = totalRevSum.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('scTotalProfit').innerText = totalProfSum.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('scAchievedMargin').innerText = achievedMargin.toFixed(2) + ' %';
+
+        document.getElementById('scTotalQtySum').innerText = totalQtySum;
+        document.getElementById('scAvgPrice').innerText = avgPrice.toLocaleString('vi-VN');
+        document.getElementById('scTotalRevSum').innerText = totalRevSum.toLocaleString('vi-VN');
+        document.getElementById('scTotalProfSum').innerText = totalProfSum.toLocaleString('vi-VN');
+
+        document.getElementById('rowCountBadge').innerText = `Kịch bản: ${totalQtySum} chiếc | Biên Lãi: ${achievedMargin.toFixed(2)}%`;
+
+        let ctx = document.getElementById('scenarioChart').getContext('2d');
+        if (scenarioChartInstance) scenarioChartInstance.destroy();
+        scenarioChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Khách Lẻ (<5c)', 'Đại Lý Vừa (5-20c)', 'Đại Lý Lớn (>50c)'],
+                datasets: [{
+                    data: [qty1, qty2, qty3],
+                    backgroundColor: ['#ffc107', '#0d6efd', '#198754']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                }
+            }
+        });
+
+        updateScenarioZaloText(productName, totalQtySum, totalRevSum, totalProfSum, achievedMargin, qty1, price1, qty2, price2, qty3, price3);
+    }
+
+    function updateScenarioZaloText(productName, totalQty, totalRev, totalProf, achievedMargin, q1, p1, q2, p2, q3, p3) {
+        let text = `🔥 [KỊCH BẢN BÁN HÀNG PHÂN BỔ DỰ ÁN SL LỚN] 🔥\n`;
+        text += `📌 Sản phẩm: ${productName}\n`;
+        text += `🎯 Tổng sản lượng target: ${totalQty} chiếc/tháng\n`;
+        text += `💰 Doanh thu dự kiến: ${totalRev.toLocaleString('vi-VN')} VNĐ\n`;
+        text += `📈 Lợi nhuận gộp mục tiêu: ${totalProf.toLocaleString('vi-VN')} VNĐ (~${achievedMargin.toFixed(2)}%)\n\n`;
+        text += `CƠ CẤU GIÁ BÁN & CHÍNH SÁCH CHIẾT KHẤU:\n`;
+        text += `1️⃣ Khách lẻ / Công ty (< 5c): ${p1.toLocaleString('vi-VN')} đ (Dự kiến bán ${q1}c)\n`;
+        text += `2️⃣ Đại lý vừa / Dự án nhỏ (5-20c): ${p2.toLocaleString('vi-VN')} đ (Dự kiến bán ${q2}c)\n`;
+        text += `3️⃣ Đại lý lớn / Bao lô (> 50c): ${p3.toLocaleString('vi-VN')} đ (Dự kiến bán ${q3}c)\n\n`;
+        text += `👉 Giá đè số lượng cực tốt cho các đơn vị chạy dự án Game/VP. Anh/chị Sales chủ động chốt lô lớn!`;
+        
+        document.getElementById('scenarioZaloText').value = text;
+    }
+
+    function autoBalanceScenario() {
+        let costPrice = parseFloat(document.getElementById('scCostPrice').value) || 0;
+        let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 177;
+        let targetMargin = parseFloat(document.getElementById('scTargetMargin').value) || 2.55;
+
+        let totalCost = targetQty * costPrice;
+        let requiredProfit = totalCost * (targetMargin / 100);
+
+        let q1 = parseFloat(document.getElementById('scQty1').value) || 20;
+        let p1 = parseFloat(document.getElementById('scPrice1').value) || 1910000;
+        
+        let q2 = parseFloat(document.getElementById('scQty2').value) || 40;
+        let p2 = parseFloat(document.getElementById('scPrice2').value) || 1880000;
+
+        let q3 = targetQty - q1 - q2;
+        if (q3 < 0) q3 = 0;
+        document.getElementById('scQty3').value = q3;
+
+        let prof1 = q1 * (p1 - costPrice);
+        let prof2 = q2 * (p2 - costPrice);
+        let remainingProfitNeeded = requiredProfit - prof1 - prof2;
+
+        let requiredProf3Unit = q3 > 0 ? (remainingProfitNeeded / q3) : 0;
+        let calculatedPrice3 = Math.round((costPrice + requiredProf3Unit) / 1000) * 1000;
+
+        document.getElementById('scPrice3').value = calculatedPrice3;
+        calculateScenario();
+    }
+
+    function copyScenarioZaloText() {
+        let zaloArea = document.getElementById('scenarioZaloText');
+        zaloArea.select();
+        zaloArea.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(zaloArea.value);
+        alert("Đã copy nội dung kịch bản Zalo vào bộ nhớ tạm!");
+    }
+
+    function exportScenarioExcel() {
+        let productName = document.getElementById('scProductName').value;
+        let totalCost = document.getElementById('scTotalCost').innerText;
+        let totalRev = document.getElementById('scTotalRevenue').innerText;
+        let totalProf = document.getElementById('scTotalProfit').innerText;
+        let margin = document.getElementById('scAchievedMargin').innerText;
+
+        let data = [
+            ["KỊCH BẢN PHÂN BỔ BÁN HÀNG TỔNG HỢP"],
+            ["Sản phẩm", productName],
+            ["Tổng vốn nhập", totalCost],
+            ["Tổng doanh thu dự kiến", totalRev],
+            ["Tổng lợi nhuận gộp", totalProf],
+            ["Biên lợi nhuận gộp", margin],
+            [],
+            ["Nhóm Khách Hàng", "SL Bán (Cái)", "Giá Bán (VNĐ)", "Lãi / Chiếc (VNĐ)", "Tổng Doanh Thu (VNĐ)", "Tổng Lãi Gộp (VNĐ)"],
+            ["Khách lẻ (<5c)", document.getElementById('scQty1').value, document.getElementById('scPrice1').value, document.getElementById('scMarginUnit1').innerText, document.getElementById('scRev1').innerText, document.getElementById('scProf1').innerText],
+            ["Đại lý vừa (5-20c)", document.getElementById('scQty2').value, document.getElementById('scPrice2').value, document.getElementById('scMarginUnit2').innerText, document.getElementById('scRev2').innerText, document.getElementById('scProf2').innerText],
+            ["Đại lý lớn (>50c)", document.getElementById('scQty3').value, document.getElementById('scPrice3').value, document.getElementById('scMarginUnit3').innerText, document.getElementById('scRev3').innerText, document.getElementById('scProf3').innerText],
+            ["TỔNG CỘNG", document.getElementById('scTotalQtySum').innerText, document.getElementById('scAvgPrice').innerText, "-", document.getElementById('scTotalRevSum').innerText, document.getElementById('scTotalProfSum').innerText]
+        ];
+
+        let ws = XLSX.utils.aoa_to_sheet(data);
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Kich_Ban_Ban_Hang");
+        XLSX.writeFile(wb, "Kich_Ban_Phan_Bo_Ban_Hang.xlsx");
     }
 
     function loadDataFromSheet(bypassCache = true) {
@@ -641,6 +973,8 @@
                     showLoading(false);
                     alert("Lỗi tải Báo cáo lợi nhuận!");
                 });
+        } else if (currentMode === 'KICH_BAN_BAN_HANG') {
+            calculateScenario();
         } else {
             showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}&nocache=${bypassCache}&t=${timeStamp}`)
@@ -1381,23 +1715,19 @@
                     return `Giá công nợ: ${num.toLocaleString('vi-VN')}`;
                 };
             }
-            // 3. CỘT TRẠNG THÁI (HIỂN THỊ DROPDOWN LỰA CHỌN TĂNG / GIẢM / NEW VÀ ICON TƯƠNG ỨNG)
+            // 3. CỘT TRẠNG THÁI (MŨI TÊN GIẢM, TĂNG, HOẶC ICON NEW)
             else if (col.statusIcon) {
                 colDef.hozAlign = "center";
-                colDef.editor = "list";
-                colDef.editorParams = {
-                    values: ["TĂNG", "GIẢM", "NEW", ""]
-                };
                 colDef.formatter = function(cell) {
                     let val = String(cell.getValue() || '').trim().toUpperCase();
                     if (val === 'GIẢM') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;" title="GIẢM"><i class="fa-solid fa-square-arrow-down text-danger"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-square-arrow-down text-danger"></i></div>`;
                     } else if (val === 'TĂNG') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;" title="TĂNG"><i class="fa-solid fa-square-arrow-up text-danger"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-square-arrow-up text-danger"></i></div>`;
                     } else if (val === 'NEW') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;" title="NEW"><i class="fa-solid fa-fire text-warning"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-fire text-warning"></i></div>`;
                     }
-                    return cell.getValue() || '';
+                    return cell.getValue();
                 };
             }
             // 4. CỘT GIÁ TRÊN ZALO (TỰ ĐỘNG GHÉP MÃ, TÊN, GIÁ TM, GIÁ CN & ICON TRẠNG THÁI)
@@ -1519,12 +1849,7 @@
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { resizable: true },
-            cellEdited: function(cell) {
-                if (idxIconCol !== -1 && cell.getField() === ("col_" + idxIconCol)) {
-                    cell.getRow().reformat();
-                }
-            }
+            columnDefaults: { resizable: true }
         });
 
         table.on("dataFiltered", function(filters, rows){
