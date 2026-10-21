@@ -161,7 +161,7 @@
             font-weight: bold !important;
         }
 
-        /* Style cho ô ngày lên giá (Màu xanh lá nhẹ) */
+        /* Style cho ô ngày lên giá */
         .cell-date-green {
             background-color: #d1e7dd !important;
             color: #0f5132 !important;
@@ -709,7 +709,7 @@
 
             if (missingTonKhoOnWebsite.length > 0) {
                 alertEl.classList.remove('d-none');
-                textEl.innerHTML = `Phát hiện <b>${missingTonKhoOnWebsite.length}</b> mã thiết bị trong <b>TỒN KHO</b> (Laptop, PC, LCD, AIO, In, Scan) chưa được đăng lên <b>WEBSITE</b>: <strong class="text-danger">${missingTonKhoOnWebsite.join(', ')}</strong>`;
+                textEl.innerHTML = `Phát hiện <b>${missingTonKhoOnWebsite.length}</b> mã thiết bị trong <b>TỒN KHO</b> chưa được đăng lên <b>WEBSITE</b>: <strong class="text-danger">${missingTonKhoOnWebsite.join(', ')}</strong>`;
             } else {
                 alertEl.classList.add('d-none');
             }
@@ -1330,7 +1330,6 @@
             }
         });
 
-        // TÌM CÁC VỊ TRÍ CỘT DÀNH CHO TAB BẢNG LÊN GIÁ (MÃ, TÊN, GIÁ TM, GIÁ CN, ICON TRẠNG THÁI)
         let idxCodeCol = activeCols.findIndex(c => c.code);
         let idxDescCol = activeCols.findIndex(c => c.desc);
         let idxCashCol = activeCols.findIndex(c => c.cashPrice);
@@ -1357,7 +1356,6 @@
                 headerFilterPlaceholder: "Lọc..."
             };
 
-            // 1. CỘT GIÁ TIỀN MẶT - TỰ ĐỘNG THÊM "Giá tiền mặt: "
             if (col.cashPrice) {
                 colDef.hozAlign = "left";
                 colDef.formatter = function(cell) {
@@ -1369,7 +1367,6 @@
                     return `Giá tiền mặt: ${num.toLocaleString('vi-VN')}`;
                 };
             }
-            // 2. CỘT GIÁ CÔNG NỢ - TỰ ĐỘNG THÊM "Giá công nợ: "
             else if (col.creditPrice) {
                 colDef.hozAlign = "left";
                 colDef.formatter = function(cell) {
@@ -1381,7 +1378,6 @@
                     return `Giá công nợ: ${num.toLocaleString('vi-VN')}`;
                 };
             }
-            // 3. CỘT TRẠNG THÁI (MŨI TÊN GIẢM, TĂNG, HOẶC ICON NEW)
             else if (col.statusIcon) {
                 colDef.hozAlign = "center";
                 colDef.formatter = function(cell) {
@@ -1396,7 +1392,6 @@
                     return cell.getValue();
                 };
             }
-            // 4. CỘT GIÁ TRÊN ZALO (TỰ ĐỘNG GHÉP MÃ, TÊN, GIÁ TM, GIÁ CN & ICON TRẠNG THÁI)
             else if (col.zaloFormat) {
                 colDef.formatter = function(cell) {
                     let rowData = cell.getRow().getData();
@@ -1429,7 +1424,6 @@
                     </div>`;
                 };
             }
-            // CÁC CỘT DẠNG SỐ BÌNH THƯỜNG
             else if (col.numeric) {
                 colDef.hozAlign = "right";
                 colDef.formatter = function(cell) {
@@ -1446,8 +1440,9 @@
                     let cleanValStr = String(val).replace(/[,.]/g, '');
                     let num = parseFloat(cleanValStr);
 
-                    let isCheckPriceCol = colNameUpper.includes('CHECK GIÁ BÁN') || colNameUpper.includes('CHECK GIÁ') || colNameUpper.includes('GIÁ BÁN');
+                    let isCheckPriceCol = colNameUpper.includes('CHECK GIÁ BÁN') || colNameUpper.includes('CHECK GIÁ');
                     
+                    // NẾU GIÁ TRỊ CỘT CHECK GIÁ BÁN BỊ ÂM -> TÔ NỀN ĐỎ CHỮ ĐỎ
                     if (!isNaN(num) && num < 0 && isCheckPriceCol) {
                         cell.getElement().classList.add("cell-negative-price");
                     } else {
@@ -1466,7 +1461,6 @@
                     };
                 }
             } 
-            // CỘT NGÀY THÁNG
             else if (col.date) {
                 colDef.hozAlign = "center";
                 colDef.formatter = function(cell) {
@@ -1494,12 +1488,37 @@
 
         let startRowOffset = 2;
 
+        // VỊ TRÍ CỦA CÁC CỘT GIÁ ĐỂ TÍNH TOÁN
+        let idxNew = activeCols.findIndex(c => {
+            let l = c.label.trim().toUpperCase();
+            return l.includes('GIÁ NHẬP MỚI') || l.includes('GIÁ COST') || l.includes('GIÁ NHẬP');
+        });
+        let idxCash = activeCols.findIndex(c => {
+            let l = c.label.trim().toUpperCase();
+            return l.includes('GIÁ BÁN TIỀN MẶT') || l.includes('GIÁ BÁN KTB') || l.includes('GIÁ TIỀN MẶT');
+        });
+        let idxCheck = activeCols.findIndex(c => {
+            let l = c.label.trim().toUpperCase();
+            return l.includes('CHECK GIÁ BÁN') || l.includes('CHECK GIÁ');
+        });
+
         let tableData = rowsToProcess.map((row, rowIndex) => {
             let actualSheetRow = startRowOffset + rowIndex;
             let obj = { sheetRowIndex: actualSheetRow, _isEditing: false }; 
+            
             activeCols.forEach((col, index) => {
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
+
+            // TỰ ĐỘNG TÍNH CỘT CHECK GIÁ BÁN TẠI FRONTEND BẰNG = GIÁ NHẬP MỚI - GIÁ BÁN TIỀN MẶT
+            if (idxNew !== -1 && idxCash !== -1 && idxCheck !== -1) {
+                let valNew = parseFloat(String(obj["col_" + idxNew] || 0).replace(/[,.]/g, '')) || 0;
+                let valCash = parseFloat(String(obj["col_" + idxCash] || 0).replace(/[,.]/g, '')) || 0;
+                if (valNew > 0 || valCash > 0) {
+                    obj["col_" + idxCheck] = valNew - valCash;
+                }
+            }
+
             return obj;
         });
 
@@ -1515,7 +1534,27 @@
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { resizable: true }
+            columnDefaults: { resizable: true },
+            // TỰ ĐỘNG CẬP NHẬT TỨC THÌ CHECK GIÁ BÁN KHI NGƯỜI DÙNG SỬA Ô TRÊN BẢNG
+            cellEdited: function(cell) {
+                let row = cell.getRow();
+                let rowData = row.getData();
+
+                if (idxNew !== -1 && idxCash !== -1 && idxCheck !== -1) {
+                    let fieldNew = "col_" + idxNew;
+                    let fieldCash = "col_" + idxCash;
+                    let fieldCheck = "col_" + idxCheck;
+
+                    let editedField = cell.getField();
+                    if (editedField === fieldNew || editedField === fieldCash) {
+                        let valNew = parseFloat(String(rowData[fieldNew] || 0).replace(/[,.]/g, '')) || 0;
+                        let valCash = parseFloat(String(rowData[fieldCash] || 0).replace(/[,.]/g, '')) || 0;
+                        
+                        rowData[fieldCheck] = valNew - valCash;
+                        row.update(rowData);
+                    }
+                }
+            }
         });
 
         table.on("dataFiltered", function(filters, rows){
