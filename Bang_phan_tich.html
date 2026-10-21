@@ -307,10 +307,14 @@
                         <label>Target SL / Tháng (Cái):</label>
                         <input type="number" id="scTargetQty" class="form-control form-control-sm text-end fw-bold text-success" value="200" oninput="autoBalanceScenario()">
                     </div>
+                    <!-- BỔ SUNG LỢI NHUẬN MIN - MAX -->
                     <div class="col-md-3">
-                        <label>Lợi Nhuận Mong Muốn (%):</label>
+                        <label>Khung Lợi Nhuận Mong Muốn (%):</label>
                         <div class="input-group input-group-sm">
-                            <input type="number" id="scTargetMargin" class="form-control text-end fw-bold" value="3.5" step="0.1" oninput="autoBalanceScenario()">
+                            <span class="input-group-text bg-light text-danger fw-bold">Min</span>
+                            <input type="number" id="scTargetMarginMin" class="form-control text-end fw-bold" value="2.5" step="0.1" oninput="autoBalanceScenario()">
+                            <span class="input-group-text bg-light text-success fw-bold">Max</span>
+                            <input type="number" id="scTargetMarginMax" class="form-control text-end fw-bold" value="5.0" step="0.1" oninput="autoBalanceScenario()">
                             <span class="input-group-text">%</span>
                         </div>
                     </div>
@@ -547,7 +551,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKptdKO7kVWUlnBVxaGvz5El0EXGXOTBu5R8AsogAhLuqd_Td2Tc84Lwfp0LgXAkgh/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0EKP2aXgnY6XunWZeh9ZFoVXv4O_7vktC0w0UoxilNzOr2Yi5p6ziSdcpFssfIyZQ/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -770,56 +774,68 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    /* LOGIC TỰ ĐỘNG CÂN ĐỐI & NHẢY GIÁ BÁN ĐỀ XUẤT THEO GIÁ NHẬP HÓA ĐƠN */
+    /* LOGIC NHẢY KHOẢNG GIÁ MIN - MAX THEO LỢI NHUẬN MONG MUỐN */
     function autoBalanceScenario() {
-        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0; // Tính theo Giá Hóa Đơn/Nhập
+        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
         let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
-        let targetMargin = parseFloat(document.getElementById('scTargetMargin').value) || 0;
+        
+        let targetMarginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
+        let targetMarginMax = parseFloat(document.getElementById('scTargetMarginMax').value) || 0;
 
         let p1Input = document.getElementById('scPrice1');
         let p2Input = document.getElementById('scPrice2');
         let p3Input = document.getElementById('scPrice3');
 
-        let p1 = parseFloat(p1Input.value) || 0;
-        let p2 = parseFloat(p2Input.value) || 0;
-
-        // Tự động gợi ý giá nếu chưa nhập hoặc thấp hơn vốn nhập
-        if (p1 <= invoicePrice) {
-            p1 = Math.round((invoicePrice * 1.07) / 1000) * 1000;
-            p1Input.value = p1;
-        }
-        if (p2 <= invoicePrice) {
-            p2 = Math.round((invoicePrice * 1.04) / 1000) * 1000;
-            p2Input.value = p2;
-        }
-
-        // Cân đối Số lượng Nhóm 3 (Bao lô)
         let q1 = parseFloat(document.getElementById('scQty1').value) || 0;
         let q2 = parseFloat(document.getElementById('scQty2').value) || 0;
         let q3 = targetQty - q1 - q2;
         if (q3 < 0) q3 = 0;
         document.getElementById('scQty3').value = q3;
 
-        // Tính Giá Nhóm 3 để đạt chính xác % Lợi nhuận mong muốn
+        // 1. Tính GIÁ MIN theo % Lợi nhuận Min
         let totalCost = targetQty * invoicePrice;
-        let requiredProfit = totalCost * (targetMargin / 100);
+        let requiredProfitMin = totalCost * (targetMarginMin / 100);
 
-        let prof1 = q1 * (p1 - invoicePrice);
-        let prof2 = q2 * (p2 - invoicePrice);
-        let remainingProfitNeeded = requiredProfit - prof1 - prof2;
+        let p1Min = Math.round((invoicePrice * (1 + (targetMarginMin + 3.5) / 100)) / 1000) * 1000;
+        let p2Min = Math.round((invoicePrice * (1 + (targetMarginMin + 1.5) / 100)) / 1000) * 1000;
+        
+        let prof1Min = q1 * (p1Min - invoicePrice);
+        let prof2Min = q2 * (p2Min - invoicePrice);
+        let remProfitMin = requiredProfitMin - prof1Min - prof2Min;
+        let p3MinUnit = q3 > 0 ? (remProfitMin / q3) : 0;
+        let p3Min = Math.round((invoicePrice + p3MinUnit) / 1000) * 1000;
 
-        let requiredProf3Unit = q3 > 0 ? (remainingProfitNeeded / q3) : 0;
-        let calculatedPrice3 = Math.round((invoicePrice + requiredProf3Unit) / 1000) * 1000;
+        // 2. Tính GIÁ MAX theo % Lợi nhuận Max
+        let requiredProfitMax = totalCost * (targetMarginMax / 100);
+        let p1Max = Math.round((invoicePrice * (1 + (targetMarginMax + 4.5) / 100)) / 1000) * 1000;
+        let p2Max = Math.round((invoicePrice * (1 + (targetMarginMax + 2.0) / 100)) / 1000) * 1000;
+        
+        let prof1Max = q1 * (p1Max - invoicePrice);
+        let prof2Max = q2 * (p2Max - invoicePrice);
+        let remProfitMax = requiredProfitMax - prof1Max - prof2Max;
+        let p3MaxUnit = q3 > 0 ? (remProfitMax / q3) : 0;
+        let p3Max = Math.round((invoicePrice + p3MaxUnit) / 1000) * 1000;
 
-        p3Input.value = calculatedPrice3;
+        p1Input.value = Math.round((p1Min + p1Max) / 2 / 1000) * 1000;
+        p2Input.value = Math.round((p2Min + p2Max) / 2 / 1000) * 1000;
+        p3Input.value = Math.round((p3Min + p3Max) / 2 / 1000) * 1000;
+
+        window.priceRangeData = {
+            p1Min: p1Min, p1Max: p1Max,
+            p2Min: p2Min, p2Max: p2Max,
+            p3Min: p3Min, p3Max: p3Max
+        };
 
         calculateScenario();
     }
 
     function calculateScenario() {
         let productName = document.getElementById('scProductName').value.trim();
-        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0; // Lấy Giá Hóa Đơn/Nhập
+        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
         let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
+
+        let marginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
+        let marginMax = parseFloat(document.getElementById('scTargetMarginMax').value) || 0;
 
         let qty1 = parseFloat(document.getElementById('scQty1').value) || 0;
         let price1 = parseFloat(document.getElementById('scPrice1').value) || 0;
@@ -865,7 +881,7 @@
         document.getElementById('scTotalCost').innerText = totalCost.toLocaleString('vi-VN') + ' VNĐ';
         document.getElementById('scTotalRevenue').innerText = totalRevSum.toLocaleString('vi-VN') + ' VNĐ';
         document.getElementById('scTotalProfit').innerText = totalProfSum.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('scAchievedMargin').innerText = achievedMargin.toFixed(2) + ' %';
+        document.getElementById('scAchievedMargin').innerText = `${achievedMargin.toFixed(2)}% (Target: ${marginMin}% - ${marginMax}%)`;
 
         document.getElementById('scTotalQtySum').innerText = totalQtySum;
         document.getElementById('scAvgPrice').innerText = avgPrice.toLocaleString('vi-VN');
@@ -894,20 +910,22 @@
             }
         });
 
-        updateScenarioZaloText(productName, totalQtySum, totalRevSum, totalProfSum, achievedMargin, qty1, price1, qty2, price2, qty3, price3);
+        updateScenarioZaloText(productName, totalQtySum, totalRevSum, totalProfSum, achievedMargin, qty1, price1, qty2, price2, qty3, price3, marginMin, marginMax);
     }
 
-    function updateScenarioZaloText(productName, totalQty, totalRev, totalProf, achievedMargin, q1, p1, q2, p2, q3, p3) {
+    function updateScenarioZaloText(productName, totalQty, totalRev, totalProf, achievedMargin, q1, p1, q2, p2, q3, p3, marginMin, marginMax) {
+        let rng = window.priceRangeData || { p1Min: p1, p1Max: p1, p2Min: p2, p2Max: p2, p3Min: p3, p3Max: p3 };
+
         let text = `🔥 [KỊCH BẢN BÁN HÀNG PHÂN BỔ DỰ ÁN SL LỚN] 🔥\n`;
         text += `📌 Sản phẩm: ${productName}\n`;
         text += `🎯 Tổng sản lượng target: ${totalQty} chiếc/tháng\n`;
         text += `💰 Doanh thu dự kiến: ${totalRev.toLocaleString('vi-VN')} VNĐ\n`;
-        text += `📈 Lợi nhuận gộp mục tiêu: ${totalProf.toLocaleString('vi-VN')} VNĐ (~${achievedMargin.toFixed(2)}%)\n\n`;
-        text += `CƠ CẤU GIÁ BÁN & CHÍNH SÁCH CHIẾT KHẤU:\n`;
-        text += `1️⃣ Khách lẻ / Công ty (< 5c): ${p1.toLocaleString('vi-VN')} đ (Dự kiến bán ${q1}c)\n`;
-        text += `2️⃣ Đại lý vừa / Dự án nhỏ (5-20c): ${p2.toLocaleString('vi-VN')} đ (Dự kiến bán ${q2}c)\n`;
-        text += `3️⃣ Đại lý lớn / Bao lô (> 50c): ${p3.toLocaleString('vi-VN')} đ (Dự kiến bán ${q3}c)\n\n`;
-        text += `👉 Giá đè số lượng cực tốt cho các đơn vị chạy dự án Game/VP. Anh/chị Sales chủ động chốt lô lớn!`;
+        text += `📈 Biên lợi nhuận khung: ${marginMin}% -> ${marginMax}% (Thực tế đạt: ${achievedMargin.toFixed(2)}%)\n\n`;
+        text += `CƠ CẤU KHUNG GIÁ BÁN THƯƠNG LƯỢNG:\n`;
+        text += `1️⃣ Khách lẻ / Công ty (< 5c): ${rng.p1Min.toLocaleString('vi-VN')} đ -> ${rng.p1Max.toLocaleString('vi-VN')} đ (Bán ${q1}c)\n`;
+        text += `2️⃣ Đại lý vừa / Dự án nhỏ (5-20c): ${rng.p2Min.toLocaleString('vi-VN')} đ -> ${rng.p2Max.toLocaleString('vi-VN')} đ (Bán ${q2}c)\n`;
+        text += `3️⃣ Đại lý lớn / Bao lô (> 50c): ${rng.p3Min.toLocaleString('vi-VN')} đ -> ${rng.p3Max.toLocaleString('vi-VN')} đ (Bán ${q3}c)\n\n`;
+        text += `👉 Khung giá thương lượng áp dụng theo dải sản lượng. Anh/chị Sales chủ động chốt đơn trong biên độ!`;
         
         document.getElementById('scenarioZaloText').value = text;
     }
