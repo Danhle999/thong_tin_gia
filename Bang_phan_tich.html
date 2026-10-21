@@ -496,7 +496,7 @@
             { label: 'Tên Hàng', desc: true, width: 380 },
             { label: 'Giá tiền mặt', cashPrice: true, width: 180 },
             { label: 'Giá công nợ', creditPrice: true, width: 180 },
-            { label: 'Trạng thái', statusIcon: true, width: 90 },
+            { label: 'Trạng thái', statusIcon: true, width: 110 },
             { label: 'NGÀY LÊN GIÁ', date: true, width: 120 },
             { label: 'GIÁ TRÊN ZALO', zaloFormat: true, width: 420 },
             { label: 'Ghi chú / Tình trạng', width: 120 },
@@ -1381,19 +1381,23 @@
                     return `Giá công nợ: ${num.toLocaleString('vi-VN')}`;
                 };
             }
-            // 3. CỘT TRẠNG THÁI (MŨI TÊN GIẢM, TĂNG, HOẶC ICON NEW)
+            // 3. CỘT TRẠNG THÁI (HIỂN THỊ DROPDOWN LỰA CHỌN TĂNG / GIẢM / NEW VÀ ICON TƯƠNG ỨNG)
             else if (col.statusIcon) {
                 colDef.hozAlign = "center";
+                colDef.editor = "list";
+                colDef.editorParams = {
+                    values: ["TĂNG", "GIẢM", "NEW", ""]
+                };
                 colDef.formatter = function(cell) {
                     let val = String(cell.getValue() || '').trim().toUpperCase();
                     if (val === 'GIẢM') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-square-arrow-down text-danger"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;" title="GIẢM"><i class="fa-solid fa-square-arrow-down text-danger"></i></div>`;
                     } else if (val === 'TĂNG') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-square-arrow-up text-danger"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;" title="TĂNG"><i class="fa-solid fa-square-arrow-up text-danger"></i></div>`;
                     } else if (val === 'NEW') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-fire text-warning"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;" title="NEW"><i class="fa-solid fa-fire text-warning"></i></div>`;
                     }
-                    return cell.getValue();
+                    return cell.getValue() || '';
                 };
             }
             // 4. CỘT GIÁ TRÊN ZALO (TỰ ĐỘNG GHÉP MÃ, TÊN, GIÁ TM, GIÁ CN & ICON TRẠNG THÁI)
@@ -1515,7 +1519,12 @@
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { resizable: true }
+            columnDefaults: { resizable: true },
+            cellEdited: function(cell) {
+                if (idxIconCol !== -1 && cell.getField() === ("col_" + idxIconCol)) {
+                    cell.getRow().reformat();
+                }
+            }
         });
 
         table.on("dataFiltered", function(filters, rows){
