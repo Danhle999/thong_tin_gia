@@ -638,10 +638,9 @@
         let alertEl = document.getElementById('missingFromTabAlert');
         let textEl = document.getElementById('missingAlertText');
 
-        // LỰA CHỌN 1: NẾU ĐANG Ở TAB WEBSITE -> KIỂM TRA XEM MÃ TỒN KHO NÀO CHƯA CÓ TRÊN WEBSITE
+        // LỰA CHỌN 1: NẾU ĐANG Ở TAB WEBSITE -> CHỈ LẤY ĐÚNG 6 NHÓM THIẾT BỊ TỪ TỒN KHO ĐỂ SO SÁNH
         if (currentMode === 'WEBSITE') {
             let activeCols = getActiveColumns();
-            // Lấy chỉ số cột Mã Sản Phẩm (Mã sản phẩm là cột số 3 trong cấu trúc mới)
             let codeColIdx = activeCols.findIndex(c => {
                 let l = c.label.trim().toUpperCase();
                 return l === 'MÃ SẢN PHẨM' || l === 'MÃ HÀNG HÓA' || l === 'SKU';
@@ -656,17 +655,40 @@
 
             let missingTonKhoOnWebsite = [];
 
-            // Duyệt danh sách TỒN KHO để tìm các mã CHƯA CÓ trên Website
+            // Duyệt danh sách TỒN KHO và LỌC ĐÚNG 6 NHÓM THIẾT BỊ (Laptop, PC, Monitor, AIO, Máy in, Máy Scan)
             rawTonKhoItems.forEach(item => {
+                let itemTypeUpper = item.type.toUpperCase();
                 let itemCodeUpper = item.code.toUpperCase();
-                if (itemCodeUpper && !currentWebsiteCodesSet.has(itemCodeUpper)) {
+                let itemNameUpper = item.name.toUpperCase();
+
+                // Dấu vết AIO
+                let isAio = itemTypeUpper.includes('AIO') || itemTypeUpper.includes('ALL-IN-ONE') || itemTypeUpper.includes('ALL IN ONE') ||
+                            itemCodeUpper.includes('AIO') || itemNameUpper.includes('AIO');
+
+                // Dấu vết Laptop
+                let isLaptop = itemTypeUpper.includes('MÁY TÍNH XÁCH TAY') || itemTypeUpper.includes('LAPTOP') || itemTypeUpper.includes('NOTEBOOK');
+
+                // Dấu vết PC (Máy tính để bàn) - Không dính AIO
+                let isDesktop = (itemTypeUpper.includes('MÁY TÍNH ĐỂ BÀN') || itemTypeUpper.includes('DESKTOP') || itemTypeUpper.includes('PC')) && !isAio;
+
+                // Dấu vết Màn hình
+                let isLcd = itemTypeUpper.includes('MÀN HÌNH MÁY TÍNH') || itemTypeUpper.includes('MÀN HÌNH') || itemTypeUpper.includes('MONITOR') || itemTypeUpper.includes('LCD');
+
+                // Dấu vết Máy in / Máy Scan
+                let isPrinterScan = itemTypeUpper.includes('MÁY IN') || itemTypeUpper.includes('MÁY SCAN') || itemTypeUpper.includes('SCAN') || itemTypeUpper.includes('PRINTER');
+
+                // Kiểm tra xem dòng tồn kho có thuộc 1 trong 6 nhóm thiết bị nêu trên không
+                let isDevice = isLaptop || isDesktop || isLcd || isAio || isPrinterScan;
+
+                // Nếu thuộc 6 nhóm thiết bị nhưng CHƯA ĐẮNG / THIẾU trên Website
+                if (isDevice && itemCodeUpper && !currentWebsiteCodesSet.has(itemCodeUpper)) {
                     missingTonKhoOnWebsite.push(item.code);
                 }
             });
 
             if (missingTonKhoOnWebsite.length > 0) {
                 alertEl.classList.remove('d-none');
-                textEl.innerHTML = `Phát hiện <b>${missingTonKhoOnWebsite.length}</b> mã trong <b>TỒN KHO</b> chưa được đăng lên <b>WEBSITE</b>: <strong class="text-danger">${missingTonKhoOnWebsite.join(', ')}</strong>`;
+                textEl.innerHTML = `Phát hiện <b>${missingTonKhoOnWebsite.length}</b> mã thiết bị trong <b>TỒN KHO</b> (Laptop, PC, LCD, AIO, In, Scan) chưa được đăng lên <b>WEBSITE</b>: <strong class="text-danger">${missingTonKhoOnWebsite.join(', ')}</strong>`;
             } else {
                 alertEl.classList.add('d-none');
             }
