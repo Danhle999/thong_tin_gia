@@ -383,7 +383,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzSa-HPLDPA4d28NLCTtomr2D56cFWW-sCM6NnW2ALE9jWC6Zr6fRFPDb8u1sbVz4Wy/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0EKP2aXgnY6XunWZeh9ZFoVXv4O_7vktC0w0UoxilNzOr2Yi5p6ziSdcpFssfIyZQ/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -537,7 +537,7 @@
         let sum = 0;
         values.forEach(function(val) {
             if (val !== null && val !== undefined && val !== '') {
-                let cleanVal = parseFloat(String(val).replace(/[,.]/g, ''));
+                let cleanVal = parseFloat(String(val).replace(/[^0-9-]/g, ''));
                 if (!isNaN(cleanVal)) sum += cleanVal;
             }
         });
@@ -1067,7 +1067,7 @@
                 if (cell.getField() === "targetAmount") {
                     let row = cell.getRow();
                     let d = row.getData();
-                    let target = parseFloat(String(d.targetAmount).replace(/[,.]/g, '')) || 0;
+                    let target = parseFloat(String(d.targetAmount).replace(/[^0-9-]/g, '')) || 0;
                     let actual = parseFloat(d.actualAmount) || 0;
 
                     if (target > 0) {
@@ -1104,7 +1104,7 @@
                     formatter: function(cell) {
                         let val = cell.getValue();
                         if (!val) return "-";
-                        let num = parseFloat(String(val).replace(/[,.]/g, ''));
+                        let num = parseFloat(String(val).replace(/[^0-9-]/g, ''));
                         return isNaN(num) || num <= 0 ? "-" : num.toLocaleString('vi-VN');
                     }
                 },
@@ -1361,7 +1361,7 @@
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
                     if (val === null || val === undefined || String(val).trim() === '') return '';
-                    let cleanStr = String(val).replace(/[^\d]/g, '');
+                    let cleanStr = String(val).replace(/[^0-9-]/g, '');
                     let num = parseFloat(cleanStr);
                     if (isNaN(num)) return val;
                     return `Giá tiền mặt: ${num.toLocaleString('vi-VN')}`;
@@ -1372,7 +1372,7 @@
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
                     if (val === null || val === undefined || String(val).trim() === '') return '';
-                    let cleanStr = String(val).replace(/[^\d]/g, '');
+                    let cleanStr = String(val).replace(/[^0-9-]/g, '');
                     let num = parseFloat(cleanStr);
                     if (isNaN(num)) return val;
                     return `Giá công nợ: ${num.toLocaleString('vi-VN')}`;
@@ -1403,8 +1403,8 @@
                     let rawCredit = idxCreditCol !== -1 ? String(rowData["col_" + idxCreditCol] || '').trim() : '';
                     let rawIcon = idxIconCol !== -1 ? String(rowData["col_" + idxIconCol] || '').trim().toUpperCase() : '';
 
-                    let cashNum = parseFloat(rawCash.replace(/[^\d]/g, ''));
-                    let creditNum = parseFloat(rawCredit.replace(/[^\d]/g, ''));
+                    let cashNum = parseFloat(rawCash.replace(/[^0-9-]/g, ''));
+                    let creditNum = parseFloat(rawCredit.replace(/[^0-9-]/g, ''));
 
                     let cashStr = !isNaN(cashNum) ? `Giá tiền mặt: ${cashNum.toLocaleString('vi-VN')}` : '';
                     let creditStr = !isNaN(creditNum) ? `Giá công nợ: ${creditNum.toLocaleString('vi-VN')}` : '';
@@ -1437,12 +1437,11 @@
                         return num > 1 ? num.toFixed(2) + '%' : (num * 100).toFixed(2) + '%';
                     }
 
-                    let cleanValStr = String(val).replace(/[,.]/g, '');
+                    let cleanValStr = String(val).replace(/[^0-9-]/g, '');
                     let num = parseFloat(cleanValStr);
 
                     let isCheckPriceCol = colNameUpper.includes('CHECK GIÁ BÁN') || colNameUpper.includes('CHECK GIÁ');
                     
-                    // NẾU GIÁ TRỊ CỘT CHECK GIÁ BÁN BỊ ÂM -> TÔ NỀN ĐỎ CHỮ ĐỎ
                     if (!isNaN(num) && num < 0 && isCheckPriceCol) {
                         cell.getElement().classList.add("cell-negative-price");
                     } else {
@@ -1488,7 +1487,6 @@
 
         let startRowOffset = 2;
 
-        // VỊ TRÍ CỦA CÁC CỘT GIÁ ĐỂ TÍNH TOÁN
         let idxNew = activeCols.findIndex(c => {
             let l = c.label.trim().toUpperCase();
             return l.includes('GIÁ NHẬP MỚI') || l.includes('GIÁ COST') || l.includes('GIÁ NHẬP');
@@ -1510,12 +1508,15 @@
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
 
-            // TỰ ĐỘNG TÍNH CỘT CHECK GIÁ BÁN TẠI FRONTEND BẰNG = GIÁ NHẬP MỚI - GIÁ BÁN TIỀN MẶT
+            // TÍNH TOÁN CÔNG THỨC: CHECK GIÁ BÁN = GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI
             if (idxNew !== -1 && idxCash !== -1 && idxCheck !== -1) {
-                let valNew = parseFloat(String(obj["col_" + idxNew] || 0).replace(/[,.]/g, '')) || 0;
-                let valCash = parseFloat(String(obj["col_" + idxCash] || 0).replace(/[,.]/g, '')) || 0;
+                let strNew = String(obj["col_" + idxNew] || "0").replace(/[^0-9-]/g, "");
+                let strCash = String(obj["col_" + idxCash] || "0").replace(/[^0-9-]/g, "");
+                let valNew = parseFloat(strNew) || 0;
+                let valCash = parseFloat(strCash) || 0;
+
                 if (valNew > 0 || valCash > 0) {
-                    obj["col_" + idxCheck] = valNew - valCash;
+                    obj["col_" + idxCheck] = valCash - valNew;
                 }
             }
 
@@ -1535,7 +1536,6 @@
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
             columnDefaults: { resizable: true },
-            // TỰ ĐỘNG CẬP NHẬT TỨC THÌ CHECK GIÁ BÁN KHI NGƯỜI DÙNG SỬA Ô TRÊN BẢNG
             cellEdited: function(cell) {
                 let row = cell.getRow();
                 let rowData = row.getData();
@@ -1547,10 +1547,13 @@
 
                     let editedField = cell.getField();
                     if (editedField === fieldNew || editedField === fieldCash) {
-                        let valNew = parseFloat(String(rowData[fieldNew] || 0).replace(/[,.]/g, '')) || 0;
-                        let valCash = parseFloat(String(rowData[fieldCash] || 0).replace(/[,.]/g, '')) || 0;
-                        
-                        rowData[fieldCheck] = valNew - valCash;
+                        let strNew = String(rowData[fieldNew] || "0").replace(/[^0-9-]/g, "");
+                        let strCash = String(rowData[fieldCash] || "0").replace(/[^0-9-]/g, "");
+                        let valNew = parseFloat(strNew) || 0;
+                        let valCash = parseFloat(strCash) || 0;
+
+                        // CHECK GIÁ BÁN = GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI
+                        rowData[fieldCheck] = valCash - valNew;
                         row.update(rowData);
                     }
                 }
