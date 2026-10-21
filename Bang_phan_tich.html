@@ -161,14 +161,12 @@
             font-weight: bold !important;
         }
 
-        /* Style cho ô ngày lên giá */
         .cell-date-green {
             background-color: #d1e7dd !important;
             color: #0f5132 !important;
             font-weight: bold !important;
         }
 
-        /* Style khung hiển thị tin nhắn Zalo */
         .zalo-price-box {
             background-color: #ffffff;
             border: 1px solid #106ba3;
@@ -219,7 +217,6 @@
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
         </div>
 
-        <!-- BẢNG THÔNG BÁO MÃ CHƯA CÓ / THIẾU TRÊN WEBSITE -->
         <div id="missingFromTabAlert" class="alert alert-warning py-2 px-3 mb-2 small d-none d-flex justify-content-between align-items-center" style="flex-shrink: 0;">
             <div>
                 <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
@@ -227,7 +224,6 @@
             </div>
         </div>
 
-        <!-- BỘ LỌC TOÀN CỤC CHO CÁC SHEET THƯỜNG -->
         <div class="filter-card" id="globalFilterCard">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -244,7 +240,6 @@
             </div>
         </div>
         
-        <!-- NÚT THAO TÁC -->
         <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
@@ -258,7 +253,6 @@
             </div>
         </div>
 
-        <!-- BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
 
         <!-- DASHBOARD BÁO CÁO LỢI NHUẬN -->
@@ -533,13 +527,19 @@
     
     let rawTonKhoItems = [];
 
+    // HÀM BÓC TÁCH CHUỖI SỐ (LOẠI BỎ TẤT CẢ KÝ TỰ KHÔNG PHẢI SỐ/DẤU TRỪ)
+    function cleanNumberValue(val) {
+        if (val === null || val === undefined || val === '') return 0;
+        let str = String(val).replace(/[^0-9-]/g, '');
+        let num = parseFloat(str);
+        return isNaN(num) ? 0 : num;
+    }
+
     function customSumCalc(values) {
         let sum = 0;
         values.forEach(function(val) {
-            if (val !== null && val !== undefined && val !== '') {
-                let cleanVal = parseFloat(String(val).replace(/[^0-9-]/g, ''));
-                if (!isNaN(cleanVal)) sum += cleanVal;
-            }
+            let num = cleanNumberValue(val);
+            sum += num;
         });
         return sum;
     }
@@ -1067,7 +1067,7 @@
                 if (cell.getField() === "targetAmount") {
                     let row = cell.getRow();
                     let d = row.getData();
-                    let target = parseFloat(String(d.targetAmount).replace(/[^0-9-]/g, '')) || 0;
+                    let target = cleanNumberValue(d.targetAmount);
                     let actual = parseFloat(d.actualAmount) || 0;
 
                     if (target > 0) {
@@ -1104,7 +1104,7 @@
                     formatter: function(cell) {
                         let val = cell.getValue();
                         if (!val) return "-";
-                        let num = parseFloat(String(val).replace(/[^0-9-]/g, ''));
+                        let num = cleanNumberValue(val);
                         return isNaN(num) || num <= 0 ? "-" : num.toLocaleString('vi-VN');
                     }
                 },
@@ -1336,6 +1336,11 @@
         let idxCreditCol = activeCols.findIndex(c => c.creditPrice);
         let idxIconCol = activeCols.findIndex(c => c.statusIcon);
 
+        // VỊ TRÍ CHÍNH XÁC CỦA TỪNG CỘT TÍNH GIÁ
+        let idxNew = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ NHẬP MỚI');
+        let idxCash = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'GIÁ BÁN TIỀN MẶT' || c.label.trim().toUpperCase() === 'GIÁ BÁN KTB');
+        let idxCheck = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'CHECK GIÁ BÁN');
+
         activeCols.forEach((col, index) => {
             let colNameUpper = col.label.trim().toUpperCase();
 
@@ -1361,8 +1366,7 @@
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
                     if (val === null || val === undefined || String(val).trim() === '') return '';
-                    let cleanStr = String(val).replace(/[^0-9-]/g, '');
-                    let num = parseFloat(cleanStr);
+                    let num = cleanNumberValue(val);
                     if (isNaN(num)) return val;
                     return `Giá tiền mặt: ${num.toLocaleString('vi-VN')}`;
                 };
@@ -1372,8 +1376,7 @@
                 colDef.formatter = function(cell) {
                     let val = cell.getValue();
                     if (val === null || val === undefined || String(val).trim() === '') return '';
-                    let cleanStr = String(val).replace(/[^0-9-]/g, '');
-                    let num = parseFloat(cleanStr);
+                    let num = cleanNumberValue(val);
                     if (isNaN(num)) return val;
                     return `Giá công nợ: ${num.toLocaleString('vi-VN')}`;
                 };
@@ -1403,11 +1406,11 @@
                     let rawCredit = idxCreditCol !== -1 ? String(rowData["col_" + idxCreditCol] || '').trim() : '';
                     let rawIcon = idxIconCol !== -1 ? String(rowData["col_" + idxIconCol] || '').trim().toUpperCase() : '';
 
-                    let cashNum = parseFloat(rawCash.replace(/[^0-9-]/g, ''));
-                    let creditNum = parseFloat(rawCredit.replace(/[^0-9-]/g, ''));
+                    let cashNum = cleanNumberValue(rawCash);
+                    let creditNum = cleanNumberValue(rawCredit);
 
-                    let cashStr = !isNaN(cashNum) ? `Giá tiền mặt: ${cashNum.toLocaleString('vi-VN')}` : '';
-                    let creditStr = !isNaN(creditNum) ? `Giá công nợ: ${creditNum.toLocaleString('vi-VN')}` : '';
+                    let cashStr = !isNaN(cashNum) && cashNum > 0 ? `Giá tiền mặt: ${cashNum.toLocaleString('vi-VN')}` : '';
+                    let creditStr = !isNaN(creditNum) && creditNum > 0 ? `Giá công nợ: ${creditNum.toLocaleString('vi-VN')}` : '';
 
                     let iconSymbol = '';
                     if (rawIcon === 'GIẢM') iconSymbol = ' ⬇️';
@@ -1437,9 +1440,7 @@
                         return num > 1 ? num.toFixed(2) + '%' : (num * 100).toFixed(2) + '%';
                     }
 
-                    let cleanValStr = String(val).replace(/[^0-9-]/g, '');
-                    let num = parseFloat(cleanValStr);
-
+                    let num = cleanNumberValue(val);
                     let isCheckPriceCol = colNameUpper.includes('CHECK GIÁ BÁN') || colNameUpper.includes('CHECK GIÁ');
                     
                     if (!isNaN(num) && num < 0 && isCheckPriceCol) {
@@ -1487,19 +1488,6 @@
 
         let startRowOffset = 2;
 
-        let idxNew = activeCols.findIndex(c => {
-            let l = c.label.trim().toUpperCase();
-            return l.includes('GIÁ NHẬP MỚI') || l.includes('GIÁ COST') || l.includes('GIÁ NHẬP');
-        });
-        let idxCash = activeCols.findIndex(c => {
-            let l = c.label.trim().toUpperCase();
-            return l.includes('GIÁ BÁN TIỀN MẶT') || l.includes('GIÁ BÁN KTB') || l.includes('GIÁ TIỀN MẶT');
-        });
-        let idxCheck = activeCols.findIndex(c => {
-            let l = c.label.trim().toUpperCase();
-            return l.includes('CHECK GIÁ BÁN') || l.includes('CHECK GIÁ');
-        });
-
         let tableData = rowsToProcess.map((row, rowIndex) => {
             let actualSheetRow = startRowOffset + rowIndex;
             let obj = { sheetRowIndex: actualSheetRow, _isEditing: false }; 
@@ -1508,12 +1496,10 @@
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
 
-            // TÍNH TOÁN CÔNG THỨC: CHECK GIÁ BÁN = GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI
+            // TÍNH TOÁN CÔNG THỨC CHUẨN: CHECK GIÁ BÁN = GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI
             if (idxNew !== -1 && idxCash !== -1 && idxCheck !== -1) {
-                let strNew = String(obj["col_" + idxNew] || "0").replace(/[^0-9-]/g, "");
-                let strCash = String(obj["col_" + idxCash] || "0").replace(/[^0-9-]/g, "");
-                let valNew = parseFloat(strNew) || 0;
-                let valCash = parseFloat(strCash) || 0;
+                let valNew = cleanNumberValue(obj["col_" + idxNew]);
+                let valCash = cleanNumberValue(obj["col_" + idxCash]);
 
                 if (valNew > 0 || valCash > 0) {
                     obj["col_" + idxCheck] = valCash - valNew;
@@ -1547,12 +1533,10 @@
 
                     let editedField = cell.getField();
                     if (editedField === fieldNew || editedField === fieldCash) {
-                        let strNew = String(rowData[fieldNew] || "0").replace(/[^0-9-]/g, "");
-                        let strCash = String(rowData[fieldCash] || "0").replace(/[^0-9-]/g, "");
-                        let valNew = parseFloat(strNew) || 0;
-                        let valCash = parseFloat(strCash) || 0;
+                        let valNew = cleanNumberValue(rowData[fieldNew]);
+                        let valCash = cleanNumberValue(rowData[fieldCash]);
 
-                        // CHECK GIÁ BÁN = GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI
+                        // CÔNG THỨC: GIÁ BÁN TIỀN MẶT - GIÁ NHẬP MỚI
                         rowData[fieldCheck] = valCash - valNew;
                         row.update(rowData);
                     }
