@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Quản Lý Dữ Liệu Bán Hàng & Nhập Kho - Tabulator</title>
@@ -673,7 +674,27 @@
             { label: 'Tên Hàng', desc: true, width: 380 },
             { label: 'Giá tiền mặt', cashPrice: true, width: 180 },
             { label: 'Giá công nợ', creditPrice: true, width: 180 },
-            { label: 'Trạng thái', statusIcon: true, width: 90 },
+            {
+                title: "Trạng thái", 
+                field: "status", 
+                width: 130,
+                hozAlign: "center",
+                formatter: function(cell, formatterParams, onRendered){
+                    var value = cell.getValue();
+                    
+                    // Bạn có thể tùy chỉnh điều kiện hiển thị icon tương ứng với giá trị dữ liệu từ Google Sheets
+                    if (value === "TĂng" || value === "UP") {
+                        return `<span class="badge bg-success"><i class="bi bi-graph-up-arrow me-1"></i> TĂNG</span>`;
+                    } else if (value === "GIẢM" || value === "DOWN") {
+                        return `<span class="badge bg-danger"><i class="bi bi-graph-down-arrow me-1"></i> GIẢM</span>`;
+                    } else if (value === "NEW" || value === "Mới") {
+                        return `<span class="badge bg-primary"><i class="bi bi-stars me-1"></i> NEW</span>`;
+                    } else {
+                        // Mặc định hoặc hiển thị gộp theo ý muốn
+                        return `<span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i> ${value || 'TRỐNG'}</span>`;
+                    }
+                }
+            },
             { label: 'NGÀY LÊN GIÁ', date: true, width: 120 },
             { label: 'GIÁ TRÊN ZALO', zaloFormat: true, width: 420 },
             { label: 'Ghi chú / Tình trạng', width: 120 },
