@@ -680,18 +680,20 @@
                 width: 130,
                 hozAlign: "center",
                 formatter: function(cell, formatterParams, onRendered){
-                    var value = cell.getValue();
+                    var rawValue = cell.getValue();
+                    var value = rawValue ? String(rawValue).trim().toUpperCase() : "";
                     
-                    // Bạn có thể tùy chỉnh điều kiện hiển thị icon tương ứng với giá trị dữ liệu từ Google Sheets
-                    if (value === "TĂng" || value === "UP") {
-                        return `<span class="badge bg-success"><i class="bi bi-graph-up-arrow me-1"></i> TĂNG</span>`;
-                    } else if (value === "GIẢM" || value === "DOWN") {
-                        return `<span class="badge bg-danger"><i class="bi bi-graph-down-arrow me-1"></i> GIẢM</span>`;
-                    } else if (value === "NEW" || value === "Mới") {
-                        return `<span class="badge bg-primary"><i class="bi bi-stars me-1"></i> NEW</span>`;
+                    if (value === "TĂNG" || value === "UP" || value === "TĂNG GIÁ") {
+                        return `<span class="badge bg-success" style="padding: 6px 10px; font-size: 12px;"><i class="bi bi-graph-up-arrow me-1"></i> TĂNG</span>`;
+                    } else if (value === "GIẢM" || value === "DOWN" || value === "GIẢM GIÁ") {
+                        return `<span class="badge bg-danger" style="padding: 6px 10px; font-size: 12px;"><i class="bi bi-graph-down-arrow me-1"></i> GIẢM</span>`;
+                    } else if (value === "NEW" || value === "MỚI") {
+                        return `<span class="badge bg-primary" style="padding: 6px 10px; font-size: 12px;"><i class="bi bi-stars me-1"></i> NEW</span>`;
+                    } else if (!rawValue || rawValue === "") {
+                        return `<span class="badge bg-secondary" style="padding: 6px 10px; font-size: 12px;"><i class="bi bi-dash-circle me-1"></i> TRỐNG</span>`;
                     } else {
-                        // Mặc định hoặc hiển thị gộp theo ý muốn
-                        return `<span class="badge bg-secondary"><i class="bi bi-dash-circle me-1"></i> ${value || 'TRỐNG'}</span>`;
+                        // Trả về nguyên bản nếu không khớp các từ khóa trên nhưng vẫn an toàn
+                        return `<span class="badge bg-secondary" style="padding: 6px 10px; font-size: 12px;">${rawValue}</span>`;
                     }
                 }
             },
