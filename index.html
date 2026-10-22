@@ -369,7 +369,7 @@
                                 <tbody>
                                     <tr>
                                         <td class="text-start fw-bold text-dark">1. Khách lẻ / Công ty (&lt; 5c)</td>
-                                        <td><input type="number" id="scQty1" class="form-control form-control-sm text-center fw-bold" value="60" oninput="autoBalanceScenario()"></td>
+                                        <td><input type="number" id="scQty1" class="form-control form-control-sm text-center fw-bold" value="30" oninput="autoBalanceScenario()"></td>
                                         <td><input type="number" id="scPrice1" class="form-control form-control-sm text-end fw-bold text-success" value="2017000" oninput="calculateScenario()"></td>
                                         <td id="scMarginUnit1" class="text-end fw-bold text-success">0</td>
                                         <td id="scRev1" class="text-end">0</td>
@@ -377,19 +377,27 @@
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-bold text-dark">2. Đại lý nhỏ / Dự án (5 - 20c)</td>
-                                        <td><input type="number" id="scQty2" class="form-control form-control-sm text-center fw-bold" value="40" oninput="autoBalanceScenario()"></td>
+                                        <td><input type="number" id="scQty2" class="form-control form-control-sm text-center fw-bold" value="30" oninput="autoBalanceScenario()"></td>
                                         <td><input type="number" id="scPrice2" class="form-control form-control-sm text-end fw-bold text-success" value="1961000" oninput="calculateScenario()"></td>
                                         <td id="scMarginUnit2" class="text-end fw-bold text-success">0</td>
                                         <td id="scRev2" class="text-end">0</td>
                                         <td id="scProf2" class="text-end fw-bold text-success">0</td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start fw-bold text-dark">3. Đại lý lớn / Bao lô (&gt; 50c)</td>
-                                        <td><input type="number" id="scQty3" class="form-control form-control-sm text-center fw-bold text-primary" value="100" oninput="autoBalanceScenario()"></td>
-                                        <td><input type="number" id="scPrice3" class="form-control form-control-sm text-end fw-bold text-primary" value="1916000" oninput="calculateScenario()"></td>
+                                        <td class="text-start fw-bold text-dark">3. Đại lý vừa / Dự án (20 - 50c)</td>
+                                        <td><input type="number" id="scQty3" class="form-control form-control-sm text-center fw-bold text-primary" value="40" oninput="autoBalanceScenario()"></td>
+                                        <td><input type="number" id="scPrice3" class="form-control form-control-sm text-end fw-bold text-primary" value="1935000" oninput="calculateScenario()"></td>
                                         <td id="scMarginUnit3" class="text-end fw-bold text-primary">0</td>
                                         <td id="scRev3" class="text-end">0</td>
                                         <td id="scProf3" class="text-end fw-bold text-primary">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold text-dark">4. Đại lý lớn / Bao lô (&gt; 50c)</td>
+                                        <td><input type="number" id="scQty4" class="form-control form-control-sm text-center fw-bold text-danger" value="100" oninput="autoBalanceScenario()"></td>
+                                        <td><input type="number" id="scPrice4" class="form-control form-control-sm text-end fw-bold text-danger" value="1916000" oninput="calculateScenario()"></td>
+                                        <td id="scMarginUnit4" class="text-end fw-bold text-danger">0</td>
+                                        <td id="scRev4" class="text-end">0</td>
+                                        <td id="scProf4" class="text-end fw-bold text-danger">0</td>
                                     </tr>
                                 </tbody>
                                 <tfoot class="table-secondary fw-bold">
