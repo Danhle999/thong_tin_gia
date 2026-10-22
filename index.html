@@ -673,7 +673,24 @@
             { label: 'Tên Hàng', desc: true, width: 380 },
             { label: 'Giá tiền mặt', cashPrice: true, width: 180 },
             { label: 'Giá công nợ', creditPrice: true, width: 180 },
-            { label: 'Trạng thái', statusIcon: true, width: 90 },
+            { 
+                label: 'Trạng thái', 
+                width: 100,
+                formatter: function(cell) {
+                    let rowData = cell.getRow().getData();
+                    // Lấy giá trị từ cột Ghi chú (hoặc cột trạng thái thực tế)
+                    let val = String(rowData["col_7"] || '').trim().toUpperCase(); // col_7 là cột Ghi chú / Tình trạng
+                    
+                    if (val.includes('GIẢM')) {
+                        return `<div class="text-center"><span class="badge bg-danger px-2 py-1"><i class="fa-solid fa-arrow-trend-down me-1"></i>GIẢM</span></div>`;
+                    } else if (val.includes('TĂNG')) {
+                        return `<div class="text-center"><span class="badge bg-success px-2 py-1"><i class="fa-solid fa-arrow-trend-up me-1"></i>TĂNG</span></div>`;
+                    } else if (val.includes('NEW') || val.includes('MỚI')) {
+                        return `<div class="text-center"><span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-fire me-1"></i>NEW</span></div>`;
+                    }
+                    return `<span class="text-muted small">-</span>`;
+                }
+            },
             { label: 'NGÀY LÊN GIÁ', date: true, width: 120 },
             { label: 'GIÁ TRÊN ZALO', zaloFormat: true, width: 420 },
             { label: 'Ghi chú / Tình trạng', width: 120 },
