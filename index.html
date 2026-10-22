@@ -791,187 +791,167 @@ function autoBalanceScenario() {
 
     let q1 = parseFloat(document.getElementById('scQty1').value) || 0;
     let q2 = parseFloat(document.getElementById('scQty2').value) || 0;
-    let q3 = targetQty - q1 - q2;
-    if (q3 < 0) q3 = 0;
-    document.getElementById('scQty3').value = q3;
+    let q3 = parseFloat(document.getElementById('scQty3').value) || 0;
+    let q4 = targetQty - q1 - q2 - q3;
+    if (q4 < 0) q4 = 0;
+    document.getElementById('scQty4').value = q4;
 
-    // 1. Xác định mức giá tuyệt đối sàn (Min) và trần (Max) dựa trên % lợi nhuận mong muốn
     let priceMin = invoicePrice * (1 + targetMarginMin / 100);
     let priceMax = invoicePrice * (1 + targetMarginMax / 100);
 
-    // 2. Tự động co giãn giá theo tỷ trọng số lượng (Volume-based pricing)
-    // Nhóm 1 (Khách lẻ - SL ít): Giá nằm sát mức MAX (lợi nhuận cao)
-    // Nhóm 3 (Đại lý lớn - SL nhiều): Giá nằm sát mức MIN (giá cạnh tranh)
-    // Nhóm 2 (Đại lý vừa): Giá ở khoảng giữa
-    
-    let totalQ = targetQty > 0 ? targetQty : 1;
-    
-    // Tỷ trọng quy đổi vị trí giá từ Max xuống Min (SL càng lớn trọng số càng tiến về Min)
-    let ratio1 = Math.max(0, 1 - (q1 / totalQ));
-    let ratio2 = Math.max(0, 1 - ((q1 + q2 / 2) / totalQ));
-    let ratio3 = 0; // Đại lý lớn nhất lấy giá sát Min nhất
+    // Phân bổ mức giá từ Max (cho khách lẻ) xuống Min (cho đại lý lớn) trong khung %
+    let p1 = priceMax;
+    let p2 = priceMin + (priceMax - priceMin) * 0.7;
+    let p3 = priceMin + (priceMax - priceMin) * 0.35;
+    let p4 = priceMin + (priceMax - priceMin) * 0.05;
 
-    // Tính giá từng nhóm và làm tròn đến hàng nghìn (VNĐ)
-    let p1 = priceMax - (priceMax - priceMin) * 0.1 * ratio1; // Nhóm 1 thiên về Max
-    let p2 = priceMin + (priceMax - priceMin) * 0.5;           // Nhóm 2 ở giữa
-    let p3 = priceMin + (priceMax - priceMin) * 0.1;           // Nhóm 3 thiên về Min
-
-    // Đảm bảo không bao giờ vượt ngoài khung Min - Max đã định
-    p1 = Math.min(Math.max(p1, priceMin), priceMax);
-    p2 = Math.min(Math.max(p2, priceMin), priceMax);
-    p3 = Math.min(Math.max(p3, priceMin), priceMax);
-
-    // Gán giá trị vào ô input giao diện
     document.getElementById('scPrice1').value = Math.round(p1 / 1000) * 1000;
     document.getElementById('scPrice2').value = Math.round(p2 / 1000) * 1000;
     document.getElementById('scPrice3').value = Math.round(p3 / 1000) * 1000;
-
-    // Lưu khoảng giá để dùng cho mẫu tin nhắn Zalo
-    window.priceRangeData = {
-        p1Min: Math.round(priceMin / 1000) * 1000, p1Max: Math.round(priceMax / 1000) * 1000,
-        p2Min: Math.round(priceMin / 1000) * 1000, p2Max: Math.round(priceMax / 1000) * 1000,
-        p3Min: Math.round(priceMin / 1000) * 1000, p3Max: Math.round(priceMax / 1000) * 1000
-    };
+    document.getElementById('scPrice4').value = Math.round(p4 / 1000) * 1000;
 
     calculateScenario();
 }
 
-    function calculateScenario() {
-        let productName = document.getElementById('scProductName').value.trim();
-        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
-        let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
+function calculateScenario() {
+    let productName = document.getElementById('scProductName').value.trim();
+    let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
+    let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
 
-        let marginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
-        let marginMax = parseFloat(document.getElementById('scTargetMarginMax').value) || 0;
+    let marginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
+    let marginMax = parseFloat(document.getElementById('scTargetMarginMax').value) || 0;
 
-        let qty1 = parseFloat(document.getElementById('scQty1').value) || 0;
-        let price1 = parseFloat(document.getElementById('scPrice1').value) || 0;
-        
-        let qty2 = parseFloat(document.getElementById('scQty2').value) || 0;
-        let price2 = parseFloat(document.getElementById('scPrice2').value) || 0;
+    let qty1 = parseFloat(document.getElementById('scQty1').value) || 0;
+    let price1 = parseFloat(document.getElementById('scPrice1').value) || 0;
+    
+    let qty2 = parseFloat(document.getElementById('scQty2').value) || 0;
+    let price2 = parseFloat(document.getElementById('scPrice2').value) || 0;
 
-        let qty3 = parseFloat(document.getElementById('scQty3').value) || 0;
-        let price3 = parseFloat(document.getElementById('scPrice3').value) || 0;
+    let qty3 = parseFloat(document.getElementById('scQty3').value) || 0;
+    let price3 = parseFloat(document.getElementById('scPrice3').value) || 0;
 
-        let totalCost = targetQty * invoicePrice;
-        
-        let marginUnit1 = price1 > 0 ? (price1 - invoicePrice) : 0;
-        let rev1 = qty1 * price1;
-        let prof1 = qty1 * marginUnit1;
+    let qty4 = parseFloat(document.getElementById('scQty4').value) || 0;
+    let price4 = parseFloat(document.getElementById('scPrice4').value) || 0;
 
-        let marginUnit2 = price2 > 0 ? (price2 - invoicePrice) : 0;
-        let rev2 = qty2 * price2;
-        let prof2 = qty2 * marginUnit2;
+    let totalCost = targetQty * invoicePrice;
+    
+    let marginUnit1 = price1 > 0 ? (price1 - invoicePrice) : 0;
+    let rev1 = qty1 * price1;
+    let prof1 = qty1 * marginUnit1;
 
-        let marginUnit3 = price3 > 0 ? (price3 - invoicePrice) : 0;
-        let rev3 = qty3 * price3;
-        let prof3 = qty3 * marginUnit3;
+    let marginUnit2 = price2 > 0 ? (price2 - invoicePrice) : 0;
+    let rev2 = qty2 * price2;
+    let prof2 = qty2 * marginUnit2;
 
-        let totalQtySum = qty1 + qty2 + qty3;
-        let totalRevSum = rev1 + rev2 + rev3;
-        let totalProfSum = prof1 + prof2 + prof3;
-        let achievedMargin = totalCost > 0 ? (totalProfSum / totalCost) * 100 : 0;
-        let avgPrice = totalQtySum > 0 ? totalRevSum / totalQtySum : 0;
+    let marginUnit3 = price3 > 0 ? (price3 - invoicePrice) : 0;
+    let rev3 = qty3 * price3;
+    let prof3 = qty3 * marginUnit3;
 
-        document.getElementById('scMarginUnit1').innerText = marginUnit1.toLocaleString('vi-VN');
-        document.getElementById('scRev1').innerText = rev1.toLocaleString('vi-VN');
-        document.getElementById('scProf1').innerText = prof1.toLocaleString('vi-VN');
+    let marginUnit4 = price4 > 0 ? (price4 - invoicePrice) : 0;
+    let rev4 = qty4 * price4;
+    let prof4 = qty4 * marginUnit4;
 
-        document.getElementById('scMarginUnit2').innerText = marginUnit2.toLocaleString('vi-VN');
-        document.getElementById('scRev2').innerText = rev2.toLocaleString('vi-VN');
-        document.getElementById('scProf2').innerText = prof2.toLocaleString('vi-VN');
+    let totalQtySum = qty1 + qty2 + qty3 + qty4;
+    let totalRevSum = rev1 + rev2 + rev3 + rev4;
+    let totalProfSum = prof1 + prof2 + prof3 + prof4;
+    let achievedMargin = totalCost > 0 ? (totalProfSum / totalCost) * 100 : 0;
+    let avgPrice = totalQtySum > 0 ? totalRevSum / totalQtySum : 0;
 
-        document.getElementById('scMarginUnit3').innerText = marginUnit3.toLocaleString('vi-VN');
-        document.getElementById('scRev3').innerText = rev3.toLocaleString('vi-VN');
-        document.getElementById('scProf3').innerText = prof3.toLocaleString('vi-VN');
+    document.getElementById('scMarginUnit1').innerText = marginUnit1.toLocaleString('vi-VN');
+    document.getElementById('scRev1').innerText = rev1.toLocaleString('vi-VN');
+    document.getElementById('scProf1').innerText = prof1.toLocaleString('vi-VN');
 
-        document.getElementById('scTotalCost').innerText = totalCost.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('scTotalRevenue').innerText = totalRevSum.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('scTotalProfit').innerText = totalProfSum.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('scAchievedMargin').innerText = `${achievedMargin.toFixed(2)}% (Mục tiêu: ${marginMin}% - ${marginMax}%)`;
+    document.getElementById('scMarginUnit2').innerText = marginUnit2.toLocaleString('vi-VN');
+    document.getElementById('scRev2').innerText = rev2.toLocaleString('vi-VN');
+    document.getElementById('scProf2').innerText = prof2.toLocaleString('vi-VN');
 
-        document.getElementById('scTotalQtySum').innerText = totalQtySum;
-        document.getElementById('scAvgPrice').innerText = avgPrice.toLocaleString('vi-VN');
-        document.getElementById('scTotalRevSum').innerText = totalRevSum.toLocaleString('vi-VN');
-        document.getElementById('scTotalProfSum').innerText = totalProfSum.toLocaleString('vi-VN');
+    document.getElementById('scMarginUnit3').innerText = marginUnit3.toLocaleString('vi-VN');
+    document.getElementById('scRev3').innerText = rev3.toLocaleString('vi-VN');
+    document.getElementById('scProf3').innerText = prof3.toLocaleString('vi-VN');
 
-        document.getElementById('rowCountBadge').innerText = `Kịch bản: ${totalQtySum} chiếc | Biên Lãi: ${achievedMargin.toFixed(2)}%`;
+    document.getElementById('scMarginUnit4').innerText = marginUnit4.toLocaleString('vi-VN');
+    document.getElementById('scRev4').innerText = rev4.toLocaleString('vi-VN');
+    document.getElementById('scProf4').innerText = prof4.toLocaleString('vi-VN');
 
-        let ctx = document.getElementById('scenarioChart').getContext('2d');
-        if (scenarioChartInstance) scenarioChartInstance.destroy();
-        scenarioChartInstance = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Khách Lẻ (<5c)', 'Đại Lý Vừa (5-20c)', 'Đại Lý Lớn (>50c)'],
-                datasets: [{
-                    data: [qty1, qty2, qty3],
-                    backgroundColor: ['#ffc107', '#0d6efd', '#198754']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
-                }
+    document.getElementById('scTotalCost').innerText = totalCost.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('scTotalRevenue').innerText = totalRevSum.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('scTotalProfit').innerText = totalProfSum.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('scAchievedMargin').innerText = `${achievedMargin.toFixed(2)}% (Mục tiêu: ${marginMin}% - ${marginMax}%)`;
+
+    document.getElementById('scTotalQtySum').innerText = totalQtySum;
+    document.getElementById('scAvgPrice').innerText = avgPrice.toLocaleString('vi-VN');
+    document.getElementById('scTotalRevSum').innerText = totalRevSum.toLocaleString('vi-VN');
+    document.getElementById('scTotalProfSum').innerText = totalProfSum.toLocaleString('vi-VN');
+
+    document.getElementById('rowCountBadge').innerText = `Kịch bản: ${totalQtySum} chiếc | Biên Lãi: ${achievedMargin.toFixed(2)}%`;
+
+    let ctx = document.getElementById('scenarioChart').getContext('2d');
+    if (scenarioChartInstance) scenarioChartInstance.destroy();
+    scenarioChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Khách Lẻ (<5c)', 'Đại Lý Nhỏ (5-20c)', 'Đại Lý Vừa (20-50c)', 'Đại Lý Lớn (>50c)'],
+            datasets: [{
+                data: [qty1, qty2, qty3, qty4],
+                backgroundColor: ['#ffc107', '#fd7e14', '#0d6efd', '#198754']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
             }
-        });
+        }
+    });
 
-        updateScenarioZaloText(productName, totalQtySum, totalRevSum, totalProfSum, achievedMargin, qty1, price1, qty2, price2, qty3, price3, marginMin, marginMax);
-    }
+    updateScenarioZaloText(productName, totalQtySum, totalRevSum, totalProfSum, achievedMargin, qty1, price1, qty2, price2, qty3, price3, qty4, price4, marginMin, marginMax);
+}
 
-    function updateScenarioZaloText(productName, totalQty, totalRev, totalProf, achievedMargin, q1, p1, q2, p2, q3, p3, marginMin, marginMax) {
-        let rng = window.priceRangeData || { p1Min: p1, p1Max: p1, p2Min: p2, p2Max: p2, p3Min: p3, p3Max: p3 };
+function updateScenarioZaloText(productName, totalQty, totalRev, totalProf, achievedMargin, q1, p1, q2, p2, q3, p3, q4, p4, marginMin, marginMax) {
+    let text = `🔥 [KỊCH BẢN BÁN HÀNG PHÂN BỔ DỰ ÁN SL LỚN] 🔥\n`;
+    text += `📌 Sản phẩm: ${productName}\n`;
+    text += `🎯 Tổng sản lượng target: ${totalQty} chiếc/tháng\n`;
+    text += `💰 Doanh thu dự kiến: ${totalRev.toLocaleString('vi-VN')} VNĐ\n`;
+    text += `📈 Biên lợi nhuận khung: ${marginMin}% -> ${marginMax}% (Thực tế đạt: ${achievedMargin.toFixed(2)}%)\n\n`;
+    text += `CƠ CẤU KHUNG GIÁ BÁN THƯƠNG LƯỢNG:\n`;
+    text += `1️⃣ Khách lẻ (< 5c): ${p1.toLocaleString('vi-VN')} đ (Bán ${q1}c)\n`;
+    text += `2️⃣ Đại lý nhỏ (5-20c): ${p2.toLocaleString('vi-VN')} đ (Bán ${q2}c)\n`;
+    text += `3️⃣ Đại lý vừa (20-50c): ${p3.toLocaleString('vi-VN')} đ (Bán ${q3}c)\n`;
+    text += `4️⃣ Đại lý lớn (> 50c): ${p4.toLocaleString('vi-VN')} đ (Bán ${q4}c)\n\n`;
+    text += `👉 Khung giá thương lượng áp dụng theo dải sản lượng. Anh/chị Sales chủ động chốt đơn trong biên độ!`;
+    
+    document.getElementById('scenarioZaloText').value = text;
+}
 
-        let text = `🔥 [KỊCH BẢN BÁN HÀNG PHÂN BỔ DỰ ÁN SL LỚN] 🔥\n`;
-        text += `📌 Sản phẩm: ${productName}\n`;
-        text += `🎯 Tổng sản lượng target: ${totalQty} chiếc/tháng\n`;
-        text += `💰 Doanh thu dự kiến: ${totalRev.toLocaleString('vi-VN')} VNĐ\n`;
-        text += `📈 Biên lợi nhuận khung: ${marginMin}% -> ${marginMax}% (Thực tế đạt: ${achievedMargin.toFixed(2)}%)\n\n`;
-        text += `CƠ CẤU KHUNG GIÁ BÁN THƯƠNG LƯỢNG (MIN -> MAX):\n`;
-        text += `1️⃣ Khách lẻ / Công ty (< 5c): ${rng.p1Min.toLocaleString('vi-VN')} đ -> ${rng.p1Max.toLocaleString('vi-VN')} đ (Bán ${q1}c)\n`;
-        text += `2️⃣ Đại lý vừa / Dự án nhỏ (5-20c): ${rng.p2Min.toLocaleString('vi-VN')} đ -> ${rng.p2Max.toLocaleString('vi-VN')} đ (Bán ${q2}c)\n`;
-        text += `3️⃣ Đại lý lớn / Bao lô (> 50c): ${rng.p3Min.toLocaleString('vi-VN')} đ -> ${rng.p3Max.toLocaleString('vi-VN')} đ (Bán ${q3}c)\n\n`;
-        text += `👉 Khung giá thương lượng áp dụng theo dải sản lượng. Anh/chị Sales chủ động chốt đơn trong biên độ!`;
-        
-        document.getElementById('scenarioZaloText').value = text;
-    }
+function exportScenarioExcel() {
+    let productName = document.getElementById('scProductName').value;
+    let totalCost = document.getElementById('scTotalCost').innerText;
+    let totalRev = document.getElementById('scTotalRevenue').innerText;
+    let totalProf = document.getElementById('scTotalProfit').innerText;
+    let margin = document.getElementById('scAchievedMargin').innerText;
 
-    function copyScenarioZaloText() {
-        let zaloArea = document.getElementById('scenarioZaloText');
-        zaloArea.select();
-        zaloArea.setSelectionRange(0, 99999);
-        navigator.clipboard.writeText(zaloArea.value);
-        alert("Đã copy nội dung kịch bản Zalo vào bộ nhớ tạm!");
-    }
+    let data = [
+        ["KỊCH BẢN PHÂN BỔ BÁN HÀNG TỔNG HỢP"],
+        ["Sản phẩm", productName],
+        ["Tổng vốn nhập", totalCost],
+        ["Tổng doanh thu dự kiến", totalRev],
+        ["Tổng lợi nhuận gộp", totalProf],
+        ["Biên lợi nhuận gộp", margin],
+        [],
+        ["Nhóm Khách Hàng", "SL Bán (Cái)", "Giá Bán (VNĐ)", "Lãi / Chiếc (VNĐ)", "Tổng Doanh Thu (VNĐ)", "Tổng Lãi Gộp (VNĐ)"],
+        ["Khách lẻ (<5c)", document.getElementById('scQty1').value, document.getElementById('scPrice1').value, document.getElementById('scMarginUnit1').innerText, document.getElementById('scRev1').innerText, document.getElementById('scProf1').innerText],
+        ["Đại lý nhỏ (5-20c)", document.getElementById('scQty2').value, document.getElementById('scPrice2').value, document.getElementById('scMarginUnit2').innerText, document.getElementById('scRev2').innerText, document.getElementById('scProf2').innerText],
+        ["Đại lý vừa (20-50c)", document.getElementById('scQty3').value, document.getElementById('scPrice3').value, document.getElementById('scMarginUnit3').innerText, document.getElementById('scRev3').innerText, document.getElementById('scProf3').innerText],
+        ["Đại lý lớn (>50c)", document.getElementById('scQty4').value, document.getElementById('scPrice4').value, document.getElementById('scMarginUnit4').innerText, document.getElementById('scRev4').innerText, document.getElementById('scProf4').innerText],
+        ["TỔNG CỘNG", document.getElementById('scTotalQtySum').innerText, document.getElementById('scAvgPrice').innerText, "-", document.getElementById('scTotalRevSum').innerText, document.getElementById('scTotalProfSum').innerText]
+    ];
 
-    function exportScenarioExcel() {
-        let productName = document.getElementById('scProductName').value;
-        let totalCost = document.getElementById('scTotalCost').innerText;
-        let totalRev = document.getElementById('scTotalRevenue').innerText;
-        let totalProf = document.getElementById('scTotalProfit').innerText;
-        let margin = document.getElementById('scAchievedMargin').innerText;
-
-        let data = [
-            ["KỊCH BẢN PHÂN BỔ BÁN HÀNG TỔNG HỢP"],
-            ["Sản phẩm", productName],
-            ["Tổng vốn nhập", totalCost],
-            ["Tổng doanh thu dự kiến", totalRev],
-            ["Tổng lợi nhuận gộp", totalProf],
-            ["Biên lợi nhuận gộp", margin],
-            [],
-            ["Nhóm Khách Hàng", "SL Bán (Cái)", "Giá Bán (VNĐ)", "Lãi / Chiếc (VNĐ)", "Tổng Doanh Thu (VNĐ)", "Tổng Lãi Gộp (VNĐ)"],
-            ["Khách lẻ (<5c)", document.getElementById('scQty1').value, document.getElementById('scPrice1').value, document.getElementById('scMarginUnit1').innerText, document.getElementById('scRev1').innerText, document.getElementById('scProf1').innerText],
-            ["Đại lý vừa (5-20c)", document.getElementById('scQty2').value, document.getElementById('scPrice2').value, document.getElementById('scMarginUnit2').innerText, document.getElementById('scRev2').innerText, document.getElementById('scProf2').innerText],
-            ["Đại lý lớn (>50c)", document.getElementById('scQty3').value, document.getElementById('scPrice3').value, document.getElementById('scMarginUnit3').innerText, document.getElementById('scRev3').innerText, document.getElementById('scProf3').innerText],
-            ["TỔNG CỘNG", document.getElementById('scTotalQtySum').innerText, document.getElementById('scAvgPrice').innerText, "-", document.getElementById('scTotalRevSum').innerText, document.getElementById('scTotalProfSum').innerText]
-        ];
-
-        let ws = XLSX.utils.aoa_to_sheet(data);
-        let wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Kich_Ban_Ban_Hang");
-        XLSX.writeFile(wb, "Kich_Ban_Phan_Bo_Ban_Hang.xlsx");
-    }
+    let ws = XLSX.utils.aoa_to_sheet(data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Kich_Ban_Ban_Hang");
+    XLSX.writeFile(wb, "Kich_Ban_Phan_Bo_Ban_Hang.xlsx");
+}
 
     function loadDataFromSheet(bypassCache = true) {
         let timeStamp = new Date().getTime();
