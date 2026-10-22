@@ -551,7 +551,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxOKuOeHfZuolG7mGCSFP3MrG9rHV56PtQNmf2G701-mb74MmuHwCstT__e4ygjfv8/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4z0kVi_f7R1RyOCVexBAjevozpcRcFSG8Q6A0OYHNZzii4TVk9NK3l_lNmNJQE9L6/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -776,7 +776,7 @@
 
     /* HÀM TỰ ĐỘNG CÂN ĐỐI & NHẢY KHOẢNG GIÁ ĐỀ XUẤT (MIN - MAX) CHO CẢ 3 NHÓM ĐỒNG LOẠT */
     function autoBalanceScenario() {
-        let costPrice = parseFloat(document.getElementById('scCostPrice').value) || 0;
+        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
         let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
         
         let targetMarginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
@@ -792,15 +792,13 @@
         if (q3 < 0) q3 = 0;
         document.getElementById('scQty3').value = q3;
 
-        // 1. Tính mức GIÁ MIN cho 3 nhóm theo % Min dựa trên Giá Cost thực tế
-        let p1Min = Math.round((costPrice * (1 + (targetMarginMin + 3.5) / 100)) / 1000) * 1000;
-        let p2Min = Math.round((costPrice * (1 + (targetMarginMin + 1.5) / 100)) / 1000) * 1000;
-        let p3Min = Math.round((costPrice * (1 + (targetMarginMin + 0.5) / 100)) / 1000) * 1000;
+        let p1Min = Math.round((invoicePrice * (1 + (targetMarginMin + 3.5) / 100)) / 1000) * 1000;
+        let p2Min = Math.round((invoicePrice * (1 + (targetMarginMin + 1.5) / 100)) / 1000) * 1000;
+        let p3Min = Math.round((invoicePrice * (1 + (targetMarginMin + 0.5) / 100)) / 1000) * 1000;
 
-        // 2. Tính mức GIÁ MAX cho 3 nhóm theo % Max dựa trên Giá Cost thực tế
-        let p1Max = Math.round((costPrice * (1 + (targetMarginMax + 5.5) / 100)) / 1000) * 1000;
-        let p2Max = Math.round((costPrice * (1 + (targetMarginMax + 2.5) / 100)) / 1000) * 1000;
-        let p3Max = Math.round((costPrice * (1 + (targetMarginMax + 1.2) / 100)) / 1000) * 1000;
+        let p1Max = Math.round((invoicePrice * (1 + (targetMarginMax + 5.5) / 100)) / 1000) * 1000;
+        let p2Max = Math.round((invoicePrice * (1 + (targetMarginMax + 2.5) / 100)) / 1000) * 1000;
+        let p3Max = Math.round((invoicePrice * (1 + (targetMarginMax + 1.2) / 100)) / 1000) * 1000;
 
         p1Input.value = Math.round((p1Min + p1Max) / 2 / 1000) * 1000;
         p2Input.value = Math.round((p2Min + p2Max) / 2 / 1000) * 1000;
@@ -817,7 +815,7 @@
 
     function calculateScenario() {
         let productName = document.getElementById('scProductName').value.trim();
-        let costPrice = parseFloat(document.getElementById('scCostPrice').value) || 0;
+        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
         let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
 
         let marginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
@@ -832,21 +830,21 @@
         let qty3 = parseFloat(document.getElementById('scQty3').value) || 0;
         let price3 = parseFloat(document.getElementById('scPrice3').value) || 0;
 
-        let totalQtySum = qty1 + qty2 + qty3;
-        let totalCost = totalQtySum * costPrice; // Tính vốn theo Giá Cost thực tế
+        let totalCost = targetQty * invoicePrice;
         
-        let marginUnit1 = price1 > 0 ? (price1 - costPrice) : 0;
+        let marginUnit1 = price1 > 0 ? (price1 - invoicePrice) : 0;
         let rev1 = qty1 * price1;
         let prof1 = qty1 * marginUnit1;
 
-        let marginUnit2 = price2 > 0 ? (price2 - costPrice) : 0;
+        let marginUnit2 = price2 > 0 ? (price2 - invoicePrice) : 0;
         let rev2 = qty2 * price2;
         let prof2 = qty2 * marginUnit2;
 
-        let marginUnit3 = price3 > 0 ? (price3 - costPrice) : 0;
+        let marginUnit3 = price3 > 0 ? (price3 - invoicePrice) : 0;
         let rev3 = qty3 * price3;
         let prof3 = qty3 * marginUnit3;
 
+        let totalQtySum = qty1 + qty2 + qty3;
         let totalRevSum = rev1 + rev2 + rev3;
         let totalProfSum = prof1 + prof2 + prof3;
         let achievedMargin = totalCost > 0 ? (totalProfSum / totalCost) * 100 : 0;
@@ -1658,9 +1656,16 @@
 
                     let cells = row.getCells();
                     for (let c of cells) {
-                        if (c.getColumn().getField() && c.getColumn().getField().startsWith('col_')) {
-                            c.edit();
-                            break;
+                        let fieldName = c.getColumn().getField();
+                        if (fieldName && fieldName.startsWith('col_')) {
+                            // Chỉ focus/edit vào cột được phép sửa đầu tiên
+                            let colIdx = parseInt(fieldName.replace('col_', ''));
+                            let colMeta = activeCols[colIdx];
+                            let lbl = colMeta ? colMeta.label.trim().toUpperCase() : '';
+                            if (lbl.includes('GIÁ BÁN') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP MỚI')) {
+                                c.edit();
+                                break;
+                            }
                         }
                     }
                 } else {
@@ -1696,6 +1701,12 @@
         activeCols.forEach((col, index) => {
             let colNameUpper = col.label.trim().toUpperCase();
 
+            // CHỈ CHO PHÉP CHỈNH SỬA CÁC CỘT GIÁ VÀ CHI PHÍ (GIÁ BÁN, GIÁ COST, COST_KTB, GIÁ NHẬP MỚI)
+            let isPriceOrCostColumn = colNameUpper.includes('GIÁ BÁN') || 
+                                     colNameUpper.includes('GIÁ COST') || 
+                                     colNameUpper.includes('COST_KTB') || 
+                                     colNameUpper.includes('GIÁ NHẬP MỚI');
+
             let colDef = {
                 title: col.label,
                 field: "col_" + index,
@@ -1704,8 +1715,8 @@
                 editor: "input",
                 editable: function(cell) {
                     let rowData = cell.getRow().getData();
-                    if (!rowData._isEditing) return false;
-                    return true;
+                    // Phải đang bấm Sửa (_isEditing = true) VÀ đúng là cột giá/chi phí mới cho phép edit
+                    return (rowData._isEditing && isPriceOrCostColumn);
                 },
                 editorParams: { selectContents: true },
                 headerFilter: "input", 
@@ -1862,11 +1873,10 @@
             height: "100%",
             columns: columnsConfig,
             pagination: "local",
-            paginationSize: 25,
+            paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { resizable: true },
-            renderHorizontal: "virtual" // Bổ sung thêm dòng này để tối ưu render cột ngang mượt hơn
+            columnDefaults: { resizable: true }
         });
 
         table.on("dataFiltered", function(filters, rows){
