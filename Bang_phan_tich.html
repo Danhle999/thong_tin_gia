@@ -683,7 +683,31 @@
         'BANG_GIA_DELL': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
             { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
-            { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
+            { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true },
+            // THÊM CỘT HIỂN THỊ MẪU ZALO ĐẸP MẮT
+            { 
+                label: 'NỘI DUNG BÁO GIÁ GỬI KHÁCH', 
+                width: 400,
+                formatter: function(cell) {
+                    let rowData = cell.getRow().getData();
+                    let part = rowData["col_2"] || '';
+                    let name = rowData["col_3"] || '';
+                    let cash = rowData["col_4"] || '';
+                    let credit = rowData["col_5"] || '';
+                    let stock = rowData["col_6"] || '';
+                    
+                    let cashNum = parseFloat(String(cash).replace(/[^\d]/g, ''));
+                    let creditNum = parseFloat(String(credit).replace(/[^\d]/g, ''));
+                    
+                    return `<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem;">
+                        <div class="fw-bold text-primary">${part}</div>
+                        <div>${name}</div>
+                        ${!isNaN(cashNum) ? `<div>💵 Giá TM: <b>${cashNum.toLocaleString('vi-VN')} đ</b></div>` : ''}
+                        ${!isNaN(creditNum) ? `<div>🤝 Giá CN: <b>${creditNum.toLocaleString('vi-VN')} đ</b></div>` : ''}
+                        <div>📦 Tồn: <span class="badge bg-success">${stock}</span></div>
+                    </div>`;
+                }
+            }
         ],
         'BANG_GIA_HP': [
             { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
