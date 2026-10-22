@@ -551,7 +551,7 @@
 </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXMeWWciICDRIN1aa-75vqHHK39aBlHwCy5saRtD1Bc3xeftov_Bw8dXsaMWvEi0rm/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4z0kVi_f7R1RyOCVexBAjevozpcRcFSG8Q6A0OYHNZzii4TVk9NK3l_lNmNJQE9L6/exec";
     
     const SHEET_CONFIGS = {
         'LAPTOP': [
@@ -776,7 +776,7 @@
 
     /* HÀM TỰ ĐỘNG CÂN ĐỐI & NHẢY KHOẢNG GIÁ ĐỀ XUẤT (MIN - MAX) CHO CẢ 3 NHÓM ĐỒNG LOẠT */
     function autoBalanceScenario() {
-        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
+        let costPrice = parseFloat(document.getElementById('scCostPrice').value) || 0;
         let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
         
         let targetMarginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
@@ -792,15 +792,15 @@
         if (q3 < 0) q3 = 0;
         document.getElementById('scQty3').value = q3;
 
-        // 1. Tính mức GIÁ MIN cho 3 nhóm theo % Min
-        let p1Min = Math.round((invoicePrice * (1 + (targetMarginMin + 3.5) / 100)) / 1000) * 1000;
-        let p2Min = Math.round((invoicePrice * (1 + (targetMarginMin + 1.5) / 100)) / 1000) * 1000;
-        let p3Min = Math.round((invoicePrice * (1 + (targetMarginMin + 0.5) / 100)) / 1000) * 1000;
+        // 1. Tính mức GIÁ MIN cho 3 nhóm theo % Min dựa trên Giá Cost thực tế
+        let p1Min = Math.round((costPrice * (1 + (targetMarginMin + 3.5) / 100)) / 1000) * 1000;
+        let p2Min = Math.round((costPrice * (1 + (targetMarginMin + 1.5) / 100)) / 1000) * 1000;
+        let p3Min = Math.round((costPrice * (1 + (targetMarginMin + 0.5) / 100)) / 1000) * 1000;
 
-        // 2. Tính mức GIÁ MAX cho 3 nhóm theo % Max
-        let p1Max = Math.round((invoicePrice * (1 + (targetMarginMax + 5.5) / 100)) / 1000) * 1000;
-        let p2Max = Math.round((invoicePrice * (1 + (targetMarginMax + 2.5) / 100)) / 1000) * 1000;
-        let p3Max = Math.round((invoicePrice * (1 + (targetMarginMax + 1.2) / 100)) / 1000) * 1000;
+        // 2. Tính mức GIÁ MAX cho 3 nhóm theo % Max dựa trên Giá Cost thực tế
+        let p1Max = Math.round((costPrice * (1 + (targetMarginMax + 5.5) / 100)) / 1000) * 1000;
+        let p2Max = Math.round((costPrice * (1 + (targetMarginMax + 2.5) / 100)) / 1000) * 1000;
+        let p3Max = Math.round((costPrice * (1 + (targetMarginMax + 1.2) / 100)) / 1000) * 1000;
 
         p1Input.value = Math.round((p1Min + p1Max) / 2 / 1000) * 1000;
         p2Input.value = Math.round((p2Min + p2Max) / 2 / 1000) * 1000;
@@ -817,7 +817,7 @@
 
     function calculateScenario() {
         let productName = document.getElementById('scProductName').value.trim();
-        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
+        let costPrice = parseFloat(document.getElementById('scCostPrice').value) || 0;
         let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
 
         let marginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
@@ -832,21 +832,21 @@
         let qty3 = parseFloat(document.getElementById('scQty3').value) || 0;
         let price3 = parseFloat(document.getElementById('scPrice3').value) || 0;
 
-        let totalCost = targetQty * invoicePrice;
+        let totalQtySum = qty1 + qty2 + qty3;
+        let totalCost = totalQtySum * costPrice; // Tính vốn theo Giá Cost thực tế
         
-        let marginUnit1 = price1 > 0 ? (price1 - invoicePrice) : 0;
+        let marginUnit1 = price1 > 0 ? (price1 - costPrice) : 0;
         let rev1 = qty1 * price1;
         let prof1 = qty1 * marginUnit1;
 
-        let marginUnit2 = price2 > 0 ? (price2 - invoicePrice) : 0;
+        let marginUnit2 = price2 > 0 ? (price2 - costPrice) : 0;
         let rev2 = qty2 * price2;
         let prof2 = qty2 * marginUnit2;
 
-        let marginUnit3 = price3 > 0 ? (price3 - invoicePrice) : 0;
+        let marginUnit3 = price3 > 0 ? (price3 - costPrice) : 0;
         let rev3 = qty3 * price3;
         let prof3 = qty3 * marginUnit3;
 
-        let totalQtySum = qty1 + qty2 + qty3;
         let totalRevSum = rev1 + rev2 + rev3;
         let totalProfSum = prof1 + prof2 + prof3;
         let achievedMargin = totalCost > 0 ? (totalProfSum / totalCost) * 100 : 0;
