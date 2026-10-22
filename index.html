@@ -675,11 +675,11 @@
             { label: 'Giá công nợ', creditPrice: true, width: 180 },
             { 
                 label: 'Trạng thái', 
-                width: 100,
+                width: 110,
                 formatter: function(cell) {
                     let rowData = cell.getRow().getData();
-                    // Lấy giá trị từ cột Ghi chú (hoặc cột trạng thái thực tế)
-                    let val = String(rowData["col_7"] || '').trim().toUpperCase(); // col_7 là cột Ghi chú / Tình trạng
+                    // Lấy chữ từ cột Ghi chú / Tình trạng (col_7)
+                    let val = String(rowData["col_7"] || '').trim().toUpperCase();
                     
                     if (val.includes('GIẢM')) {
                         return `<div class="text-center"><span class="badge bg-danger px-2 py-1"><i class="fa-solid fa-arrow-trend-down me-1"></i>GIẢM</span></div>`;
