@@ -774,44 +774,59 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    /* HÀM TỰ ĐỘNG CÂN ĐỐI & NHẢY KHOẢNG GIÁ ĐỀ XUẤT (MIN - MAX) CHO CẢ 3 NHÓM ĐỒNG LOẠT */
-    function autoBalanceScenario() {
-        let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
-        let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
-        
-        let targetMarginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
-        let targetMarginMax = parseFloat(document.getElementById('scTargetMarginMax').value) || 0;
+function autoBalanceScenario() {
+    let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
+    let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
+    
+    let targetMarginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
+    let targetMarginMax = parseFloat(document.getElementById('scTargetMarginMax').value) || 0;
 
-        let p1Input = document.getElementById('scPrice1');
-        let p2Input = document.getElementById('scPrice2');
-        let p3Input = document.getElementById('scPrice3');
+    let q1 = parseFloat(document.getElementById('scQty1').value) || 0;
+    let q2 = parseFloat(document.getElementById('scQty2').value) || 0;
+    let q3 = targetQty - q1 - q2;
+    if (q3 < 0) q3 = 0;
+    document.getElementById('scQty3').value = q3;
 
-        let q1 = parseFloat(document.getElementById('scQty1').value) || 0;
-        let q2 = parseFloat(document.getElementById('scQty2').value) || 0;
-        let q3 = targetQty - q1 - q2;
-        if (q3 < 0) q3 = 0;
-        document.getElementById('scQty3').value = q3;
+    // 1. Xác định mức giá tuyệt đối sàn (Min) và trần (Max) dựa trên % lợi nhuận mong muốn
+    let priceMin = invoicePrice * (1 + targetMarginMin / 100);
+    let priceMax = invoicePrice * (1 + targetMarginMax / 100);
 
-        let p1Min = Math.round((invoicePrice * (1 + (targetMarginMin + 3.5) / 100)) / 1000) * 1000;
-        let p2Min = Math.round((invoicePrice * (1 + (targetMarginMin + 1.5) / 100)) / 1000) * 1000;
-        let p3Min = Math.round((invoicePrice * (1 + (targetMarginMin + 0.5) / 100)) / 1000) * 1000;
+    // 2. Tự động co giãn giá theo tỷ trọng số lượng (Volume-based pricing)
+    // Nhóm 1 (Khách lẻ - SL ít): Giá nằm sát mức MAX (lợi nhuận cao)
+    // Nhóm 3 (Đại lý lớn - SL nhiều): Giá nằm sát mức MIN (giá cạnh tranh)
+    // Nhóm 2 (Đại lý vừa): Giá ở khoảng giữa
+    
+    let totalQ = targetQty > 0 ? targetQty : 1;
+    
+    // Tỷ trọng quy đổi vị trí giá từ Max xuống Min (SL càng lớn trọng số càng tiến về Min)
+    let ratio1 = Math.max(0, 1 - (q1 / totalQ));
+    let ratio2 = Math.max(0, 1 - ((q1 + q2 / 2) / totalQ));
+    let ratio3 = 0; // Đại lý lớn nhất lấy giá sát Min nhất
 
-        let p1Max = Math.round((invoicePrice * (1 + (targetMarginMax + 5.5) / 100)) / 1000) * 1000;
-        let p2Max = Math.round((invoicePrice * (1 + (targetMarginMax + 2.5) / 100)) / 1000) * 1000;
-        let p3Max = Math.round((invoicePrice * (1 + (targetMarginMax + 1.2) / 100)) / 1000) * 1000;
+    // Tính giá từng nhóm và làm tròn đến hàng nghìn (VNĐ)
+    let p1 = priceMax - (priceMax - priceMin) * 0.1 * ratio1; // Nhóm 1 thiên về Max
+    let p2 = priceMin + (priceMax - priceMin) * 0.5;           // Nhóm 2 ở giữa
+    let p3 = priceMin + (priceMax - priceMin) * 0.1;           // Nhóm 3 thiên về Min
 
-        p1Input.value = Math.round((p1Min + p1Max) / 2 / 1000) * 1000;
-        p2Input.value = Math.round((p2Min + p2Max) / 2 / 1000) * 1000;
-        p3Input.value = Math.round((p3Min + p3Max) / 2 / 1000) * 1000;
+    // Đảm bảo không bao giờ vượt ngoài khung Min - Max đã định
+    p1 = Math.min(Math.max(p1, priceMin), priceMax);
+    p2 = Math.min(Math.max(p2, priceMin), priceMax);
+    p3 = Math.min(Math.max(p3, priceMin), priceMax);
 
-        window.priceRangeData = {
-            p1Min: p1Min, p1Max: p1Max,
-            p2Min: p2Min, p2Max: p2Max,
-            p3Min: p3Min, p3Max: p3Max
-        };
+    // Gán giá trị vào ô input giao diện
+    document.getElementById('scPrice1').value = Math.round(p1 / 1000) * 1000;
+    document.getElementById('scPrice2').value = Math.round(p2 / 1000) * 1000;
+    document.getElementById('scPrice3').value = Math.round(p3 / 1000) * 1000;
 
-        calculateScenario();
-    }
+    // Lưu khoảng giá để dùng cho mẫu tin nhắn Zalo
+    window.priceRangeData = {
+        p1Min: Math.round(priceMin / 1000) * 1000, p1Max: Math.round(priceMax / 1000) * 1000,
+        p2Min: Math.round(priceMin / 1000) * 1000, p2Max: Math.round(priceMax / 1000) * 1000,
+        p3Min: Math.round(priceMin / 1000) * 1000, p3Max: Math.round(priceMax / 1000) * 1000
+    };
+
+    calculateScenario();
+}
 
     function calculateScenario() {
         let productName = document.getElementById('scProductName').value.trim();
