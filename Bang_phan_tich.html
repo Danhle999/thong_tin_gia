@@ -307,7 +307,7 @@
                         <label>Target SL / Tháng (Cái):</label>
                         <input type="number" id="scTargetQty" class="form-control form-control-sm text-end fw-bold text-success" value="200" oninput="autoBalanceScenario()">
                     </div>
-                    <!-- BỔ SUNG LỢI NHUẬN MIN - MAX -->
+                    <!-- KHUNG NHẬP LỢI NHUẬN MIN & MAX -->
                     <div class="col-md-3">
                         <label>Khung Lợi Nhuận Mong Muốn (%):</label>
                         <div class="input-group input-group-sm">
@@ -774,7 +774,7 @@
         document.getElementById('spinnerText').innerText = text;
     }
 
-    /* LOGIC NHẢY KHOẢNG GIÁ MIN - MAX THEO LỢI NHUẬN MONG MUỐN */
+    /* HÀM TỰ ĐỘNG CÂN ĐỐI & NHẢY KHOẢNG GIÁ ĐỀ XUẤT (MIN - MAX) CHO CẢ 3 NHÓM ĐỒNG LOẠT */
     function autoBalanceScenario() {
         let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
         let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
@@ -792,29 +792,15 @@
         if (q3 < 0) q3 = 0;
         document.getElementById('scQty3').value = q3;
 
-        // 1. Tính GIÁ MIN theo % Lợi nhuận Min
-        let totalCost = targetQty * invoicePrice;
-        let requiredProfitMin = totalCost * (targetMarginMin / 100);
-
+        // 1. Tính mức GIÁ MIN cho 3 nhóm theo % Min
         let p1Min = Math.round((invoicePrice * (1 + (targetMarginMin + 3.5) / 100)) / 1000) * 1000;
         let p2Min = Math.round((invoicePrice * (1 + (targetMarginMin + 1.5) / 100)) / 1000) * 1000;
-        
-        let prof1Min = q1 * (p1Min - invoicePrice);
-        let prof2Min = q2 * (p2Min - invoicePrice);
-        let remProfitMin = requiredProfitMin - prof1Min - prof2Min;
-        let p3MinUnit = q3 > 0 ? (remProfitMin / q3) : 0;
-        let p3Min = Math.round((invoicePrice + p3MinUnit) / 1000) * 1000;
+        let p3Min = Math.round((invoicePrice * (1 + (targetMarginMin + 0.5) / 100)) / 1000) * 1000;
 
-        // 2. Tính GIÁ MAX theo % Lợi nhuận Max
-        let requiredProfitMax = totalCost * (targetMarginMax / 100);
-        let p1Max = Math.round((invoicePrice * (1 + (targetMarginMax + 4.5) / 100)) / 1000) * 1000;
-        let p2Max = Math.round((invoicePrice * (1 + (targetMarginMax + 2.0) / 100)) / 1000) * 1000;
-        
-        let prof1Max = q1 * (p1Max - invoicePrice);
-        let prof2Max = q2 * (p2Max - invoicePrice);
-        let remProfitMax = requiredProfitMax - prof1Max - prof2Max;
-        let p3MaxUnit = q3 > 0 ? (remProfitMax / q3) : 0;
-        let p3Max = Math.round((invoicePrice + p3MaxUnit) / 1000) * 1000;
+        // 2. Tính mức GIÁ MAX cho 3 nhóm theo % Max
+        let p1Max = Math.round((invoicePrice * (1 + (targetMarginMax + 5.5) / 100)) / 1000) * 1000;
+        let p2Max = Math.round((invoicePrice * (1 + (targetMarginMax + 2.5) / 100)) / 1000) * 1000;
+        let p3Max = Math.round((invoicePrice * (1 + (targetMarginMax + 1.2) / 100)) / 1000) * 1000;
 
         p1Input.value = Math.round((p1Min + p1Max) / 2 / 1000) * 1000;
         p2Input.value = Math.round((p2Min + p2Max) / 2 / 1000) * 1000;
@@ -881,7 +867,7 @@
         document.getElementById('scTotalCost').innerText = totalCost.toLocaleString('vi-VN') + ' VNĐ';
         document.getElementById('scTotalRevenue').innerText = totalRevSum.toLocaleString('vi-VN') + ' VNĐ';
         document.getElementById('scTotalProfit').innerText = totalProfSum.toLocaleString('vi-VN') + ' VNĐ';
-        document.getElementById('scAchievedMargin').innerText = `${achievedMargin.toFixed(2)}% (Target: ${marginMin}% - ${marginMax}%)`;
+        document.getElementById('scAchievedMargin').innerText = `${achievedMargin.toFixed(2)}% (Mục tiêu: ${marginMin}% - ${marginMax}%)`;
 
         document.getElementById('scTotalQtySum').innerText = totalQtySum;
         document.getElementById('scAvgPrice').innerText = avgPrice.toLocaleString('vi-VN');
@@ -921,7 +907,7 @@
         text += `🎯 Tổng sản lượng target: ${totalQty} chiếc/tháng\n`;
         text += `💰 Doanh thu dự kiến: ${totalRev.toLocaleString('vi-VN')} VNĐ\n`;
         text += `📈 Biên lợi nhuận khung: ${marginMin}% -> ${marginMax}% (Thực tế đạt: ${achievedMargin.toFixed(2)}%)\n\n`;
-        text += `CƠ CẤU KHUNG GIÁ BÁN THƯƠNG LƯỢNG:\n`;
+        text += `CƠ CẤU KHUNG GIÁ BÁN THƯƠNG LƯỢNG (MIN -> MAX):\n`;
         text += `1️⃣ Khách lẻ / Công ty (< 5c): ${rng.p1Min.toLocaleString('vi-VN')} đ -> ${rng.p1Max.toLocaleString('vi-VN')} đ (Bán ${q1}c)\n`;
         text += `2️⃣ Đại lý vừa / Dự án nhỏ (5-20c): ${rng.p2Min.toLocaleString('vi-VN')} đ -> ${rng.p2Max.toLocaleString('vi-VN')} đ (Bán ${q2}c)\n`;
         text += `3️⃣ Đại lý lớn / Bao lô (> 50c): ${rng.p3Min.toLocaleString('vi-VN')} đ -> ${rng.p3Max.toLocaleString('vi-VN')} đ (Bán ${q3}c)\n\n`;
