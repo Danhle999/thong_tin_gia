@@ -1703,17 +1703,17 @@
 
             // CHỈ CHO PHÉP CHỈNH SỬA CÁC CỘT GIÁ VÀ CHI PHÍ (GIÁ BÁN, GIÁ COST, COST_KTB, GIÁ NHẬP MỚI)
             let isPriceOrCostColumn = colNameUpper.includes('GIÁ BÁN') || 
-                                     colNameUpper.includes('GIÁ COST') || 
-                                     colNameUpper.includes('COST_KTB') || 
-                colNameUpper.includes('Sell In Hãng') ||
-                colNameUpper.includes('Sell Out Hãng') ||
-                colNameUpper.includes('Chiết Khấu') ||
-                colNameUpper.includes('Sell In NPP') ||
-                colNameUpper.includes('Sel Out NPP') ||
-                colNameUpper.includes('SL SELL OUT HÃNG SUPPORT') ||
-                colNameUpper.includes('SL TON LUC DO') ||
-                colNameUpper.includes('TEN CHUONG TRINH') ||
-                                     colNameUpper.includes('GIÁ NHẬP MỚI');
+                                       colNameUpper.includes('GIÁ COST') || 
+                                       colNameUpper.includes('COST_KTB') || 
+                                       colNameUpper.includes('GIÁ NHẬP MỚI') ||
+                                       colNameUpper.includes('SELL IN HÃNG') ||
+                                       colNameUpper.includes('SELL OUT HÃNG') ||
+                                       colNameUpper.includes('CHIẾT KHẤU') ||
+                                       colNameUpper.includes('SELL IN NPP') ||
+                                       colNameUpper.includes('SELL OUT NPP') ||
+                                       colNameUpper.includes('SL SELL OUT HÃNG SUPPORT') ||
+                                       colNameUpper.includes('SL TON LUC DO') ||
+                                       colNameUpper.includes('TEN CHUONG TRINH');
 
             let colDef = {
                 title: col.label,
