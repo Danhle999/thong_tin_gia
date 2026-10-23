@@ -27,7 +27,16 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 15px;
         }
-
+        /* Tô màu nền xanh lá nhạt cho các ô dữ liệu được phép sửa */
+        .highlight-editable {
+            background-color: #f0fdf4 !important; 
+            border-right: 1px dashed #bbf7d0 !important; 
+        }
+        /* Tô màu xanh đậm hơn một chút cho Tiêu đề của cột đó */
+        .tabulator-col.highlight-editable {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+        }
         .table-container {
             background: #ffffff;
             border-radius: 8px;
@@ -1763,7 +1772,11 @@ function exportScenarioExcel() {
                 headerFilterFunc: "like", 
                 headerFilterPlaceholder: "Lọc..."
             };
-
+            // THÊM LỆNH TÔ MÀU VÀO NGAY ĐÂY
+            if (isEditableCol) {
+                colDef.cssClass = "highlight-editable";
+            }
+            // Khúc dưới của bạn giữ nguyên
             if (col.cashPrice) {
                 colDef.hozAlign = "left";
                 colDef.formatter = function(cell) {
