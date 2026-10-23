@@ -1889,6 +1889,13 @@ function exportScenarioExcel() {
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
             columnDefaults: { resizable: true }
+            // THÊM ĐOẠN NÀY ĐỂ TỰ ĐỘNG CẬP NHẬT KHI NGƯỜI DÙNG CHỈNH SỬA Ô DỮ LIỆU
+            cellEdited: function(cell) {
+                let row = cell.getRow();
+                let rowData = row.getData();
+                let field = cell.getField();
+                rowData[field] = cell.getValue();
+            }
         });
 
         table.on("dataFiltered", function(filters, rows){
