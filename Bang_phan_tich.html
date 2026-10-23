@@ -1858,14 +1858,14 @@ function exportScenarioExcel() {
             columnsConfig.push(colDef);
         });
 
-        let rowsToProcess = rawData;
-        if (rawData.length > 0 && String(rawData[0][0]) === String(activeCols[0].label)) {
+        let rowsToProcess = [];
+        let startRowOffset = 2;
+
+        if (rawData && rawData.length > 0) {
             rowsToProcess = rawData.slice(1);
         }
 
         checkMissingTonKhoItems(rowsToProcess);
-
-        let startRowOffset = 2;
 
         let tableData = rowsToProcess.map((row, rowIndex) => {
             let actualSheetRow = startRowOffset + rowIndex;
