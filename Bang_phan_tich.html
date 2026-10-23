@@ -1770,8 +1770,8 @@ function exportScenarioExcel() {
                 headerFilterFunc: "like", 
                 headerFilterPlaceholder: "Lọc..."
             };
-            // THÊM LỆNH TÔ MÀU VÀO NGAY ĐÂY
-            if (isEditableCol) {
+            // LỆNH TÔ MÀU NỀN XANH CHO CỘT ĐƯỢC PHÉP SỬA
+            if (isPriceOrCostColumn) {
                 colDef.cssClass = "highlight-editable";
             }
             // Khúc dưới của bạn giữ nguyên
