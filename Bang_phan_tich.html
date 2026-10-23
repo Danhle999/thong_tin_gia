@@ -1653,6 +1653,7 @@ function exportScenarioExcel() {
                 let btn = cellEl.querySelector('button');
 
                 if (!rowData._isEditing) {
+                    // Chuyển sang chế độ Sửa
                     rowData._isEditing = true;
                     btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
                     btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
@@ -1662,7 +1663,6 @@ function exportScenarioExcel() {
                     for (let c of cells) {
                         let fieldName = c.getColumn().getField();
                         if (fieldName && fieldName.startsWith('col_')) {
-                            // Chỉ focus/edit vào cột được phép sửa đầu tiên
                             let colIdx = parseInt(fieldName.replace('col_', ''));
                             let colMeta = activeCols[colIdx];
                             let lbl = colMeta ? colMeta.label.trim().toUpperCase() : '';
@@ -1673,22 +1673,51 @@ function exportScenarioExcel() {
                         }
                     }
                 } else {
-                    let fullRowData = [];
+                    // KHI BẤM LƯU: Xây dựng mảng tọa độ (Targeted Updates) thay vì gửi cả dòng
+                    let updates = [];
+                    
                     activeCols.forEach((col, i) => {
-                        let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
-                        if (col.date && val) {
-                            let d = new Date(val);
-                            if (!isNaN(d.getTime())) {
-                                let yyyy = d.getFullYear();
-                                let mm = String(d.getMonth() + 1).padStart(2, '0');
-                                let dd = String(d.getDate()).padStart(2, '0');
-                                val = `${yyyy}-${mm}-${dd}`;
+                        let colNameUpper = col.label.trim().toUpperCase();
+                        
+                        // Điều kiện giống hệt lúc bạn khóa ô, có chặn thêm chữ CHECK và %
+                        let isEditable = (
+                            colNameUpper.includes('GIÁ BÁN') || 
+                            colNameUpper.includes('GIÁ COST') || 
+                            colNameUpper.includes('COST_KTB') || 
+                            colNameUpper.includes('GIÁ NHẬP MỚI') ||
+                            colNameUpper.includes('SELL IN HÃNG') ||
+                            colNameUpper.includes('SELL OUT HÃNG') ||
+                            colNameUpper.includes('CHIẾT KHẤU') ||
+                            colNameUpper.includes('SELL IN NPP') ||
+                            colNameUpper.includes('SELL OUT NPP') ||
+                            colNameUpper.includes('SL SELL OUT HÃNG SUPPORT') ||
+                            colNameUpper.includes('SL TON LUC DO') ||
+                            colNameUpper.includes('TEN CHUONG TRINH')
+                        ) 
+                        && !colNameUpper.includes('CHECK') 
+                        && !colNameUpper.includes('% LOI NHUAN')
+                        && !colNameUpper.includes('% LỢI NHUẬN')
+                        && !colNameUpper.includes('CHÊNH LỆCH');
+
+                        if (isEditable) {
+                            let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
+                            if (col.date && val) {
+                                let d = new Date(val);
+                                if (!isNaN(d.getTime())) {
+                                    let yyyy = d.getFullYear();
+                                    let mm = String(d.getMonth() + 1).padStart(2, '0');
+                                    let dd = String(d.getDate()).padStart(2, '0');
+                                    val = `${yyyy}-${mm}-${dd}`;
+                                }
                             }
+                            // Thêm vào mảng: Cột thứ mấy (i+1) và Giá trị mới là gì
+                            updates.push({ colIndex: i + 1, value: val });
                         }
-                        fullRowData.push(val);
                     });
 
-                    saveRowToSheet(rowData.sheetRowIndex, fullRowData);
+                    // Gửi mảng tọa độ updates lên Google Apps Script
+                    saveRowToSheet(rowData.sheetRowIndex, updates);
+                    
                     rowData._isEditing = false;
                     row.update(rowData);
                     row.reformat();
