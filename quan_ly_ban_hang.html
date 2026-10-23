@@ -394,9 +394,17 @@
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Mã Hàng Hóa", field: "code", width: 170, headerFilter: "input" },
                 { title: "Tên Hàng Hóa", field: "name", width: 250, headerFilter: "input" },
-                { title: "Khoảng Ngày Nhập Kho", field: "importDateRange", hozAlign: "center", width: 160, formatter: function(cell){
-                    return `<span class="badge bg-secondary text-white fw-normal">${cell.getValue()}</span>`;
-                }},
+                { 
+                    title: "Khoảng Ngày Nhập Kho", 
+                    field: "importDateRange", 
+                    hozAlign: "center", 
+                    width: 160, 
+                    headerFilter: "input", 
+                    formatter: function(cell){
+                        let val = cell.getValue() || "N/A";
+                        return `<span class="badge bg-secondary text-white fw-normal">${val}</span>`;
+                    }
+                },
                 { title: "Tổng SL Nhập", field: "importQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng Giá Nhập (VNĐ)", field: "importAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng SL Bán", field: "sellQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
@@ -464,9 +472,17 @@
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Mã Hàng Hóa", field: "code", width: 170 },
                 { title: "Tên Sản Phẩm", field: "name", width: 230 },
-                { title: "Khoảng Ngày Nhập Kho", field: "importDateRange", hozAlign: "center", width: 160, formatter: function(cell){
-                    return `<span class="badge bg-info text-dark fw-normal">${cell.getValue()}</span>`;
-                }},
+                { 
+                    title: "Khoảng Ngày Nhập Kho", 
+                    field: "importDateRange", 
+                    hozAlign: "center", 
+                    width: 160, 
+                    headerFilter: "input", 
+                    formatter: function(cell){
+                        let val = cell.getValue() || "N/A";
+                        return `<span class="badge bg-info text-dark fw-normal">${val}</span>`;
+                    }
+                },
                 { title: "Ngày Bán", field: "date", hozAlign: "center", width: 110 },
                 { title: "Khách Hàng", field: "customer", width: 200 },
                 { title: "Số Đơn Hàng", field: "orderNo", width: 120 },
@@ -613,17 +629,17 @@
             ]
         });
 
-        // Xử lý Bảng Mục tiêu 2
+        // Xử lý Bảng Mục tiêu 2 (ĐÃ SỬA LỖI GỘP NHÓM)
         let summaryKeys = new Set();
-        actualRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
-        targetRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
+        actualRows.forEach(r => summaryKeys.add(JSON.stringify({q: String(r[0]||'').trim(), b: String(r[1]||'').trim(), t: String(r[2]||'').trim()})));
+        targetRows.forEach(r => summaryKeys.add(JSON.stringify({q: String(r[0]||'').trim(), b: String(r[1]||'').trim(), t: String(r[2]||'').trim()})));
 
         let summaryTableData = [];
         let idxCounter = 1;
 
-        summaryKeys.forEach(key => {
-            let parts = key.split('_');
-            let q = parts[0], b = parts[1], t = parts[2];
+        summaryKeys.forEach(keyStr => {
+            let obj = JSON.parse(keyStr);
+            let q = obj.q, b = obj.b, t = obj.t;
 
             let actualMatch = actualRows.find(r => String(r[0]).trim() === q && String(r[1]).trim().toLowerCase() === b.toLowerCase() && String(r[2]).trim().toLowerCase() === t.toLowerCase());
             let actualAmt = actualMatch ? parseFloat(actualMatch[4]) || 0 : 0;
