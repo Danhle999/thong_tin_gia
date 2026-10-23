@@ -1733,11 +1733,10 @@ function exportScenarioExcel() {
         activeCols.forEach((col, index) => {
             let colNameUpper = col.label.trim().toUpperCase();
 
-            // CHỈ CHO PHÉP CHỈNH SỬA CÁC CỘT GIÁ VÀ CHI PHÍ (GIÁ BÁN, GIÁ COST, COST_KTB, GIÁ NHẬP MỚI)
+            // CHỈ CHO PHÉP CHỈNH SỬA CÁC CỘT GIÁ VÀ CHI PHÍ (GIÁ BÁN, GIÁ COST, COST_KTB)
             let isPriceOrCostColumn = colNameUpper.includes('GIÁ BÁN') || 
                                        colNameUpper.includes('GIÁ COST') || 
                                        colNameUpper.includes('COST_KTB') || 
-                                       colNameUpper.includes('GIÁ NHẬP MỚI') ||
                                        colNameUpper.includes('SELL IN HÃNG') ||
                                        colNameUpper.includes('SELL OUT HÃNG') ||
                                        colNameUpper.includes('CHIẾT KHẤU') ||
