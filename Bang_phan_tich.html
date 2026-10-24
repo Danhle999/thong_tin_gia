@@ -2131,7 +2131,13 @@ function exportScenarioExcel() {
     }
 
     window.onload = function() {
-        loadDataFromSheet(true);
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        if (mode && SHEET_CONFIGS[mode]) {
+            switchTableMode(mode);
+        } else {
+            loadDataFromSheet(true);
+        }
     };
 
 
