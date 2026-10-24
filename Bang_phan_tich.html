@@ -739,10 +739,10 @@
             { label: 'Tên Hàng', desc: true, width: 350 },
             { label: 'GIÁ BÁN TIỀN MẶT', cashPrice: true, width: 170 },
             { label: 'GIÁ BÁN CÔNG NỢ', creditPrice: true, width: 170 },
-            { label: 'Trạng thái', statusIcon: true, width: 90 },
+            { label: 'TÌNH TRẠNG', statusIcon: true, width: 90 },
             { label: 'NGÀY LÊN GIÁ', date: true, width: 120 },
             { label: 'GIÁ TRÊN ZALO', zaloFormat: true, width: 420 },
-            { label: 'GHI CHÚ / TÌNH TRẠNG', width: 150 },
+            { label: 'GHI CHÚ', width: 150 },
             { label: 'SL TỒN', numeric: true, width: 90 },
             { label: 'SL BÁN', numeric: true, width: 90 }
         ],
@@ -1794,7 +1794,8 @@ function loadDataFromSheet(bypassCache = true) {
                             colNameUpper.includes('SELL OUT NPP') ||
                             colNameUpper.includes('SL SELL OUT HÃNG SUPPORT') ||
                             colNameUpper.includes('SL TON LUC DO') ||
-                            colNameUpper.includes('GHI CHÚ / TÌNH TRẠNG') ||
+                            colNameUpper.includes('TÌNH TRẠNG') ||
+                            colNameUpper.includes('GHI CHÚ') ||
                             colNameUpper.includes('NGÀY LÊN GIÁ') ||
                             colNameUpper.includes('TEN CHUONG TRINH')
                         ) 
@@ -1850,7 +1851,8 @@ function loadDataFromSheet(bypassCache = true) {
                                        colNameUpper.includes('SELL OUT NPP') ||
                                        colNameUpper.includes('SL SELL OUT HÃNG SUPPORT') ||
                                        colNameUpper.includes('SL TON LUC DO') ||
-                                        colNameUpper.includes('GHI CHÚ / TÌNH TRẠNG') ||
+                                        colNameUpper.includes('TÌNH TRẠNG') ||
+                                        colNameUpper.includes('GHI CHÚ') ||
                                         colNameUpper.includes('NGÀY LÊN GIÁ') ||
                                        colNameUpper.includes('TEN CHUONG TRINH');
 
