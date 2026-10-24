@@ -27,16 +27,20 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 15px;
         }
-        //Tô màu nền và viền dưới cho cột đang được lọc (Header Filter)
+        // Tô màu nền cho tiêu đề cột đang được lọc
         .tabulator-col.is-filtered {
-            background-color: #fff3cd !important; 
+            background-color: #ffeba1 !important;
             border-bottom: 3px solid #ffc107 !important;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.2s ease;
         }
+        
+        // Đảm bảo màu chữ bên trong vẫn giữ nguyên màu tối (đen/xám)
+        .tabulator-col.is-filtered .tabulator-col-content,
         .tabulator-col.is-filtered .tabulator-col-title {
-            color: #856404 !important;
-            font-weight: bold;
+            color: #212529 !important;
+            font-weight: bold !important; 
         }
+
         .highlight-editable {
             background-color: #f0fdf4 !important; 
             border-right: 1px dashed #bbf7d0 !important; 
