@@ -2050,7 +2050,55 @@ function loadDataFromSheet(bypassCache = true) {
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { resizable: true }
+            columnDefaults: { resizable: true },
+            
+            // THÊM ĐOẠN TOOLTIP HOVER TẠI ĐÂY:
+            tooltip: function(e, cell) {
+            // Chỉ áp dụng cho các tab sản phẩm yêu cầu
+            if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
+                return false;
+            }
+            
+            let rowData = cell.getRow().getData();
+            let activeCols = getActiveColumns();
+            
+            let importPrice = "";
+            let price1 = "";
+            let price2 = "";
+            
+            // Tự động dò tìm các cột giá dựa vào tiêu đề cột tùy theo tab
+            activeCols.forEach((col, idx) => {
+                let lbl = col.label.trim().toUpperCase();
+                let val = rowData["col_" + idx];
+                if (val !== undefined && val !== null && val !== '') {
+                    if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
+                        if (!importPrice) importPrice = val;
+                    }
+                    if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB')) {
+                        price1 = val;
+                    }
+                    if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
+                        price2 = val;
+                    }
+                }
+            });
+            
+            let formatMoney = (v) => {
+                let num = parseFloat(String(v).replace(/[,.]/g, ''));
+                return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
+            };
+            
+            if (!importPrice && !price1 && !price2) return false;
+            
+            // Đặt tên nhãn linh hoạt riêng cho tab LCD và các tab khác
+            let label1 = (currentMode === 'LCD') ? '• Giá Bán Sỉ:' : '• Giá Tiền Mặt:';
+            let label2 = (currentMode === 'LCD') ? '• Giá Bán SL:' : '• Giá Công Nợ / Đề Xuất:';
+            
+            return `📦 THÔNG TIN GIÁ NHANH (${currentMode}):\n` +
+                   `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
+                   `${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
+                   `${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
+        }
         });
 
             table.on("dataFiltered", function(filters, rows){
