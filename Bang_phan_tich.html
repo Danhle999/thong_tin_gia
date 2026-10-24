@@ -760,6 +760,7 @@
     };
 
     let currentMode = 'LAPTOP';
+    let tabDataCache = {}; // Biến lưu trữ dữ liệu đệm cho các tab
     let table = null;
     let tableQuarterDetail = null;
     let tableBrandSummary = null;
@@ -839,7 +840,7 @@
             document.getElementById('missingFromTabAlert').classList.add('d-none');
         } else {
             resetAllFilters(false);
-            loadDataFromSheet(true);
+            loadDataFromSheet(false);
         }
     }
 
@@ -1019,9 +1020,10 @@ function exportScenarioExcel() {
     XLSX.writeFile(wb, "Kich_Ban_Phan_Bo_Ban_Hang.xlsx");
 }
 
-    function loadDataFromSheet(bypassCache = true) {
+function loadDataFromSheet(bypassCache = true) {
         let timeStamp = new Date().getTime();
 
+        // 1. Load ngầm dữ liệu Tồn Kho (nếu chưa có) để đối chiếu mã
         if (rawTonKhoItems.length === 0 && currentMode !== 'TON_KHO') {
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=TON_KHO&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
@@ -1037,32 +1039,45 @@ function exportScenarioExcel() {
                 .catch(err => console.error("Lỗi nạp bộ nhớ Tồn Kho:", err));
         }
 
+        // 2. KIỂM TRA CACHE TRƯỚC KHI GỌI API
+        if (!bypassCache && tabDataCache[currentMode]) {
+            if (currentMode === 'THONG_KE_QUY') {
+                globalActualData = tabDataCache[currentMode].actuals || [];
+                globalTargetData = tabDataCache[currentMode].targets || [];
+                renderThongKeQuyTab();
+            } else if (currentMode === 'BAO_CAO_LOI_NHUAN') {
+                renderProfitReportTab(tabDataCache[currentMode]);
+            } else if (currentMode === 'KICH_BAN_BAN_HANG') {
+                autoBalanceScenario();
+            } else {
+                buildTabulatorTable(tabDataCache[currentMode]);
+            }
+            return; // Nếu có cache thì dừng luôn, không fetch server nữa
+        }
+
+        // 3. NẾU CHƯA CÓ CACHE HOẶC BẤM NÚT "TẢI LẠI", GỌI LÊN GOOGLE SHEETS
         if (currentMode === 'THONG_KE_QUY') {
             showLoading(true, "Đang tải dữ liệu Thống kê Quý...");
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=THONG_KE_QUY&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
                     showLoading(false);
+                    tabDataCache[currentMode] = data; // Lưu vào Cache
                     globalActualData = data.actuals || [];
                     globalTargetData = data.targets || [];
                     renderThongKeQuyTab();
                 })
-                .catch(err => {
-                    showLoading(false);
-                    alert("Lỗi tải dữ liệu Thống kê quý!");
-                });
+                .catch(err => { showLoading(false); alert("Lỗi tải dữ liệu Thống kê quý!"); });
         } else if (currentMode === 'BAO_CAO_LOI_NHUAN') {
             showLoading(true, "Đang tính toán Báo cáo Lợi nhuận FIFO từ các lô nhập kho...");
             fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAO_CAO_LOI_NHUAN&nocache=${bypassCache}&t=${timeStamp}`)
                 .then(res => res.json())
                 .then(data => {
                     showLoading(false);
+                    tabDataCache[currentMode] = data; // Lưu vào Cache
                     renderProfitReportTab(data);
                 })
-                .catch(err => {
-                    showLoading(false);
-                    alert("Lỗi tải Báo cáo lợi nhuận!");
-                });
+                .catch(err => { showLoading(false); alert("Lỗi tải Báo cáo lợi nhuận!"); });
         } else if (currentMode === 'KICH_BAN_BAN_HANG') {
             autoBalanceScenario();
         } else {
@@ -1084,12 +1099,10 @@ function exportScenarioExcel() {
                         })).filter(x => x.code !== '');
                     }
 
+                    tabDataCache[currentMode] = data; // LƯU VÀO CACHE BỘ NHỚ
                     buildTabulatorTable(data);
                 })
-                .catch(err => {
-                    showLoading(false);
-                    alert("Lỗi kết nối đến Google Sheets!");
-                });
+                .catch(err => { showLoading(false); alert("Lỗi kết nối đến Google Sheets!"); });
         }
     }
 
