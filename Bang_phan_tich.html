@@ -1607,7 +1607,10 @@ function loadDataFromSheet(bypassCache = true) {
 
     function saveTargetToGoogleSheet(quarter, brand, productType, targetAmount) {
         showLoading(true, "Đang lưu mục tiêu doanh số...");
-
+        
+        // CHÈN DÒNG NÀY: Xóa bộ đệm của tab hiện tại
+        delete tabDataCache[currentMode];
+        
         var payloadData = {
             action: "updateTarget",
             quarter: quarter,
@@ -2109,6 +2112,10 @@ function loadDataFromSheet(bypassCache = true) {
 
     function saveRowToSheet(sheetRowIndex, fullRowData) {
         showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
+        
+        // CHÈN DÒNG NÀY: Xóa bộ đệm của tab hiện tại để lần sau bắt buộc tải dữ liệu mới
+        delete tabDataCache[currentMode];
+        
         var payloadData = { action: "updateRow", sheetName: currentMode.trim(), rowIndex: sheetRowIndex, rowData: fullRowData };
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
