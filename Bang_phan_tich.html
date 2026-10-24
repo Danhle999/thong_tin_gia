@@ -1922,7 +1922,18 @@ function loadDataFromSheet(bypassCache = true) {
                     
                     let rawCash = idxCashCol !== -1 ? String(rowData["col_" + idxCashCol] || '').trim() : '';
                     let rawCredit = idxCreditCol !== -1 ? String(rowData["col_" + idxCreditCol] || '').trim() : '';
-                    let rawIcon = idxIconCol !== -1 ? String(rowData["col_" + idxIconCol] || '').trim().toUpperCase() : '';
+
+                    // CẢI TIẾN: Tự động quét toàn bộ các cột trong dòng để tìm xem cột nào chứa giá trị GIẢM, TĂNG hoặc NEW
+                    let rawIcon = '';
+                    for (let key in rowData) {
+                        if (key.startsWith('col_')) {
+                            let valStr = String(rowData[key] || '').trim().toUpperCase();
+                            if (valStr === 'GIẢM' || valStr === 'TĂNG' || valStr === 'NEW') {
+                                rawIcon = valStr;
+                                break;
+                            }
+                        }
+                    }
 
                     let cashNum = parseFloat(rawCash.replace(/[^\d]/g, ''));
                     let creditNum = parseFloat(rawCredit.replace(/[^\d]/g, ''));
