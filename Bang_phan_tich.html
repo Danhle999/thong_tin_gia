@@ -212,6 +212,47 @@
             color: #475569;
             margin-bottom: 2px;
         }
+
+        // RESPONSIVE: Phóng to giao diện cho màn hình lớn (Màn 24 inch / Full HD trở lên)
+        @media (min-width: 1600px) {
+            html, body {
+                font-size: 17px !important; // Tăng cỡ chữ gốc lên 17px
+            }
+            
+            //Tăng khoảng cách các ô trong bảng Tabulator cho thoáng hơn
+            .tabulator .tabulator-header .tabulator-col-content { 
+                padding: 8px !important; 
+            }
+            .tabulator .tabulator-row .tabulator-cell {
+                padding-top: 6px !important;
+                padding-bottom: 6px !important;
+                line-height: 1.5 !important;
+            }
+
+            // Tăng kích thước nút điều hướng (View mode)
+            .view-mode-btn-group .btn { 
+                font-size: 1rem; 
+                padding: 6px 14px;
+            }
+
+            // Tăng kích thước bộ lọc Global
+            .filter-card .form-label {
+                font-size: 0.95rem;
+            }
+            
+            // Phóng to thẻ Thống kê (Stat card)
+            .stat-card {
+                padding: 12px 16px;
+            }
+            .stat-card h5 {
+                font-size: 1.5rem !important;
+            }
+            
+            // Tiêu đề bảng to hơn
+            .table-section-title {
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 <body>
