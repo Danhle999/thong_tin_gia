@@ -28,17 +28,18 @@
             font-size: 15px;
         }
         // Tô màu nền cho tiêu đề cột đang được lọc
-        .tabulator-col.is-filtered {
-            background-color: #ffeba1 !important;
-            border-bottom: 3px solid #ffc107 !important;
-            transition: background-color 0.2s ease;
+        .tabulator-col.is-filtered,
+        .tabulator-col.is-filtered .tabulator-col-content {
+            background-color: #ffeba1 !important; 
+            border-bottom: 2px solid #ffc107 !important;
         }
         
-        // Đảm bảo màu chữ bên trong vẫn giữ nguyên màu tối (đen/xám)
-        .tabulator-col.is-filtered .tabulator-col-content,
-        .tabulator-col.is-filtered .tabulator-col-title {
-            color: #212529 !important;
-            font-weight: bold !important; 
+        // Nhấn mạnh luôn ô nhập liệu (input) để dễ nhận biết
+        .tabulator-col.is-filtered input {
+            background-color: #fff9e6 !important;
+            border: 1px solid #ffc107 !important;
+            color: #d32f2f !important;
+            font-weight: bold;
         }
 
         .highlight-editable {
@@ -1945,27 +1946,28 @@ function exportScenarioExcel() {
         });
 
             table.on("dataFiltered", function(filters, rows){
-            // Cập nhật số dòng hiển thị
             document.getElementById('rowCountBadge').innerText = `Hiển thị: ${rows.length} / ${tableData.length} dòng`;
 
-            // BƯỚC MỚI: Xóa class 'is-filtered' khỏi tất cả các cột trước
-            let allCols = table.getColumns();
-            allCols.forEach(col => {
-                let elem = col.getElement();
-                if (elem) elem.classList.remove('is-filtered');
-            });
+            // Dùng setTimeout để ép JS đợi Tabulator render xong mới gán class
+            setTimeout(() => {
+                // Xóa màu ở tất cả các cột trước
+                let allCols = table.getColumns();
+                allCols.forEach(col => {
+                    let elem = col.getElement();
+                    if (elem) elem.classList.remove('is-filtered');
+                });
 
-            // Kiểm tra xem bộ lọc nào đang được áp dụng (qua Header Filter)
-            // Lọc global bằng hàm (function) sẽ không có f.field
-            filters.forEach(f => {
-                if (f.field) {
-                    let col = table.getColumn(f.field);
-                    if (col) {
-                        let elem = col.getElement();
-                        if (elem) elem.classList.add('is-filtered');
+                // Tìm và tô màu cột đang được lọc
+                filters.forEach(f => {
+                    if (f.field) {
+                        let col = table.getColumn(f.field);
+                        if (col) {
+                            let elem = col.getElement();
+                            if (elem) elem.classList.add('is-filtered');
+                        }
                     }
-                }
-            });
+                });
+            }, 50); // Trì hoãn 50ms
         });
 
         table.on("tableBuilt", function() {
