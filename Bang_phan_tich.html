@@ -1869,7 +1869,17 @@ function loadDataFromSheet(bypassCache = true) {
                 },
                 editorParams: { selectContents: true },
                 headerFilter: "input", 
-                headerFilterFunc: "like", 
+                headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
+                    if (!headerValue) return true;
+                    if (rowValue === null || rowValue === undefined) return false;
+                    
+                    // Tách từ khóa theo khoảng trắng (ví: "DELL I3" thành ["dell", "i3"])
+                    let keywords = String(headerValue).toLowerCase().split(' ').filter(k => k.trim() !== '');
+                    let cellStr = String(rowValue).toLowerCase();
+                    
+                    // Kiểm tra xem TẤT CẢ các từ khóa có xuất hiện trong ô hay không
+                    return keywords.every(k => cellStr.includes(k));
+                },
                 headerFilterPlaceholder: "Lọc..."
             };
             // LỆNH TÔ MÀU NỀN XANH CHO CỘT ĐƯỢC PHÉP SỬA
