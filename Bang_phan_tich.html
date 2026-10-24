@@ -334,7 +334,9 @@
                 <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
                 <button class="btn btn-sm btn-outline-danger" id="btnToggleHetHang" onclick="toggleHideHetHang()"><i class="fa-solid fa-filter-circle-xmark me-1"></i>Ẩn Hết Hàng</button>
                 <!-- NÚT COPY ZALO MỚI ĐƯỢC THÊM VÀO ĐÂY -->
-                <button class="btn btn-sm btn-info text-dark fw-bold" onclick="copyFilteredZaloPrices()"><i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo</button>
+                <button class="btn btn-sm btn-info text-dark fw-bold d-none" id="btnCopyZalo" onclick="copyFilteredZaloPrices()">
+                    <i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo
+                </button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2" id="excelUploadContainer">
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
@@ -829,6 +831,8 @@
         let isThongKe = (mode === 'THONG_KE_QUY');
         let isLoiNhuan = (mode === 'BAO_CAO_LOI_NHUAN');
         let isKichBan = (mode === 'KICH_BAN_BAN_HANG');
+        // Khai báo thêm biến nhận diện các tab Báo giá
+        let isBaoGia = ['BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO'].includes(mode);
 
         document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
         document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
@@ -836,7 +840,16 @@
         document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
         document.getElementById('profitReportView').style.display = isLoiNhuan ? 'flex' : 'none';
         document.getElementById('kichBanView').style.display = isKichBan ? 'flex' : 'none';
-
+        
+        // Điều khiển Nút Copy Zalo: Chỉ hiện khi ở các tab Báo giá
+        let btnCopy = document.getElementById('btnCopyZalo');
+        if (btnCopy) {
+            if (isBaoGia) {
+                btnCopy.classList.remove('d-none'); // Hiện nút
+            } else {
+                btnCopy.classList.add('d-none');    // Ẩn nút
+            }
+        }
         if (isKichBan) {
             autoBalanceScenario();
             document.getElementById('missingFromTabAlert').classList.add('d-none');
