@@ -333,6 +333,8 @@
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
                 <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
                 <button class="btn btn-sm btn-outline-danger" id="btnToggleHetHang" onclick="toggleHideHetHang()"><i class="fa-solid fa-filter-circle-xmark me-1"></i>Ẩn Hết Hàng</button>
+                <!-- NÚT COPY ZALO MỚI ĐƯỢC THÊM VÀO ĐÂY -->
+                <button class="btn btn-sm btn-info text-dark fw-bold" onclick="copyFilteredZaloPrices()"><i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo</button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2" id="excelUploadContainer">
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
@@ -2244,6 +2246,64 @@ function toggleHideHetHang() {
         });
     }
 }
+
+
+    function copyFilteredZaloPrices() {
+        if (!table) return;
+
+        // Lấy danh sách các dòng ĐANG HIỂN THỊ (đã vượt qua bộ lọc)
+        let activeRows = table.getData("active");
+
+        if (activeRows.length === 0) {
+            alert("Không có dữ liệu nào để Copy!");
+            return;
+        }
+
+        let activeCols = getActiveColumns();
+        let idxCodeCol = activeCols.findIndex(c => c.code);
+        let idxDescCol = activeCols.findIndex(c => c.desc);
+        let idxCashCol = activeCols.findIndex(c => c.cashPrice);
+        let idxCreditCol = activeCols.findIndex(c => c.creditPrice);
+        let idxIconCol = activeCols.findIndex(c => c.statusIcon);
+
+        let finalCopiedText = "BÁO GIÁ THIẾT BỊ\n\n";
+
+        activeRows.forEach(rowData => {
+            let codeVal = idxCodeCol !== -1 ? String(rowData["col_" + idxCodeCol] || '').trim() : '';
+            let descVal = idxDescCol !== -1 ? String(rowData["col_" + idxDescCol] || '').trim() : '';
+            
+            let rawCash = idxCashCol !== -1 ? String(rowData["col_" + idxCashCol] || '').trim() : '';
+            let rawCredit = idxCreditCol !== -1 ? String(rowData["col_" + idxCreditCol] || '').trim() : '';
+            let rawIcon = idxIconCol !== -1 ? String(rowData["col_" + idxIconCol] || '').trim().toUpperCase() : '';
+
+            let cashNum = parseFloat(rawCash.replace(/[^\d]/g, ''));
+            let creditNum = parseFloat(rawCredit.replace(/[^\d]/g, ''));
+
+            let cashStr = !isNaN(cashNum) ? `💰 Giá tiền mặt: ${cashNum.toLocaleString('vi-VN')} đ` : '';
+            let creditStr = !isNaN(creditNum) ? `💳 Giá công nợ: ${creditNum.toLocaleString('vi-VN')} đ` : '';
+
+            let iconSymbol = '';
+            if (rawIcon === 'GIẢM') iconSymbol = ' ⬇️ (GIẢM)';
+            else if (rawIcon === 'TĂNG') iconSymbol = ' ⬆️ (TĂNG)';
+            else if (rawIcon === 'NEW') iconSymbol = ' 💥 (NEW)';
+
+            if (codeVal || descVal || cashStr || creditStr) {
+                 finalCopiedText += `📌 [${codeVal}]\n`;
+                 finalCopiedText += `👉 ${descVal}\n`;
+                 if(cashStr) finalCopiedText += `${cashStr}\n`;
+                 if(creditStr) finalCopiedText += `${creditStr}${iconSymbol}\n`;
+                 finalCopiedText += `------------------------\n`;
+            }
+        });
+
+        // Copy vào Clipboard của máy tính
+        navigator.clipboard.writeText(finalCopiedText).then(() => {
+            alert(`✅ Đã copy thành công ${activeRows.length} mã sản phẩm. Bạn có thể mở Zalo và dán (Ctrl+V) ngay!`);
+        }).catch(err => {
+            console.error('Lỗi khi copy: ', err);
+            alert("Trình duyệt không hỗ trợ copy hoặc bị lỗi!");
+        });
+    }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
