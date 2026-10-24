@@ -2079,7 +2079,16 @@ function loadDataFromSheet(bypassCache = true) {
             table.setFilter(function(data){
                 let matchGlobal = true, matchCus = true, matchDate = true;
 
-                if (kw) matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
+                if (kw) {
+                    // Tách từ khóa bằng khoảng trắng thành mảng các từ
+                    let keywords = kw.split(' ').filter(k => k.trim() !== '');
+                    
+                    // Gộp tất cả dữ liệu của dòng thành một chuỗi duy nhất để tìm kiếm
+                    let rowDataString = Object.values(data).join(' ').toLowerCase();
+                    
+                    // Yêu cầu MỌI từ khóa đều phải xuất hiện trong chuỗi dữ liệu của dòng
+                    matchGlobal = keywords.every(k => rowDataString.includes(k));
+                }
 
                 if (kwCus) {
                     matchCus = Object.entries(data).some(([key, val]) => {
