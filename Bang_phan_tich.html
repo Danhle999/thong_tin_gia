@@ -1899,18 +1899,18 @@ function loadDataFromSheet(bypassCache = true) {
                     return `Giá công nợ: ${num.toLocaleString('vi-VN')}`;
                 };
             }
-            else if (col.statusIcon) {
+            else if (colNameUpper === 'TÌNH TRẠNG') {
                 colDef.hozAlign = "center";
                 colDef.formatter = function(cell) {
                     let val = String(cell.getValue() || '').trim().toUpperCase();
                     if (val === 'GIẢM') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-square-arrow-down text-danger"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded fw-bold text-danger" style="font-size: 0.85rem;"><i class="fa-solid fa-arrow-trend-down me-1"></i>GIẢM</div>`;
                     } else if (val === 'TĂNG') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-square-arrow-up text-danger"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded fw-bold text-success" style="font-size: 0.85rem;"><i class="fa-solid fa-arrow-trend-up me-1"></i>TĂNG</div>`;
                     } else if (val === 'NEW') {
-                        return `<div class="p-1 border text-center bg-light rounded" style="font-size: 1.1rem;"><i class="fa-solid fa-fire text-warning"></i></div>`;
+                        return `<div class="p-1 border text-center bg-light rounded fw-bold text-warning" style="font-size: 0.85rem;"><i class="fa-solid fa-fire me-1"></i>NEW</div>`;
                     }
-                    return cell.getValue();
+                    return cell.getValue(); // Nếu là chữ khác thì hiển thị bình thường
                 };
             }
             else if (col.zaloFormat) {
