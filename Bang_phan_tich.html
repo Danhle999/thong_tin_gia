@@ -787,6 +787,9 @@
     function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
 
     function switchTableMode(mode) {
+        // Cập nhật URL trên thanh địa chỉ mà không reload trang
+        window.history.pushState(null, '', '?mode=' + mode);
+        
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
