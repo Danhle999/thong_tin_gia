@@ -2053,7 +2053,8 @@ function loadDataFromSheet(bypassCache = true) {
             columnDefaults: { resizable: true },
             
             // THÊM ĐOẠN TOOLTIP HOVER TẠI ĐÂY:
-            tooltip: function(e, cell) {
+            // THAY THẾ ĐOẠN TOOLTIP CŨ BẰNG ĐOẠN NÀY:
+        tooltip: function(e, cell) {
             // Chỉ áp dụng cho các tab sản phẩm yêu cầu
             if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
                 return false;
@@ -2088,16 +2089,12 @@ function loadDataFromSheet(bypassCache = true) {
                 return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
             };
             
-            if (!importPrice && !price1 && !price2) return false;
-            
             // Đặt tên nhãn linh hoạt riêng cho tab LCD và các tab khác
-            let label1 = (currentMode === 'LCD') ? '• Giá Bán Sỉ:' : '• Giá Tiền Mặt:';
-            let label2 = (currentMode === 'LCD') ? '• Giá Bán SL:' : '• Giá Công Nợ / Đề Xuất:';
+            let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
+            let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
             
-            return `📦 THÔNG TIN GIÁ NHANH (${currentMode}):\n` +
-                   `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
-                   `${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
-                   `${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
+            // Trả về dạng một dòng chuẩn xác để Tabulator hiển thị mượt mà 100%
+            return `[${currentMode}]  |  Nhập: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}  |  ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}  |  ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
         }
         });
 
