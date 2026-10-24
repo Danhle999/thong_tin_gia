@@ -2053,49 +2053,48 @@ function loadDataFromSheet(bypassCache = true) {
             columnDefaults: { resizable: true },
             
             // THÊM ĐOẠN TOOLTIP HOVER TẠI ĐÂY:
-            // THAY THẾ ĐOẠN TOOLTIP CŨ BẰNG ĐOẠN NÀY:
-        tooltip: function(e, cell) {
-            // Chỉ áp dụng cho các tab sản phẩm yêu cầu
-            if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
-                return false;
-            }
-            
-            let rowData = cell.getRow().getData();
-            let activeCols = getActiveColumns();
-            
-            let importPrice = "";
-            let price1 = "";
-            let price2 = "";
-            
-            // Tự động dò tìm các cột giá dựa vào tiêu đề cột tùy theo tab
-            activeCols.forEach((col, idx) => {
-                let lbl = col.label.trim().toUpperCase();
-                let val = rowData["col_" + idx];
-                if (val !== undefined && val !== null && val !== '') {
-                    if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
-                        if (!importPrice) importPrice = val;
-                    }
-                    if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB')) {
-                        price1 = val;
-                    }
-                    if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
-                        price2 = val;
-                    }
+            // Dùng rowFormatted để gán tooltip native của trình duyệt (bỏ qua lỗi bị tràn/cắt khung)
+            rowFormatted: function(row) {
+                if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
+                    return;
                 }
-            });
-            
-            let formatMoney = (v) => {
-                let num = parseFloat(String(v).replace(/[,.]/g, ''));
-                return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
-            };
-            
-            // Đặt tên nhãn linh hoạt riêng cho tab LCD và các tab khác
-            let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
-            let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
-            
-            // Trả về dạng một dòng chuẩn xác để Tabulator hiển thị mượt mà 100%
-            return `[${currentMode}]  |  Nhập: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}  |  ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}  |  ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
-        }
+                
+                let rowData = row.getData();
+                let activeCols = getActiveColumns();
+                
+                let importPrice = "";
+                let price1 = "";
+                let price2 = "";
+                
+                activeCols.forEach((col, idx) => {
+                    let lbl = col.label.trim().toUpperCase();
+                    let val = rowData["col_" + idx];
+                    if (val !== undefined && val !== null && val !== '') {
+                        if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
+                            if (!importPrice) importPrice = val;
+                        }
+                        if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB')) {
+                            price1 = val;
+                        }
+                        if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
+                            price2 = val;
+                        }
+                    }
+                });
+                
+                let formatMoney = (v) => {
+                    let num = parseFloat(String(v).replace(/[,.]/g, ''));
+                    return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
+                };
+                
+                let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
+                let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
+                
+                let tooltipText = `[${currentMode}]  |  Nhập: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}  |  ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}  |  ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
+                
+                // Gán trực tiếp thuộc tính title vào DOM của dòng sản phẩm
+                row.getElement().setAttribute("title", tooltipText);
+            }
         });
 
             table.on("dataFiltered", function(filters, rows){
