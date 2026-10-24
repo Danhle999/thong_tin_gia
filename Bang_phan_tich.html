@@ -1330,16 +1330,23 @@ function exportScenarioExcel() {
         });
     }
 
+    let profitDetailTimeout = null;
+
     function filterProfitDetails() {
         if (!tableProfitDetails) return;
-        let codeKw = document.getElementById('filterDetailCodeInput').value.trim().toLowerCase();
-        let cusKw = document.getElementById('filterDetailCustomerInput').value.trim().toLowerCase();
 
-        tableProfitDetails.setFilter(function(data) {
-            let matchCode = !codeKw || String(data.code || '').toLowerCase().includes(codeKw) || String(data.name || '').toLowerCase().includes(codeKw);
-            let matchCus = !cusKw || String(data.customer || '').toLowerCase().includes(cusKw) || String(data.orderNo || '').toLowerCase().includes(cusKw);
-            return matchCode && matchCus;
-        });
+        if (profitDetailTimeout) clearTimeout(profitDetailTimeout);
+
+        profitDetailTimeout = setTimeout(() => {
+            let codeKw = document.getElementById('filterDetailCodeInput').value.trim().toLowerCase();
+            let cusKw = document.getElementById('filterDetailCustomerInput').value.trim().toLowerCase();
+
+            tableProfitDetails.setFilter(function(data) {
+                let matchCode = !codeKw || String(data.code || '').toLowerCase().includes(codeKw) || String(data.name || '').toLowerCase().includes(codeKw);
+                let matchCus = !cusKw || String(data.customer || '').toLowerCase().includes(cusKw) || String(data.orderNo || '').toLowerCase().includes(cusKw);
+                return matchCode && matchCus;
+            });
+        }, 400);
     }
 
     function clearProfitDetailFilter() {
@@ -2018,55 +2025,62 @@ function exportScenarioExcel() {
         });
     }
 
+    let globalSearchTimeout = null; 
+
     function applyGlobalSearch() {
         if (!table) return;
-        let kw = document.getElementById('globalSearchInput').value.toLowerCase();
-        let kwCus = document.getElementById('customerFilterInput').value.toLowerCase();
-        let dateFromVal = document.getElementById('dateFromInput').value;
-        let dateToVal = document.getElementById('dateToInput').value;
 
-        let dateFrom = dateFromVal ? new Date(dateFromVal) : null;
-        let dateTo = dateToVal ? new Date(dateToVal) : null;
-        if (dateTo) dateTo.setHours(23, 59, 59, 999);
+        if (globalSearchTimeout) clearTimeout(globalSearchTimeout);
 
-        let activeCols = getActiveColumns();
+        globalSearchTimeout = setTimeout(() => {
+            let kw = document.getElementById('globalSearchInput').value.toLowerCase();
+            let kwCus = document.getElementById('customerFilterInput').value.toLowerCase();
+            let dateFromVal = document.getElementById('dateFromInput').value;
+            let dateToVal = document.getElementById('dateToInput').value;
 
-        table.setFilter(function(data){
-            let matchGlobal = true, matchCus = true, matchDate = true;
+            let dateFrom = dateFromVal ? new Date(dateFromVal) : null;
+            let dateTo = dateToVal ? new Date(dateToVal) : null;
+            if (dateTo) dateTo.setHours(23, 59, 59, 999);
 
-            if (kw) matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
+            let activeCols = getActiveColumns();
 
-            if (kwCus) {
-                matchCus = Object.entries(data).some(([key, val]) => {
-                    if (key.startsWith('col_')) {
-                        let idx = parseInt(key.replace('col_', ''));
-                        let col = activeCols[idx];
-                        if (col && (col.customer || col.ncc || col.code)) return String(val).toLowerCase().includes(kwCus);
-                    }
-                    return false;
-                });
-            }
+            table.setFilter(function(data){
+                let matchGlobal = true, matchCus = true, matchDate = true;
 
-            if (dateFrom || dateTo) {
-                matchDate = Object.entries(data).some(([key, val]) => {
-                    if (key.startsWith('col_')) {
-                        let idx = parseInt(key.replace('col_', ''));
-                        let col = activeCols[idx];
-                        if (col && col.date && val) {
-                            let cellDate = new Date(val);
-                            if (!isNaN(cellDate.getTime())) {
-                                if (dateFrom && cellDate < dateFrom) return false;
-                                if (dateTo && cellDate > dateTo) return false;
-                                return true;
+                if (kw) matchGlobal = Object.values(data).some(val => String(val).toLowerCase().includes(kw));
+
+                if (kwCus) {
+                    matchCus = Object.entries(data).some(([key, val]) => {
+                        if (key.startsWith('col_')) {
+                            let idx = parseInt(key.replace('col_', ''));
+                            let col = activeCols[idx];
+                            if (col && (col.customer || col.ncc || col.code)) return String(val).toLowerCase().includes(kwCus);
+                        }
+                        return false;
+                    });
+                }
+
+                if (dateFrom || dateTo) {
+                    matchDate = Object.entries(data).some(([key, val]) => {
+                        if (key.startsWith('col_')) {
+                            let idx = parseInt(key.replace('col_', ''));
+                            let col = activeCols[idx];
+                            if (col && col.date && val) {
+                                let cellDate = new Date(val);
+                                if (!isNaN(cellDate.getTime())) {
+                                    if (dateFrom && cellDate < dateFrom) return false;
+                                    if (dateTo && cellDate > dateTo) return false;
+                                    return true;
+                                }
                             }
                         }
-                    }
-                    return false;
-                });
-            }
+                        return false;
+                    });
+                }
 
-            return matchGlobal && matchCus && matchDate;
-        });
+                return matchGlobal && matchCus && matchDate;
+            });
+        }, 400); 
     }
 
     function resetAllFilters(reload = true) {
