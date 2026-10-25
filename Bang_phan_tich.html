@@ -525,16 +525,22 @@
                 <div class="table-section-header">
                     <div class="table-section-title text-success"><i class="fa-solid fa-boxes-packing me-1"></i> 1. Báo Cáo Nhập Hàng</div>
                 </div>
-                <!-- BỘ LỌC RIÊNG CHO NHẬP HÀNG -->
+                <!-- BỘ LỌC CHO NHẬP HÀNG -->
                 <div class="row g-2 mb-2 p-2 bg-light border rounded align-items-center">
-                    <div class="col-md-5">
-                        <input type="text" id="filterImportCodeInput" class="form-control form-control-sm fs-6" placeholder="Lọc Mã Hàng Hóa hoặc Tên Hàng..." onkeyup="filterImportTable()">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Mã / Tên Hàng:</label>
+                        <input type="text" id="filterImportCodeInput" class="form-control form-control-sm fs-6" placeholder="Nhập mã hoặc tên hàng..." onkeyup="filterImportTable()">
                     </div>
-                    <div class="col-md-5">
-                        <input type="text" id="filterImportDateInput" class="form-control form-control-sm fs-6" placeholder="Lọc theo Ngày Nhập (YYYY-MM-DD)..." onkeyup="filterImportTable()">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-day me-1"></i>Từ ngày:</label>
+                        <input type="date" id="filterImportDateFrom" class="form-control form-control-sm fs-6" onchange="filterImportTable()">
                     </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearImportFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Bỏ Lọc</button>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-check me-1"></i>Đến ngày:</label>
+                        <input type="date" id="filterImportDateTo" class="form-control form-control-sm fs-6" onchange="filterImportTable()">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-sm btn-outline-secondary w-100 mt-3" onclick="clearImportFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
                     </div>
                 </div>
                 <div id="table-profit-import" style="height: 300px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
@@ -545,16 +551,26 @@
                 <div class="table-section-header">
                     <div class="table-section-title text-primary"><i class="fa-solid fa-cart-shopping me-1"></i> 2. Báo Cáo Bán Hàng</div>
                 </div>
-                <!-- BỘ LỌC ĐẦY ĐỦ CHO BÁN HÀNG -->
+                <!-- BỘ LỌC CHO BÁN HÀNG -->
                 <div class="row g-2 mb-2 p-2 bg-light border rounded align-items-center">
-                    <div class="col-md-5">
-                        <input type="text" id="filterDetailCodeInput" class="form-control form-control-sm fs-6" placeholder="Lọc Mã Hàng Hóa hoặc Tên Sản Phẩm..." onkeyup="filterProfitDetails()">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Mã / Tên SP:</label>
+                        <input type="text" id="filterDetailCodeInput" class="form-control form-control-sm fs-6" placeholder="Mã hoặc tên sản phẩm..." onkeyup="filterProfitDetails()">
                     </div>
-                    <div class="col-md-5">
-                        <input type="text" id="filterDetailCustomerInput" class="form-control form-control-sm fs-6" placeholder="Lọc Khách Hàng hoặc Số Đơn Hàng..." onkeyup="filterProfitDetails()">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / Đơn:</label>
+                        <input type="text" id="filterDetailCustomerInput" class="form-control form-control-sm fs-6" placeholder="Tên KH hoặc số đơn..." onkeyup="filterProfitDetails()">
                     </div>
                     <div class="col-md-2">
-                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearProfitDetailFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Bỏ Lọc</button>
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-day me-1"></i>Từ ngày:</label>
+                        <input type="date" id="filterSalesDateFrom" class="form-control form-control-sm fs-6" onchange="filterProfitDetails()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-check me-1"></i>Đến ngày:</label>
+                        <input type="date" id="filterSalesDateTo" class="form-control form-control-sm fs-6" onchange="filterProfitDetails()">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-sm btn-outline-secondary w-100 mt-3" onclick="clearProfitDetailFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
                     </div>
                 </div>
                 <div id="table-profit-sales" style="height: 380px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
@@ -1280,9 +1296,9 @@ function loadDataFromSheet(bypassCache = true) {
             paginationSizeSelector: [10, 20, 50, 100],
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-                { title: "Mã Hàng Hóa", field: "name", width: 180 },
-                { title: "Tên Hàng Hóa", field: "code", width: 300 },
                 { title: "Ngày Nhập", field: "date", hozAlign: "center", width: 120 },
+                { title: "Mã Hàng Hóa", field: "code", width: 180 },
+                { title: "Tên Hàng Hóa / Diễn Giải", field: "name", width: 300 },
                 { title: "SL Nhập", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Giá Cost / Đơn Giá Nhập", field: "cost", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng Giá Trị Nhập (VNĐ)", field: "totalCost", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
@@ -1313,11 +1329,11 @@ function loadDataFromSheet(bypassCache = true) {
             paginationSizeSelector: [10, 20, 50, 100],
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-                { title: "Mã Hàng Hóa", field: "code", width: 180 },
-                { title: "Tên Sản Phẩm", field: "name", width: 280 },
                 { title: "Ngày Bán", field: "date", hozAlign: "center", width: 120 },
                 { title: "Khách Hàng", field: "customer", width: 200 },
                 { title: "Số Đơn Hàng", field: "orderNo", width: 130 },
+                { title: "Mã Hàng Hóa", field: "code", width: 180 },
+                { title: "Tên Sản Phẩm", field: "name", width: 280 },
                 { title: "SL Bán", field: "qty", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 170, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
@@ -1325,7 +1341,7 @@ function loadDataFromSheet(bypassCache = true) {
         });
     }
 
-// --- HÀM LỌC CHO BẢNG NHẬP HÀNG (Mã hàng / Tên hàng & Ngày nhập) ---
+// --- HÀM LỌC CHO BẢNG NHẬP HÀNG ---
     let importFilterTimeout = null;
     function filterImportTable() {
         if (!tableProfitImport) return;
@@ -1333,11 +1349,23 @@ function loadDataFromSheet(bypassCache = true) {
 
         importFilterTimeout = setTimeout(() => {
             let codeKw = document.getElementById('filterImportCodeInput').value.trim().toLowerCase();
-            let dateKw = document.getElementById('filterImportDateInput').value.trim().toLowerCase();
+            let dateFromVal = document.getElementById('filterImportDateFrom').value;
+            let dateToVal = document.getElementById('filterImportDateTo').value;
+
+            let dateFrom = dateFromVal ? new Date(dateFromVal) : null;
+            let dateTo = dateToVal ? new Date(dateToVal) : null;
+            if (dateTo) dateTo.setHours(23, 59, 59, 999);
 
             tableProfitImport.setFilter(function(data) {
                 let matchCode = !codeKw || String(data.code || '').toLowerCase().includes(codeKw) || String(data.name || '').toLowerCase().includes(codeKw);
-                let matchDate = !dateKw || String(data.date || '').toLowerCase().includes(dateKw);
+                let matchDate = true;
+                if ((dateFrom || dateTo) && data.date) {
+                    let cellDate = new Date(data.date);
+                    if (!isNaN(cellDate.getTime())) {
+                        if (dateFrom && cellDate < dateFrom) matchDate = false;
+                        if (dateTo && cellDate > dateTo) matchDate = false;
+                    }
+                }
                 return matchCode && matchDate;
             });
         }, 300);
@@ -1345,11 +1373,12 @@ function loadDataFromSheet(bypassCache = true) {
 
 function clearImportFilter() {
         document.getElementById('filterImportCodeInput').value = '';
-        document.getElementById('filterImportDateInput').value = '';
+        document.getElementById('filterImportDateFrom').value = '';
+        document.getElementById('filterImportDateTo').value = '';
         if (tableProfitImport) tableProfitImport.clearFilter();
     }
 
-    // --- HÀM LỌC CHO BẢNG BÁN HÀNG (Mã hàng / Tên sản phẩm + Khách hàng / Số đơn hàng) ---
+    // --- HÀM LỌC CHO BẢNG BÁN HÀNG ---
     let profitDetailTimeout = null;
     function filterProfitDetails() {
         if (!tableProfitSales) return;
@@ -1358,18 +1387,34 @@ function clearImportFilter() {
         profitDetailTimeout = setTimeout(() => {
             let codeKw = document.getElementById('filterDetailCodeInput').value.trim().toLowerCase();
             let cusKw = document.getElementById('filterDetailCustomerInput').value.trim().toLowerCase();
+            let dateFromVal = document.getElementById('filterSalesDateFrom').value;
+            let dateToVal = document.getElementById('filterSalesDateTo').value;
+
+            let dateFrom = dateFromVal ? new Date(dateFromVal) : null;
+            let dateTo = dateToVal ? new Date(dateToVal) : null;
+            if (dateTo) dateTo.setHours(23, 59, 59, 999);
 
             tableProfitSales.setFilter(function(data) {
                 let matchCode = !codeKw || String(data.code || '').toLowerCase().includes(codeKw) || String(data.name || '').toLowerCase().includes(codeKw);
                 let matchCus = !cusKw || String(data.customer || '').toLowerCase().includes(cusKw) || String(data.orderNo || '').toLowerCase().includes(cusKw);
-                return matchCode && matchCus;
+                let matchDate = true;
+                if ((dateFrom || dateTo) && data.date) {
+                    let cellDate = new Date(data.date);
+                    if (!isNaN(cellDate.getTime())) {
+                        if (dateFrom && cellDate < dateFrom) matchDate = false;
+                        if (dateTo && cellDate > dateTo) matchDate = false;
+                    }
+                }
+                return matchCode && matchCus && matchDate;
             });
         }, 300);
     }
 
-    function clearProfitDetailFilter() {
+function clearProfitDetailFilter() {
         document.getElementById('filterDetailCodeInput').value = '';
         document.getElementById('filterDetailCustomerInput').value = '';
+        document.getElementById('filterSalesDateFrom').value = '';
+        document.getElementById('filterSalesDateTo').value = '';
         if (tableProfitSales) tableProfitSales.clearFilter();
     }
 
