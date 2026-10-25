@@ -1243,68 +1243,74 @@ function loadDataFromSheet(bypassCache = true) {
     }
 
     function renderProfitReportTab(data) {
-    document.getElementById('missingFromTabAlert').classList.add('d-none');
-    
-    let listNhap = (data && data.dataNhap) ? data.dataNhap : [];
-    let listBan = (data && data.dataBan) ? data.dataBan : [];
+        document.getElementById('missingFromTabAlert').classList.add('d-none');
+        
+        let listNhap = (data && data.dataNhap) ? data.dataNhap : [];
+        let listBan = (data && data.dataBan) ? data.dataBan : [];
 
-    document.getElementById('rowCountBadge').innerText = `NHẬP KHO: ${listNhap.length} dòng | BÁN HÀNG: ${listBan.length} đơn`;
-
-    // ==========================================
-    // BẢNG 1: DANH SÁCH NHẬP HÀNG (TABULATOR)
-    // ==========================================
-    if (tableProfitSummary) tableProfitSummary.destroy();
-
-    tableProfitSummary = new Tabulator("#table-profit-summary", {
-        data: listNhap,
-        layout: "fitColumns",
-        height: "300px",
-        pagination: "local",
-        paginationSize: 10,
-        paginationSizeSelector: [10, 20, 50, 100],
-        columns: [
-            { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-            { title: "Ngày Nhập", field: "date", hozAlign: "center", width: 120, headerFilter: "input" },
-            { title: "Mã Hàng Hóa", field: "code", width: 180, headerFilter: "input" },
-            { title: "Tên Hàng Hóa / Diễn Giải", field: "name", width: 300, headerFilter: "input" },
-            { title: "SL Nhập", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-            { title: "Giá Cost / Đơn Giá Nhập", field: "cost", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-            { title: "Tổng Giá Trị Nhập (VNĐ)", field: "totalCost", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
-        ],
-        rowClick: function(e, row) {
-            let rowData = row.getData();
-            if (rowData && rowData.code) {
-                document.getElementById('filterDetailCodeInput').value = rowData.code;
-                filterProfitDetails();
-            }
+        let badgeEl = document.getElementById('rowCountBadge');
+        if (badgeEl) {
+            badgeEl.innerText = `NHẬP KHO: ${listNhap.length} dòng | BÁN HÀNG: ${listBan.length} đơn`;
         }
-    });
 
-    // ==========================================
-    // BẢNG 2: DANH SÁCH BÁN HÀNG (TABULATOR)
-    // ==========================================
-    if (tableProfitDetails) tableProfitDetails.destroy();
+        // ==========================================
+        // 1. BẢNG 1: NHẬP HÀNG (TABULATOR)
+        // ==========================================
+        if (tableProfitImport) tableProfitImport.destroy();
 
-    tableProfitDetails = new Tabulator("#table-profit-details", {
-        data: listBan,
-        layout: "fitColumns",
-        height: "380px",
-        pagination: "local",
-        paginationSize: 20,
-        paginationSizeSelector: [10, 20, 50, 100],
-        columns: [
-            { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-            { title: "Ngày Bán", field: "date", hozAlign: "center", width: 120, headerFilter: "input" },
-            { title: "Khách Hàng", field: "customer", width: 200, headerFilter: "input" },
-            { title: "Số Đơn Hàng", field: "orderNo", width: 130, headerFilter: "input" },
-            { title: "Mã Hàng Hóa", field: "code", width: 180, headerFilter: "input" },
-            { title: "Tên Sản Phẩm", field: "name", width: 280, headerFilter: "input" },
-            { title: "SL Bán", field: "qty", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-            { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-            { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 170, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
-        ]
-    });
-}
+        tableProfitImport = new Tabulator("#table-profit-import", {
+            data: listNhap,
+            layout: "fitColumns",
+            height: "300px",
+            pagination: "local",
+            paginationSize: 10,
+            paginationSizeSelector: [10, 20, 50, 100],
+            columns: [
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
+                { title: "Ngày Nhập", field: "date", hozAlign: "center", width: 120, headerFilter: "input" },
+                { title: "Mã Hàng Hóa", field: "code", width: 180, headerFilter: "input" },
+                { title: "Tên Hàng Hóa / Diễn Giải", field: "name", width: 300, headerFilter: "input" },
+                { title: "SL Nhập", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Giá Cost / Đơn Giá Nhập", field: "cost", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị Nhập (VNĐ)", field: "totalCost", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
+            ],
+            rowClick: function(e, row) {
+                let rowData = row.getData();
+                if (rowData && rowData.code) {
+                    let codeInput = document.getElementById('filterDetailCodeInput');
+                    if (codeInput) {
+                        codeInput.value = rowData.code;
+                        filterProfitDetails();
+                    }
+                }
+            }
+        });
+
+        // ==========================================
+        // 2. BẢNG 2: BÁN HÀNG (TABULATOR)
+        // ==========================================
+        if (tableProfitSales) tableProfitSales.destroy();
+
+        tableProfitSales = new Tabulator("#table-profit-sales", {
+            data: listBan,
+            layout: "fitColumns",
+            height: "380px",
+            pagination: "local",
+            paginationSize: 20,
+            paginationSizeSelector: [10, 20, 50, 100],
+            columns: [
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
+                { title: "Ngày Bán", field: "date", hozAlign: "center", width: 120, headerFilter: "input" },
+                { title: "Khách Hàng", field: "customer", width: 200, headerFilter: "input" },
+                { title: "Số Đơn Hàng", field: "orderNo", width: 130, headerFilter: "input" },
+                { title: "Mã Hàng Hóa", field: "code", width: 180, headerFilter: "input" },
+                { title: "Tên Sản Phẩm", field: "name", width: 280, headerFilter: "input" },
+                { title: "SL Bán", field: "qty", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 170, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
+            ]
+        });
+    }
 
 // Hàm lọc dành cho Bảng Bán Hàng
 function filterProfitDetails() {
@@ -1328,26 +1334,32 @@ function clearProfitDetailFilter() {
     let profitDetailTimeout = null;
 
     function filterProfitDetails() {
-        if (!tableProfitDetails) return;
+        if (!tableProfitSales) return;
 
         if (profitDetailTimeout) clearTimeout(profitDetailTimeout);
 
         profitDetailTimeout = setTimeout(() => {
-            let codeKw = document.getElementById('filterDetailCodeInput').value.trim().toLowerCase();
-            let cusKw = document.getElementById('filterDetailCustomerInput').value.trim().toLowerCase();
+            let codeInput = document.getElementById('filterDetailCodeInput');
+            let cusInput = document.getElementById('filterDetailCustomerInput');
 
-            tableProfitDetails.setFilter(function(data) {
+            let codeKw = codeInput ? codeInput.value.trim().toLowerCase() : '';
+            let cusKw = cusInput ? cusInput.value.trim().toLowerCase() : '';
+
+            tableProfitSales.setFilter(function(data) {
                 let matchCode = !codeKw || String(data.code || '').toLowerCase().includes(codeKw) || String(data.name || '').toLowerCase().includes(codeKw);
                 let matchCus = !cusKw || String(data.customer || '').toLowerCase().includes(cusKw) || String(data.orderNo || '').toLowerCase().includes(cusKw);
                 return matchCode && matchCus;
             });
-        }, 400);
+        }, 300);
     }
 
     function clearProfitDetailFilter() {
-        document.getElementById('filterDetailCodeInput').value = '';
-        document.getElementById('filterDetailCustomerInput').value = '';
-        if (tableProfitDetails) tableProfitDetails.clearFilter();
+        let codeInput = document.getElementById('filterDetailCodeInput');
+        let cusInput = document.getElementById('filterDetailCustomerInput');
+        if (codeInput) codeInput.value = '';
+        if (cusInput) cusInput.value = '';
+        
+        if (tableProfitSales) tableProfitSales.clearFilter();
     }
 
     function renderThongKeQuyTab() {
