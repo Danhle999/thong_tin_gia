@@ -1244,65 +1244,102 @@ function loadDataFromSheet(bypassCache = true) {
 
     function renderProfitReportTab(data) {
     document.getElementById('missingFromTabAlert').classList.add('d-none');
-    
-    // Đọc dữ liệu mảng Nhập Hàng và Bán Hàng từ Google Sheets
-    let importRows = (data && data.summary && data.summary.length > 1) ? data.summary.slice(1) : [];
-    let salesRows = (data && data.details && data.details.length > 1) ? data.details.slice(1) : [];
+    let summaryRows = (data && data.summary && data.summary.length > 1) ? data.summary.slice(1) : [];
+    let detailRows = (data && data.details && data.details.length > 1) ? data.details.slice(1) : [];
 
-    document.getElementById('rowCountBadge').innerText = `TỔNG: ${importRows.length} lô nhập | ${salesRows.length} đơn bán`;
+    document.getElementById('rowCountBadge').innerText = `TỔNG: ${summaryRows.length} mã VTHH | ${detailRows.length} đơn hàng`;
 
-    // ==========================================
-    // 1. ÁNH XẠ DỮ LIỆU BẢNG 1: NHẬP HÀNG
-    // ==========================================
-    let importTableData = importRows.map((r, idx) => ({
+    // 1. ÁNH XÁ BẢNG TỔNG HỢP
+    let summaryTableData = summaryRows.map((r, idx) => ({
         id: idx + 1,
-        code: String(r[0] || '').trim(),           // Mã hàng
-        name: String(r[1] || '').trim(),           // Tên hàng hóa
-        importDate: String(r[2] || ''),            // Ngày mua hàng
-        qty: parseFloat(r[3]) || 0,                // Số lượng mua
-        unitPrice: parseFloat(r[4]) || 0,          // Đơn giá
-        totalAmount: parseFloat(r[5]) || 0         // Thành tiền
+        code: r[0],            // r[0]: Mã Hàng
+        name: r[1],            // r[1]: Tên Hàng
+        importQty: parseFloat(r[2]) || 0,
+        importAmt: parseFloat(r[3]) || 0,
+        sellQty: parseFloat(r[4]) || 0,
+        sellAmt: parseFloat(r[5]) || 0,
+        cogsFifo: parseFloat(r[6]) || 0,
+        grossProfit: parseFloat(r[7]) || 0,
+        profitMargin: parseFloat(r[8]) || 0,
+        importDateRange: r[9] || "N/A"
     }));
 
-    if (tableProfitImport) tableProfitImport.destroy();
+    if (tableProfitSummary) tableProfitSummary.destroy();
 
-    tableProfitImport = new Tabulator("#table-profit-import", {
-        data: importTableData,
+    tableProfitSummary = new Tabulator("#table-profit-summary", {
+        data: summaryTableData,
         layout: "fitColumns",
-        height: "300px",
+        height: "280px",
         pagination: "local",
         paginationSize: 10,
+        selectableRows: 1,
         columns: [
             { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-            { title: "Mã Hàng", field: "code", width: 160, headerFilter: "input" },
-            { title: "Tên Hàng Hóa", field: "name", width: 280, headerFilter: "input" },
-            { title: "Ngày Mua Hàng", field: "importDate", hozAlign: "center", width: 130 },
-            { title: "Số Lượng Mua", field: "qty", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-            { title: "Đơn Giá (VNĐ)", field: "unitPrice", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-            { title: "Thành Tiền (VNĐ)", field: "totalAmount", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
-        ]
+            { title: "Mã Hàng Hóa", field: "code", width: 170, headerFilter: "input" },
+            { title: "Tên Hàng Hóa", field: "name", width: 250, headerFilter: "input" },
+            { title: "Khoảng Ngày Nhập Kho", field: "importDateRange", hozAlign: "center", width: 160, formatter: function(cell){
+                return `<span class="badge bg-secondary text-white fw-normal">${cell.getValue()}</span>`;
+            }},
+            { title: "Tổng SL Nhập", field: "importQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { title: "Tổng Giá Nhập (VNĐ)", field: "importAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { title: "Tổng SL Bán", field: "sellQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { title: "Tổng Doanh Thu (VNĐ)", field: "sellAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { title: "Tổng Giá Vốn FIFO (VNĐ)", field: "cogsFifo", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { 
+                title: "Lợi Nhuận Gộp (VNĐ)", 
+                field: "grossProfit", 
+                hozAlign: "right", 
+                width: 160, 
+                bottomCalc: customSumCalc, 
+                bottomCalcFormatter: "money", 
+                bottomCalcFormatterParams: { precision: 0, thousand: "." },
+                formatter: function(cell) {
+                    let val = parseFloat(cell.getValue()) || 0;
+                    let color = val < 0 ? '#dc3545' : '#198754';
+                    return `<span style="color: ${color}; font-weight: bold;">${val.toLocaleString('vi-VN')}</span>`;
+                }
+            },
+            { 
+                title: "% Lãi Gộp", 
+                field: "profitMargin", 
+                hozAlign: "right", 
+                width: 100,
+                formatter: function(cell) {
+                    let val = parseFloat(cell.getValue()) || 0;
+                    let color = val < 0 ? '#dc3545' : '#198754';
+                    return `<span style="color: ${color}; font-weight: bold;">${val.toFixed(2)}%</span>`;
+                }
+            }
+        ],
+        rowClick: function(e, row) {
+            let rowData = row.getData();
+            if (rowData && rowData.code) {
+                document.getElementById('filterDetailCodeInput').value = rowData.code;
+                filterProfitDetails();
+            }
+        }
     });
 
-    // ==========================================
-    // 2. ÁNH XẠ DỮ LIỆU BẢNG 2: BÁN HÀNG
-    // ==========================================
-    let salesTableData = salesRows.map((r, idx) => ({
+    // 2. ÁNH XÁ BẢNG CHI TIẾT
+    let detailTableData = detailRows.map((r, idx) => ({
         id: idx + 1,
-        code: String(r[0] || '').trim(),           // Mã hàng
-        name: String(r[1] || '').trim(),           // Tên hàng hóa
-        importDate: String(r[2] || ''),            // Ngày mua hàng (lô nhập)
-        customer: String(r[3] || ''),              // Khách hàng
-        orderNo: String(r[4] || ''),               // Số đơn hàng
-        bookDate: String(r[5] || ''),              // Ngày ghi sổ
-        qty: parseFloat(r[6]) || 0,                // Số lượng mua / bán
-        unitPrice: parseFloat(r[7]) || 0,          // Đơn giá
-        totalAmount: parseFloat(r[8]) || 0         // Thành tiền
+        code: r[0],           // r[0]: Mã Hàng Hóa
+        name: r[1],           // r[1]: Tên Hàng Hóa
+        date: r[2],           // r[2]: Ngày Bán
+        customer: r[3],       // r[3]: Khách Hàng
+        orderNo: r[4],        // r[4]: Số Đơn Hàng
+        qty: parseFloat(r[5]) || 0,         // r[5]: SL Bán
+        unitPrice: parseFloat(r[6]) || 0,   // r[6]: Đơn Giá Bán
+        revenue: parseFloat(r[7]) || 0,     // r[7]: Thành Tiền Bán
+        cost: parseFloat(r[8]) || 0,        // r[8]: Giá Vốn FIFO
+        profit: parseFloat(r[9]) || 0,      // r[9]: Lợi Nhuận
+        importDateRange: r[10] || "N/A"     // r[10]: Khoảng Ngày Nhập Kho
     }));
 
-    if (tableProfitSales) tableProfitSales.destroy();
+    if (tableProfitDetails) tableProfitDetails.destroy();
 
-    tableProfitSales = new Tabulator("#table-profit-sales", {
-        data: salesTableData,
+    tableProfitDetails = new Tabulator("#table-profit-details", {
+        data: detailTableData,
         layout: "fitColumns",
         height: "380px",
         pagination: "local",
@@ -1310,15 +1347,32 @@ function loadDataFromSheet(bypassCache = true) {
         paginationSizeSelector: [10, 20, 50, 100],
         columns: [
             { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-            { title: "Mã Hàng", field: "code", width: 150 },
-            { title: "Tên Hàng Hóa", field: "name", width: 230 },
-            { title: "Ngày Mua Hàng", field: "importDate", hozAlign: "center", width: 130 },
+            { title: "Mã Hàng Hóa", field: "code", width: 170 },
+            { title: "Tên Sản Phẩm", field: "name", width: 230 },
+            { title: "Khoảng Ngày Nhập Kho", field: "importDateRange", hozAlign: "center", width: 160, formatter: function(cell){
+                return `<span class="badge bg-info text-dark fw-normal">${cell.getValue()}</span>`;
+            }},
+            { title: "Ngày Bán", field: "date", hozAlign: "center", width: 110 },
             { title: "Khách Hàng", field: "customer", width: 200 },
             { title: "Số Đơn Hàng", field: "orderNo", width: 120 },
-            { title: "Ngày Ghi Sổ", field: "bookDate", hozAlign: "center", width: 120 },
-            { title: "Số Lượng Mua", field: "qty", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-            { title: "Đơn Giá (VNĐ)", field: "unitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-            { title: "Thành Tiền (VNĐ)", field: "totalAmount", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
+            { title: "SL Bán", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+            { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { title: "Giá Vốn FIFO (VNĐ)", field: "cost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { 
+                title: "Lợi Nhuận (VNĐ)", 
+                field: "profit", 
+                hozAlign: "right", 
+                width: 140, 
+                bottomCalc: customSumCalc, 
+                bottomCalcFormatter: "money", 
+                bottomCalcFormatterParams: { precision: 0, thousand: "." },
+                formatter: function(cell) {
+                    let val = parseFloat(cell.getValue()) || 0;
+                    let color = val < 0 ? '#dc3545' : '#198754';
+                    return `<span style="color: ${color}; font-weight: bold;">${val.toLocaleString('vi-VN')}</span>`;
+                }
+            }
         ]
     });
 }
