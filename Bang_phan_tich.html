@@ -1321,18 +1321,18 @@ function loadDataFromSheet(bypassCache = true) {
         // Liên kết đúng: Ngày nhập lô -> Ngày bán -> Khách hàng -> SL -> Đơn giá bán -> Giá vốn (đơn giá nhập) -> Giá cost -> Lợi nhuận
         let detailTableData = detailRows.map((r, idx) => ({
             id: idx + 1,
-            name: String(r[0] || '').trim(),           // Tên hàng hóa
-            code: String(r[1] || '').trim(),           // Mã hàng hóa
-            importDateRange: String(r[2] || 'N/A'),    // Ngày nhập lô / Khoảng ngày nhập
-            date: String(r[3] || ''),                  // Ngày bán
-            customer: String(r[4] || ''),              // Khách hàng
-            orderNo: String(r[5] || ''),               // Số đơn hàng
-            qty: parseFloat(r[6]) || 0,                // SL Bán
-            unitPrice: parseFloat(r[7]) || 0,          // Đơn giá bán
-            revenue: parseFloat(r[8]) || 0,            // Thành tiền bán
-            cost: parseFloat(r[9]) || 0,               // Giá Vốn (Lấy từ Đơn giá nhập kho)
-            priceCost: parseFloat(r[10]) || 0,         // Giá Cost (Lấy từ Giá cost nhập kho)
-            profit: parseFloat(r[11]) || 0             // Lợi nhuận
+            code: String(r[0] || '').trim(),           // Cột 0: Mã hàng hóa
+            name: String(r[1] || '').trim(),           // Cột 1: Tên hàng hóa
+            importDateRange: String(r[2] || 'N/A'),    // Cột 2: Ngày nhập lô
+            customer: String(r[3] || ''),              // Cột 3: Khách hàng
+            orderNo: String(r[4] || ''),               // Cột 4: Số đơn hàng
+            date: String(r[5] || ''),                  // Cột 5: Ngày bán
+            qty: parseFloat(r[6]) || 0,                // Cột 6: SL Bán
+            unitPrice: parseFloat(r[7]) || 0,          // Cột 7: Đơn giá bán
+            revenue: parseFloat(r[8]) || 0,            // Cột 8: Thành tiền bán
+            cost: parseFloat(r[9]) || 0,               // Cột 9: Giá Vốn (Đơn giá nhập)
+            priceCost: parseFloat(r[10]) || 0,         // Cột 10: Giá Cost
+            profit: parseFloat(r[11]) || 0             // Cột 11: Lợi nhuận
         }));
 
         if (tableProfitDetails) tableProfitDetails.destroy();
