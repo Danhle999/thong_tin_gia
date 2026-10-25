@@ -1318,17 +1318,18 @@ function loadDataFromSheet(bypassCache = true) {
 
         let detailTableData = detailRows.map((r, idx) => ({
             id: idx + 1,
-            code: r[1],           // Mã hàng hóa (cột 2)
-            name: r[0],           // Tên hàng hóa (cột 1)
-            date: r[2],           // Ngày bán (cột 3) -> Tránh trùng với customer
-            customer: r[3],       // Khách hàng (cột 4)
-            orderNo: r[4],        // Số đơn hàng (cột 5)
-            qty: parseFloat(r[5]) || 0,         // SL Bán (cột 6)
-            unitPrice: parseFloat(r[6]) || 0,   // Đơn giá bán (cột 7)
-            revenue: parseFloat(r[7]) || 0,     // Thành tiền bán (cột 8)
-            cost: parseFloat(r[8]) || 0,        // Giá vốn FIFO (cột 9)
-            profit: parseFloat(r[9]) || 0,      // Lợi nhuận (cột 10)
-            importDateRange: r[10] || "N/A"     // Khoảng ngày nhập kho (cột 11)
+            code: r[1],           // Mã hàng hóa
+            name: r[0],           // Tên hàng hóa
+            importDateRange: r[2] || "N/A", // Khoảng ngày nhập kho
+            date: r[3],           // Ngày bán
+            customer: r[4],       // Khách hàng
+            orderNo: r[5],        // Số đơn hàng
+            qty: parseFloat(r[6]) || 0,         // SL Bán
+            unitPrice: parseFloat(r[7]) || 0,   // Đơn giá bán
+            revenue: parseFloat(r[8]) || 0,     // Thành tiền bán
+            cost: parseFloat(r[9]) || 0,        // Giá vốn (lấy từ cột Đơn Giá trong tab Nhập kho)
+            priceCost: parseFloat(r[10]) || 0,  // Cột Giá Cost mới (lấy từ cột Giá cost trong tab Nhập kho)
+            profit: parseFloat(r[11]) || 0      // Lợi nhuận
         }));
 
         if (tableProfitDetails) tableProfitDetails.destroy();
@@ -1353,7 +1354,9 @@ function loadDataFromSheet(bypassCache = true) {
                 { title: "SL Bán", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Giá Vốn FIFO (VNĐ)", field: "cost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Giá Vốn (Đơn Giá) (VNĐ)", field: "cost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                // Thêm cột Giá Cost mới vào đây:
+                { title: "Giá Cost (VNĐ)", field: "priceCost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { 
                     title: "Lợi Nhuận (VNĐ)", 
                     field: "profit", 
