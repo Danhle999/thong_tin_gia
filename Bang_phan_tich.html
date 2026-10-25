@@ -522,14 +522,7 @@
         <div id="profitReportView" class="dashboard-container">
             <div>
                 <div class="table-section-header">
-                    <div class="table-section-title text-success"><i class="fa-solid fa-chart-pie me-1"></i> 1. Báo Cáo Tổng Hợp Doanh Thu & Lợi Nhuận Lãi Gộp Theo Vật Tư Hàng Hóa (FIFO)</div>
-                </div>
-                <div id="table-profit-summary" style="height: 280px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
-            </div>
-
-            <div>
-                <div class="table-section-header">
-                    <div class="table-section-title text-primary"><i class="fa-solid fa-list-check me-1"></i> 2. Báo Cáo Chi Tiết Lịch Sử Bán Hàng & Giá Vốn Trừ Dần Từng Lô Hàng (FIFO)</div>
+                    <div class="table-section-title text-primary"><i class="fa-solid fa-list-check me-1"></i> Báo Cáo Chi Tiết Lịch Sử Bán Hàng & Giá Vốn Trừ Dần Từng Lô Hàng (FIFO)</div>
                 </div>
                 <div class="row g-2 mb-2 p-2 bg-light border rounded align-items-center">
                     <div class="col-md-5">
@@ -542,7 +535,7 @@
                         <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearProfitDetailFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Bỏ Lọc</button>
                     </div>
                 </div>
-                <div id="table-profit-details" style="height: 380px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+                <div id="table-profit-details" style="height: calc(100vh - 210px); border: 1px solid #dee2e6; border-radius: 4px;"></div>
             </div>
         </div>
 
@@ -1241,88 +1234,15 @@ function loadDataFromSheet(bypassCache = true) {
 
     function renderProfitReportTab(data) {
         document.getElementById('missingFromTabAlert').classList.add('d-none');
-        let summaryRows = (data && data.summary && data.summary.length > 1) ? data.summary.slice(1) : [];
         let detailRows = (data && data.details && data.details.length > 1) ? data.details.slice(1) : [];
 
-        document.getElementById('rowCountBadge').innerText = `TỔNG: ${summaryRows.length} mã VTHH | ${detailRows.length} đơn hàng`;
+        document.getElementById('rowCountBadge').innerText = `TỔNG: ${detailRows.length} đơn hàng chi tiết`;
 
-        // 1. ÁNH XẠ DỮ LIỆU BẢNG TỔNG HỢP (SUMMARY)
-        let summaryTableData = summaryRows.map((r, idx) => ({
-            id: idx + 1,
-            name: String(r[0] || '').trim(),          // Tên hàng hóa
-            code: String(r[1] || '').trim(),          // Mã hàng hóa
-            importQty: parseFloat(r[2]) || 0,         // Tổng SL nhập
-            importAmt: parseFloat(r[3]) || 0,         // Tổng giá trị nhập
-            sellQty: parseFloat(r[4]) || 0,           // Tổng SL bán
-            sellAmt: parseFloat(r[5]) || 0,           // Tổng doanh thu
-            cogsFifo: parseFloat(r[6]) || 0,          // Tổng giá vốn FIFO
-            grossProfit: parseFloat(r[7]) || 0,       // Lợi nhuận gộp
-            profitMargin: parseFloat(r[8]) || 0,      // % Lãi gộp
-            importDateRange: String(r[9] || 'N/A')    // Khoảng ngày nhập kho
-        }));
-
-        if (tableProfitSummary) tableProfitSummary.destroy();
-
-        tableProfitSummary = new Tabulator("#table-profit-summary", {
-            data: summaryTableData,
-            layout: "fitColumns",
-            height: "280px",
-            pagination: "local",
-            paginationSize: 10,
-            selectableRows: 1,
-            columns: [
-                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-                { title: "Mã Hàng Hóa", field: "code", width: 170, headerFilter: "input" },
-                { title: "Tên Hàng Hóa", field: "name", width: 250, headerFilter: "input" },
-                { title: "Khoảng Ngày Nhập Kho", field: "importDateRange", hozAlign: "center", width: 160, formatter: function(cell){
-                    return `<span class="badge bg-secondary text-white fw-normal">${cell.getValue()}</span>`;
-                }},
-                { title: "Tổng SL Nhập", field: "importQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Giá Nhập (VNĐ)", field: "importAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng SL Bán", field: "sellQty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Doanh Thu (VNĐ)", field: "sellAmt", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Tổng Giá Vốn FIFO (VNĐ)", field: "cogsFifo", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { 
-                    title: "Lợi Nhuận Gộp (VNĐ)", 
-                    field: "grossProfit", 
-                    hozAlign: "right", 
-                    width: 160, 
-                    bottomCalc: customSumCalc, 
-                    bottomCalcFormatter: "money", 
-                    bottomCalcFormatterParams: { precision: 0, thousand: "." },
-                    formatter: function(cell) {
-                        let val = parseFloat(cell.getValue()) || 0;
-                        let color = val < 0 ? '#dc3545' : '#198754';
-                        return `<span style="color: ${color}; font-weight: bold;">${val.toLocaleString('vi-VN')}</span>`;
-                    }
-                },
-                { 
-                    title: "% Lãi Gộp", 
-                    field: "profitMargin", 
-                    hozAlign: "right", 
-                    width: 100,
-                    formatter: function(cell) {
-                        let val = parseFloat(cell.getValue()) || 0;
-                        let color = val < 0 ? '#dc3545' : '#198754';
-                        return `<span style="color: ${color}; font-weight: bold;">${val.toFixed(2)}%</span>`;
-                    }
-                }
-            ],
-            rowClick: function(e, row) {
-                let rowData = row.getData();
-                if (rowData && rowData.code) {
-                    document.getElementById('filterDetailCodeInput').value = rowData.code;
-                    filterProfitDetails();
-                }
-            }
-        });
-
-        // 2. ÁNH XẠ DỮ LIỆU BẢNG CHI TIẾT (DETAILS) - Khớp đúng thứ tự r[0] đến r[11]
+        // ÁNH XẠ DỮ LIỆU BẢNG CHI TIẾT
         let detailTableData = detailRows.map((r, idx) => ({
             id: idx + 1,
             code: String(r[0] || '').trim(),           // r[0]: Mã hàng hóa
             name: String(r[1] || '').trim(),           // r[1]: Tên hàng hóa
-            importDateRange: String(r[2] || 'N/A'),    // r[2]: Ngày nhập lô
             date: String(r[3] || ''),                  // r[3]: Ngày bán
             customer: String(r[4] || ''),              // r[4]: Khách hàng
             orderNo: String(r[5] || ''),               // r[5]: Số đơn hàng
@@ -1339,19 +1259,16 @@ function loadDataFromSheet(bypassCache = true) {
         tableProfitDetails = new Tabulator("#table-profit-details", {
             data: detailTableData,
             layout: "fitColumns",
-            height: "380px",
+            height: "calc(100vh - 210px)",
             pagination: "local",
-            paginationSize: 20,
-            paginationSizeSelector: [10, 20, 50, 100],
+            paginationSize: 50,
+            paginationSizeSelector: [20, 50, 100, 200, 500],
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Mã Hàng Hóa", field: "code", width: 170 },
-                { title: "Tên Hàng Hóa", field: "name", width: 230 },
-                { title: "Ngày Nhập Lô", field: "importDateRange", hozAlign: "center", width: 140, formatter: function(cell){
-                    return `<span class="badge bg-info text-dark fw-normal">${cell.getValue()}</span>`;
-                }},
+                { title: "Tên Hàng Hóa", field: "name", width: 250 },
                 { title: "Ngày Bán", field: "date", hozAlign: "center", width: 110 },
-                { title: "Khách Hàng", field: "customer", width: 200 },
+                { title: "Khách Hàng", field: "customer", width: 220 },
                 { title: "Số Đơn Hàng", field: "orderNo", width: 120 },
                 { title: "SL Bán", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
