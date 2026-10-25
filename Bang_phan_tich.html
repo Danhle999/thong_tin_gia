@@ -2064,10 +2064,9 @@ function loadDataFromSheet(bypassCache = true) {
             paginationSize: 50,
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
-            columnDefaults: { 
-                resizable: true,
-                // Dán đoạn tooltip vào đây:
-            tooltip: function(e, cell) {
+            columnDefaults: { resizable: true},
+            / ĐẶT TOOLTIP Ở ĐÂY (Cấp bảng chính, dùng tham số cell)
+            tooltip: function(cell) {
                 if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
                     return false;
                 }
@@ -2107,8 +2106,7 @@ function loadDataFromSheet(bypassCache = true) {
                        `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
                        `• ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
                        `• ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
-            }            
-                            }
+            }
         });
 
             table.on("dataFiltered", function(filters, rows){
