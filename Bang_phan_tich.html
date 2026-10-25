@@ -39,6 +39,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
             white-space: pre-line !important;
             z-index: 99999 !important;
+            line-height: 1.4 !important;
         }
         
         .tabulator-col.is-filtered,
@@ -2065,13 +2066,13 @@ function loadDataFromSheet(bypassCache = true) {
             movableColumns: true,
             columnDefaults: { resizable: true },
             
-            // DÙNG ROWFORMATTED ĐỂ KÍCH HOẠT CUSTOM TOOLTIP CHẠY THEO TRỎ CHUỘT 100% HIỆN
-            rowFormatted: function(row) {
+            // Dán đoạn tooltip vào đây:
+            tooltip: function(e, cell) {
                 if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
-                    return;
+                    return false;
                 }
                 
-                let rowData = row.getData();
+                let rowData = cell.getRow().getData();
                 let activeCols = getActiveColumns();
                 
                 let importPrice = "";
@@ -2085,11 +2086,11 @@ function loadDataFromSheet(bypassCache = true) {
                         if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
                             if (!importPrice) importPrice = val;
                         }
-                        if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB')) {
-                            price1 = val;
+                        if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB') || lbl.includes('GIÁ BÁN LẺ')) {
+                            if (!price1) price1 = val;
                         }
                         if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
-                            price2 = val;
+                            if (!price2) price2 = val;
                         }
                     }
                 });
@@ -2102,29 +2103,10 @@ function loadDataFromSheet(bypassCache = true) {
                 let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
                 let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
                 
-                let tooltipText = `📦 [${currentMode}] THÔNG TIN GIÁ NHANH\n` +
-                                  `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
-                                  `• ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
-                                  `• ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
-                
-                let rowEl = row.getElement();
-                let tooltipDiv = document.getElementById('custom-tooltip');
-                
-                if (rowEl && tooltipDiv) {
-                    rowEl.onmouseenter = function(e) {
-                        tooltipDiv.innerText = tooltipText;
-                        tooltipDiv.style.display = 'block';
-                    };
-                    
-                    rowEl.onmousemove = function(e) {
-                        tooltipDiv.style.top = (e.clientY + 15) + 'px';
-                        tooltipDiv.style.left = (e.clientX + 15) + 'px';
-                    };
-                    
-                    rowEl.onmouseleave = function() {
-                        tooltipDiv.style.display = 'none';
-                    };
-                }
+                return `📦 [${currentMode}] THÔNG TIN GIÁ NHANH\n` +
+                       `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
+                       `• ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
+                       `• ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
             }
         });
 
