@@ -1246,18 +1246,19 @@ function loadDataFromSheet(bypassCache = true) {
 
         document.getElementById('rowCountBadge').innerText = `TỔNG: ${summaryRows.length} mã VTHH | ${detailRows.length} đơn hàng`;
 
+        // 1. ÁNH XẠ DỮ LIỆU BẢNG TỔNG HỢP (SUMMARY)
         let summaryTableData = summaryRows.map((r, idx) => ({
             id: idx + 1,
-            code: r[1],
-            name: r[0],
-            importQty: parseFloat(r[2]) || 0,
-            importAmt: parseFloat(r[3]) || 0,
-            sellQty: parseFloat(r[4]) || 0,
-            sellAmt: parseFloat(r[5]) || 0,
-            cogsFifo: parseFloat(r[6]) || 0,
-            grossProfit: parseFloat(r[7]) || 0,
-            profitMargin: parseFloat(r[8]) || 0,
-            importDateRange: r[9] || "N/A"
+            name: String(r[0] || '').trim(),          // Cột 1: Tên hàng hóa
+            code: String(r[1] || '').trim(),          // Cột 2: Mã hàng hóa
+            importQty: parseFloat(r[2]) || 0,         // Tổng SL nhập
+            importAmt: parseFloat(r[3]) || 0,         // Tổng giá trị nhập
+            sellQty: parseFloat(r[4]) || 0,           // Tổng SL bán
+            sellAmt: parseFloat(r[5]) || 0,           // Tổng doanh thu
+            cogsFifo: parseFloat(r[6]) || 0,          // Tổng giá vốn FIFO
+            grossProfit: parseFloat(r[7]) || 0,       // Lợi nhuận gộp
+            profitMargin: parseFloat(r[8]) || 0,      // % Lãi gộp
+            importDateRange: String(r[9] || 'N/A')    // Khoảng ngày nhập kho
         }));
 
         if (tableProfitSummary) tableProfitSummary.destroy();
@@ -1316,20 +1317,22 @@ function loadDataFromSheet(bypassCache = true) {
             }
         });
 
+        // 2. ÁNH XẠ DỮ LIỆU BẢNG CHI TIẾT (DETAILS)
+        // Liên kết đúng: Ngày nhập lô -> Ngày bán -> Khách hàng -> SL -> Đơn giá bán -> Giá vốn (đơn giá nhập) -> Giá cost -> Lợi nhuận
         let detailTableData = detailRows.map((r, idx) => ({
             id: idx + 1,
-            code: r[0],           // Mã hàng hóa
-            name: r[1],           // Tên hàng hóa
-            importDateRange: r[3] || "N/A", // Khoảng ngày nhập kho
-            date: r[4],           // Ngày bán
-            customer: r[5],       // Khách hàng
-            orderNo: r[6],        // Số đơn hàng
-            qty: parseFloat(r[7]) || 0,         // SL Bán
-            unitPrice: parseFloat(r[8]) || 0,   // Đơn giá bán
-            revenue: parseFloat(r[9]) || 0,     // Thành tiền bán
-            cost: parseFloat(r[10]) || 0,        // Giá vốn (lấy từ cột Đơn Giá trong tab Nhập kho)
-            priceCost: parseFloat(r[11]) || 0,  // Cột Giá Cost mới (lấy từ cột Giá cost trong tab Nhập kho)
-            profit: parseFloat(r[12]) || 0      // Lợi nhuận
+            name: String(r[0] || '').trim(),           // Tên hàng hóa
+            code: String(r[1] || '').trim(),           // Mã hàng hóa
+            importDateRange: String(r[2] || 'N/A'),    // Ngày nhập lô / Khoảng ngày nhập
+            date: String(r[3] || ''),                  // Ngày bán
+            customer: String(r[4] || ''),              // Khách hàng
+            orderNo: String(r[5] || ''),               // Số đơn hàng
+            qty: parseFloat(r[6]) || 0,                // SL Bán
+            unitPrice: parseFloat(r[7]) || 0,          // Đơn giá bán
+            revenue: parseFloat(r[8]) || 0,            // Thành tiền bán
+            cost: parseFloat(r[9]) || 0,               // Giá Vốn (Lấy từ Đơn giá nhập kho)
+            priceCost: parseFloat(r[10]) || 0,         // Giá Cost (Lấy từ Giá cost nhập kho)
+            profit: parseFloat(r[11]) || 0             // Lợi nhuận
         }));
 
         if (tableProfitDetails) tableProfitDetails.destroy();
