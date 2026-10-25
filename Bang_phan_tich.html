@@ -1347,12 +1347,12 @@ function loadDataFromSheet(bypassCache = true) {
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Mã Hàng Hóa", field: "code", width: 170 },
-                { title: "Tên Sản Phẩm", field: "name", width: 230 },
+                { title: "Tên Hàng Hóa", field: "name", width: 230 },
                 { title: "Ngày Nhập Lô", field: "importDateRange", hozAlign: "center", width: 140, formatter: function(cell){
                     return `<span class="badge bg-info text-dark fw-normal">${cell.getValue()}</span>`;
                 }},
-                { title: "Ngày Bán", field: "date", hozAlign: "center", width: 110 },
                 { title: "Khách Hàng", field: "customer", width: 200 },
+                { title: "Ngày Bán", field: "date", hozAlign: "center", width: 110 },
                 { title: "Số Đơn Hàng", field: "orderNo", width: 120 },
                 { title: "SL Bán", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
