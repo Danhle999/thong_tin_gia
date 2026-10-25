@@ -1345,7 +1345,7 @@ function loadDataFromSheet(bypassCache = true) {
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
                 { title: "Mã Hàng Hóa", field: "code", width: 170 },
                 { title: "Tên Sản Phẩm", field: "name", width: 230 },
-                { title: "Khoảng Ngày Nhập Kho", field: "importDateRange", hozAlign: "center", width: 160, formatter: function(cell){
+                { title: "Ngày Nhập Lô", field: "importDateRange", hozAlign: "center", width: 140, formatter: function(cell){
                     return `<span class="badge bg-info text-dark fw-normal">${cell.getValue()}</span>`;
                 }},
                 { title: "Ngày Bán", field: "date", hozAlign: "center", width: 110 },
@@ -1354,8 +1354,7 @@ function loadDataFromSheet(bypassCache = true) {
                 { title: "SL Bán", field: "qty", hozAlign: "right", width: 90, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Giá Vốn (Đơn Giá) (VNĐ)", field: "cost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                // Thêm cột Giá Cost mới vào đây:
+                { title: "Giá Vốn (VNĐ)", field: "cost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Giá Cost (VNĐ)", field: "priceCost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { 
                     title: "Lợi Nhuận (VNĐ)", 
