@@ -1320,16 +1320,16 @@ function loadDataFromSheet(bypassCache = true) {
             id: idx + 1,
             code: r[0],           // Mã hàng hóa
             name: r[1],           // Tên hàng hóa
-            importDateRange: r[2] || "N/A", // Khoảng ngày nhập kho
-            date: r[3],           // Ngày bán
-            customer: r[4],       // Khách hàng
-            orderNo: r[5],        // Số đơn hàng
-            qty: parseFloat(r[6]) || 0,         // SL Bán
-            unitPrice: parseFloat(r[7]) || 0,   // Đơn giá bán
-            revenue: parseFloat(r[8]) || 0,     // Thành tiền bán
-            cost: parseFloat(r[9]) || 0,        // Giá vốn (lấy từ cột Đơn Giá trong tab Nhập kho)
-            priceCost: parseFloat(r[10]) || 0,  // Cột Giá Cost mới (lấy từ cột Giá cost trong tab Nhập kho)
-            profit: parseFloat(r[11]) || 0      // Lợi nhuận
+            importDateRange: r[3] || "N/A", // Khoảng ngày nhập kho
+            date: r[4],           // Ngày bán
+            customer: r[5],       // Khách hàng
+            orderNo: r[6],        // Số đơn hàng
+            qty: parseFloat(r[7]) || 0,         // SL Bán
+            unitPrice: parseFloat(r[8]) || 0,   // Đơn giá bán
+            revenue: parseFloat(r[9]) || 0,     // Thành tiền bán
+            cost: parseFloat(r[10]) || 0,        // Giá vốn (lấy từ cột Đơn Giá trong tab Nhập kho)
+            priceCost: parseFloat(r[11]) || 0,  // Cột Giá Cost mới (lấy từ cột Giá cost trong tab Nhập kho)
+            profit: parseFloat(r[12]) || 0      // Lợi nhuận
         }));
 
         if (tableProfitDetails) tableProfitDetails.destroy();
