@@ -28,20 +28,17 @@
             font-size: 15px;
         }
         
-        #custom-tooltip {
-            position: fixed;
-            display: none;
-            background: rgba(15, 23, 42, 0.95);
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            z-index: 10000;
-            pointer-events: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            border: 1px solid #38bdf8;
-            line-height: 1.4;
-            white-space: pre-line;
+        
+        .tabulator-tooltip {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border: 1px solid #38bdf8 !important;
+            padding: 8px 12px !important;
+            border-radius: 6px !important;
+            font-size: 0.85rem !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+            white-space: pre-line !important;
+            z-index: 99999 !important;
         }
         
         .tabulator-col.is-filtered,
@@ -2068,66 +2065,50 @@ function loadDataFromSheet(bypassCache = true) {
             movableColumns: true,
             columnDefaults: { resizable: true },
             
-            // THÊM ĐOẠN TOOLTIP HOVER TẠI ĐÂY:
-            rowFormatted: function(row) {
-            if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
-                return;
-            }
-            
-            let rowData = row.getData();
-            let activeCols = getActiveColumns();
-            
-            let importPrice = "";
-            let price1 = "";
-            let price2 = "";
-            
-            activeCols.forEach((col, idx) => {
-                let lbl = col.label.trim().toUpperCase();
-                let val = rowData["col_" + idx];
-                if (val !== undefined && val !== null && val !== '') {
-                    if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
-                        if (!importPrice) importPrice = val;
-                    }
-                    if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB')) {
-                        price1 = val;
-                    }
-                    if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
-                        price2 = val;
-                    }
+            // SỬ DỤNG TÍNH NĂNG TOOLTIP CHÍNH CHỦ CỦA TABULATOR:
+            tooltip: function(e, cell) {
+                // Chỉ áp dụng cho các tab sản phẩm yêu cầu
+                if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
+                    return false; // Không hiện tooltip ở các tab khác
                 }
-            });
-            
-            let formatMoney = (v) => {
-                let num = parseFloat(String(v).replace(/[,.]/g, ''));
-                return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
-            };
-            
-            let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
-            let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
-            
-            let tooltipText = `📦 [${currentMode}] THÔNG TIN GIÁ NHANH\n` +
-                              `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
-                              `• ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
-                              `• ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
-            
-            let rowEl = row.getElement();
-            let tooltipDiv = document.getElementById('custom-tooltip');
-            
-            // Xử lý sự kiện rê chuột mượt mà tuyệt đối
-            rowEl.onmouseenter = function(e) {
-                tooltipDiv.innerText = tooltipText;
-                tooltipDiv.style.display = 'block';
-            };
-            
-            rowEl.onmousemove = function(e) {
-                tooltipDiv.style.top = (e.clientY + 15) + 'px';
-                tooltipDiv.style.left = (e.clientX + 15) + 'px';
-            };
-            
-            rowEl.onmouseleave = function() {
-                tooltipDiv.style.display = 'none';
-            };
-        }
+                
+                let rowData = cell.getRow().getData();
+                let activeCols = getActiveColumns();
+                
+                let importPrice = "";
+                let price1 = "";
+                let price2 = "";
+                
+                activeCols.forEach((col, idx) => {
+                    let lbl = col.label.trim().toUpperCase();
+                    let val = rowData["col_" + idx];
+                    if (val !== undefined && val !== null && val !== '') {
+                        if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
+                            if (!importPrice) importPrice = val;
+                        }
+                        if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB')) {
+                            price1 = val;
+                        }
+                        if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
+                            price2 = val;
+                        }
+                    }
+                });
+                
+                let formatMoney = (v) => {
+                    let num = parseFloat(String(v).replace(/[,.]/g, ''));
+                    return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
+                };
+                
+                let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
+                let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
+                
+                // Trả về chuỗi nội dung hiển thị cho tooltip
+                return `📦 [${currentMode}] THÔNG TIN GIÁ NHANH\n` +
+                       `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
+                       `• ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
+                       `• ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
+            }
         });
 
             table.on("dataFiltered", function(filters, rows){
