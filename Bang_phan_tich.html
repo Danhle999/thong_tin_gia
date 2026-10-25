@@ -1248,8 +1248,8 @@ function loadDataFromSheet(bypassCache = true) {
 
         let summaryTableData = summaryRows.map((r, idx) => ({
             id: idx + 1,
-            code: r[0],
-            name: r[1],
+            code: r[1],
+            name: r[0],
             importQty: parseFloat(r[2]) || 0,
             importAmt: parseFloat(r[3]) || 0,
             sellQty: parseFloat(r[4]) || 0,
