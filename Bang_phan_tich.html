@@ -1243,15 +1243,15 @@ function loadDataFromSheet(bypassCache = true) {
             id: idx + 1,
             code: String(r[0] || '').trim(),           // r[0]: Mã hàng hóa
             name: String(r[1] || '').trim(),           // r[1]: Tên hàng hóa
-            date: String(r[3] || ''),                  // r[3]: Ngày bán
-            customer: String(r[4] || ''),              // r[4]: Khách hàng
-            orderNo: String(r[5] || ''),               // r[5]: Số đơn hàng
-            qty: parseFloat(r[6]) || 0,                // r[6]: SL Bán
-            unitPrice: parseFloat(r[7]) || 0,          // r[7]: Đơn giá bán
-            revenue: parseFloat(r[8]) || 0,            // r[8]: Thành tiền bán
-            cost: parseFloat(r[9]) || 0,               // r[9]: Giá Vốn (Đơn giá nhập)
-            priceCost: parseFloat(r[10]) || 0,         // r[10]: Giá Cost
-            profit: parseFloat(r[11]) || 0             // r[11]: Lợi nhuận
+            date: String(r[2] || ''),                  // r[3]: Ngày bán
+            customer: String(r[3] || ''),              // r[4]: Khách hàng
+            orderNo: String(r[4] || ''),               // r[5]: Số đơn hàng
+            qty: parseFloat(r[5]) || 0,                // r[6]: SL Bán
+            unitPrice: parseFloat(r[6]) || 0,          // r[7]: Đơn giá bán
+            revenue: parseFloat(r[7]) || 0,            // r[8]: Thành tiền bán
+            cost: parseFloat(r[8]) || 0,               // r[9]: Giá Vốn (Đơn giá nhập)
+            priceCost: parseFloat(r[9]) || 0,         // r[10]: Giá Cost
+            profit: parseFloat(r[10]) || 0             // r[11]: Lợi nhuận
         }));
 
         if (tableProfitDetails) tableProfitDetails.destroy();
