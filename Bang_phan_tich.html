@@ -1249,11 +1249,11 @@ function loadDataFromSheet(bypassCache = true) {
 
     document.getElementById('rowCountBadge').innerText = `TỔNG: ${summaryRows.length} mã VTHH | ${detailRows.length} đơn hàng`;
 
-    // 1. ÁNH XÁ BẢNG TỔNG HỢP
+    // 1. ÁNH XÁ BẢNG TỔNG HỢP (SUMMARY)
     let summaryTableData = summaryRows.map((r, idx) => ({
         id: idx + 1,
-        code: r[0],            // r[0]: Mã Hàng
-        name: r[1],            // r[1]: Tên Hàng
+        code: r[0],            // r[0]: Mã Hàng Hóa
+        name: r[1],            // r[1]: Tên Hàng Hóa
         importQty: parseFloat(r[2]) || 0,
         importAmt: parseFloat(r[3]) || 0,
         sellQty: parseFloat(r[4]) || 0,
@@ -1320,7 +1320,7 @@ function loadDataFromSheet(bypassCache = true) {
         }
     });
 
-    // 2. ÁNH XÁ BẢNG CHI TIẾT
+    // 2. ÁNH XÁ BẢNG CHI TIẾT (DETAILS)
     let detailTableData = detailRows.map((r, idx) => ({
         id: idx + 1,
         code: r[0],           // r[0]: Mã Hàng Hóa
