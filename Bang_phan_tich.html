@@ -2208,7 +2208,16 @@ function loadDataFromSheet(bypassCache = true) {
         }, 400); 
     }
 
-
+    // Tự động gán title trực tiếp cho tất cả các ô trong bảng khi render xong
+        table.on("tableBuilt", function() {
+            applyTooltipsToTable();
+        });
+        table.on("dataLoaded", function() {
+            applyTooltipsToTable();
+        });
+        table.on("renderComplete", function() {
+            applyTooltipsToTable();
+        });
     function applyTooltipsToTable() {
         if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) return;
         
