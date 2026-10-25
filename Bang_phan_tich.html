@@ -2218,49 +2218,48 @@ function loadDataFromSheet(bypassCache = true) {
         table.on("renderComplete", function() {
             applyTooltipsToTable();
         });
-    function applyTooltipsToTable() {
-        if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) return;
-        
-        let activeCols = getActiveColumns();
-        
-        table.getRows().forEach(row => {
-            let rowData = row.getData();
-            let importPrice = "";
-            let price1 = "";
-            let price2 = "";
+        function applyTooltipsToTable() {
+            if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) return;
             
-            activeCols.forEach((col, idx) => {
-                let lbl = col.label.trim().toUpperCase();
-                let val = rowData["col_" + idx];
-                if (val !== undefined && val !== null && val !== '') {
-                    if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
-                        if (!importPrice) importPrice = val;
+            table.getRows().forEach(row => {
+                let rowData = row.getData();
+                let importPrice = "";
+                let price1 = "";
+                let price2 = "";
+                
+                activeCols.forEach((col, idx) => {
+                    let lbl = col.label.trim().toUpperCase();
+                    let val = rowData["col_" + idx];
+                    if (val !== undefined && val !== null && val !== '') {
+                        if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
+                            if (!importPrice) importPrice = val;
+                        }
+                        if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB')) {
+                            price1 = val;
+                        }
+                        if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
+                            price2 = val;
+                        }
                     }
-                    if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB')) {
-                        price1 = val;
-                    }
-                    if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
-                        price2 = val;
-                    }
-                }
+                });
+                
+                let formatMoney = (v) => {
+                    let num = parseFloat(String(v).replace(/[,.]/g, ''));
+                    return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
+                };
+                
+                let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
+                let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
+                
+                let tooltipText = `[${currentMode}] Nhập: ${importPrice ? formatMoney(importPrice) : 'Chưa có'} | ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'} | ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
+                
+                row.getCells().forEach(cell => {
+                    let el = cell.getElement();
+                    if (el) el.setAttribute("title", tooltipText);
+                });
             });
-            
-            let formatMoney = (v) => {
-                let num = parseFloat(String(v).replace(/[,.]/g, ''));
-                return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
-            };
-            
-            let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
-            let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
-            
-            let tooltipText = `[${currentMode}] Nhập: ${importPrice ? formatMoney(importPrice) : 'Chưa có'} | ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'} | ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
-            
-            row.getCells().forEach(cell => {
-                let el = cell.getElement();
-                if (el) el.setAttribute("title", tooltipText);
-            });
-        });
-    }
+        }
+    
     function resetAllFilters(reload = true) {
         document.getElementById('globalSearchInput').value = '';
         document.getElementById('customerFilterInput').value = '';
