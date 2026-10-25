@@ -27,19 +27,35 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 15px;
         }
-
-.tabulator-col.is-filtered,
-.tabulator-col.is-filtered .tabulator-col-content {
-    background-color: #ffeba1 !important; 
-    border-bottom: 2px solid #ffc107 !important;
-}
-
-.tabulator-col.is-filtered input {
-    background-color: #fff9e6 !important;
-    border: 1px solid #ffc107 !important;
-    color: #d32f2f !important;
-    font-weight: bold;
-}
+        
+        #custom-tooltip {
+            position: fixed;
+            display: none;
+            background: rgba(15, 23, 42, 0.95);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            z-index: 10000;
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 1px solid #38bdf8;
+            line-height: 1.4;
+            white-space: pre-line;
+        }
+        
+        .tabulator-col.is-filtered,
+        .tabulator-col.is-filtered .tabulator-col-content {
+            background-color: #ffeba1 !important; 
+            border-bottom: 2px solid #ffc107 !important;
+        }
+        
+        .tabulator-col.is-filtered input {
+            background-color: #fff9e6 !important;
+            border: 1px solid #ffc107 !important;
+            color: #d32f2f !important;
+            font-weight: bold;
+        }
 
         .highlight-editable {
             background-color: #f0fdf4 !important; 
@@ -255,7 +271,7 @@
     </style>
 </head>
 <body>
-
+<div id="custom-tooltip"></div>
 <div id="loadingSpinner">
     <div class="text-center">
         <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
@@ -2053,7 +2069,6 @@ function loadDataFromSheet(bypassCache = true) {
             columnDefaults: { resizable: true },
             
             // THÊM ĐOẠN TOOLTIP HOVER TẠI ĐÂY:
-            // Dùng rowFormatted để gán tooltip native của trình duyệt (bỏ qua lỗi bị tràn/cắt khung)
             rowFormatted: function(row) {
             if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
                 return;
@@ -2090,15 +2105,28 @@ function loadDataFromSheet(bypassCache = true) {
             let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
             let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
             
-            let tooltipText = `[${currentMode}]  |  Nhập: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}  |  ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}  |  ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
+            let tooltipText = `📦 [${currentMode}] THÔNG TIN GIÁ NHANH\n` +
+                              `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
+                              `• ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
+                              `• ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
             
-            // Gán title cho TỪNG Ô (cell) trong dòng để rê chuột vào bất kỳ cột nào cũng hiện thông tin
-            row.getCells().forEach(cell => {
-                let cellEl = cell.getElement();
-                if (cellEl) {
-                    cellEl.setAttribute("title", tooltipText);
-                }
-            });
+            let rowEl = row.getElement();
+            let tooltipDiv = document.getElementById('custom-tooltip');
+            
+            // Xử lý sự kiện rê chuột mượt mà tuyệt đối
+            rowEl.onmouseenter = function(e) {
+                tooltipDiv.innerText = tooltipText;
+                tooltipDiv.style.display = 'block';
+            };
+            
+            rowEl.onmousemove = function(e) {
+                tooltipDiv.style.top = (e.clientY + 15) + 'px';
+                tooltipDiv.style.left = (e.clientX + 15) + 'px';
+            };
+            
+            rowEl.onmouseleave = function() {
+                tooltipDiv.style.display = 'none';
+            };
         }
         });
 
