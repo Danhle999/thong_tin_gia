@@ -1300,7 +1300,7 @@ function loadDataFromSheet(bypassCache = true) {
                 { title: "Tên Hàng Hóa", field: "name", width: 500 },
                 { title: "Ngày Nhập", field: "date", hozAlign: "center", width: 120 },
                 { title: "SL Nhập", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Giá Cost / Đơn Giá Nhập", field: "cost", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Đơn Giá Nhập", field: "cost", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng Giá Trị Nhập (VNĐ)", field: "totalCost", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
             ],
             rowClick: function(e, row) {
