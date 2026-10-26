@@ -1296,8 +1296,8 @@ function loadDataFromSheet(bypassCache = true) {
             paginationSizeSelector: [10, 20, 50, 100],
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-                { title: "Mã Hàng Hóa", field: "importCode", width: 180 },  // Ánh xạ đúng field phân biệt
-                { title: "Tên Hàng Hóa", field: "importName", width: 500 },  // Ánh xạ đúng field phân biệt
+                { title: "Mã Hàng Hóa", field: "code", width: 180 },  // Đã chuẩn field code
+                { title: "Tên Hàng Hóa", field: "name", width: 500 },  // Đã chuẩn field name
                 { title: "Ngày Nhập", field: "date", hozAlign: "center", width: 120 },
                 { title: "SL Nhập", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Giá Cost / Đơn Giá Nhập", field: "cost", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
@@ -1305,10 +1305,10 @@ function loadDataFromSheet(bypassCache = true) {
             ],
             rowClick: function(e, row) {
                 let rowData = row.getData();
-                if (rowData && rowData.importCode) {
+                if (rowData && rowData.code) {
                     let codeInput = document.getElementById('filterDetailCodeInput');
                     if (codeInput) {
-                        codeInput.value = rowData.importCode; // Truyền chính xác mã nhập sang bộ lọc bên dưới
+                        codeInput.value = rowData.code;
                         filterProfitDetails();
                     }
                 }
@@ -1329,8 +1329,8 @@ function loadDataFromSheet(bypassCache = true) {
             paginationSizeSelector: [10, 20, 50, 100],
             columns: [
                 { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-                { title: "Mã Hàng Hóa", field: "sellCode", width: 180 },  // Ánh xạ đúng field phân biệt
-                { title: "Tên Sản Phẩm", field: "sellName", width: 500 },  // Ánh xạ đúng field phân biệt
+                { title: "Mã Hàng Hóa", field: "code", width: 180 },  // Đã chuẩn field code
+                { title: "Tên Sản Phẩm", field: "name", width: 500 },  // Đã chuẩn field name
                 { title: "Ngày Bán", field: "date", hozAlign: "center", width: 120 },
                 { title: "Khách Hàng", field: "customer", width: 250 },
                 { title: "Số Đơn Hàng", field: "orderNo", width: 130 },
