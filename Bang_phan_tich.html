@@ -1321,24 +1321,26 @@ function loadDataFromSheet(bypassCache = true) {
         if (tableProfitSales) tableProfitSales.destroy();
 
         tableProfitSales = new Tabulator("#table-profit-sales", {
-            data: listBan,
-            layout: "fitColumns",
-            height: "380px",
-            pagination: "local",
-            paginationSize: 20,
-            paginationSizeSelector: [10, 20, 50, 100],
-            columns: [
-                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
-                { title: "Mã Hàng Hóa", field: "code", width: 180 },
-                { title: "Tên Sản Phẩm", field: "name", width: 500 },
-                { title: "Ngày Bán", field: "date", hozAlign: "center", width: 120 },
-                { title: "Khách Hàng", field: "customer", width: 250 },
-                { title: "Số Đơn Hàng", field: "orderNo", width: 130 },
-                { title: "SL Bán", field: "qty", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
-                { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 170, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
-            ]
-        });
+        data: listBan,
+        layout: "fitColumns",
+        height: "380px",
+        pagination: "local",
+        paginationSize: 20,
+        paginationSizeSelector: [10, 20, 50, 100],
+        columns: [
+            { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
+            { title: "Mã Hàng Hóa", field: "code", width: 180 },
+            { title: "Tên Sản Phẩm", field: "name", width: 500 },
+            { title: "Ngày Bán", field: "date", hozAlign: "center", width: 120 },
+            { title: "Khách Hàng", field: "customer", width: 250 },
+            { title: "Số Đơn Hàng", field: "orderNo", width: 130 },
+            { title: "SL Bán", field: "qty", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+            { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 170, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+            // 👉 THÊM DÒNG CỘT NÀY VÀO GIAO DIỆN HTML ĐỂ HIỂN THỊ ĐƠN GIÁ NHẬP
+            { title: "Đơn Giá Nhập (VNĐ)", field: "importUnitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+        ]
+    });
     }
 
 // --- HÀM LỌC CHO BẢNG NHẬP HÀNG ---
