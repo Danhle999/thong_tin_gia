@@ -1,1 +1,2439 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Dữ Liệu Bán Hàng & Nhập Kho - Tabulator</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Tabulator CSS -->
+    <link href="https://unpkg.com/tabulator-tables@6.2.5/dist/css/tabulator.min.css" rel="stylesheet">
+    <!-- SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tabulator JS -->
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.5/dist/js/tabulator.min.js"></script>
 
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden !important; 
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 15px;
+        }
+        
+        
+        .tabulator-tooltip {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border: 1px solid #38bdf8 !important;
+            padding: 8px 12px !important;
+            border-radius: 6px !important;
+            font-size: 0.85rem !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+            white-space: pre-line !important;
+            z-index: 99999 !important;
+            line-height: 1.4 !important;
+        }
+        
+        .tabulator-col.is-filtered,
+        .tabulator-col.is-filtered .tabulator-col-content {
+            background-color: #ffeba1 !important; 
+            border-bottom: 2px solid #ffc107 !important;
+        }
+        
+        .tabulator-col.is-filtered input {
+            background-color: #fff9e6 !important;
+            border: 1px solid #ffc107 !important;
+            color: #d32f2f !important;
+            font-weight: bold;
+        }
+
+        .highlight-editable {
+            background-color: #f0fdf4 !important; 
+            border-right: 1px dashed #bbf7d0 !important; 
+        }
+        .tabulator-col.highlight-editable {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+        }
+        .table-container {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        #example-table {
+            flex: 1 1 auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        #loadingSpinner { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(255,255,255,0.85); 
+            z-index: 9999; 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        .filter-card { 
+            background: #eef2f7; 
+            border-radius: 6px; 
+            padding: 10px 15px; 
+            margin-bottom: 10px; 
+            border: 1px solid #cbd5e1;
+            flex-shrink: 0;
+        }
+
+        .view-mode-btn-group .btn { font-weight: 600; font-size: 0.9rem; }
+        .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
+        
+        .tabulator { font-size: 0.95rem; }
+
+        .btn-edit-action { transition: all 0.2s ease-in-out; }
+        .btn-edit-action:hover { transform: scale(1.05); }
+
+        .tabulator .tabulator-header .tabulator-col {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            vertical-align: middle !important;
+        }
+        
+        .tabulator .tabulator-header .tabulator-col-content { padding: 4px !important; }
+        .tabulator .tabulator-header .tabulator-col-title {
+            white-space: normal !important;
+            text-overflow: clip !important;
+            line-height: 1.25;
+        }
+
+        .tabulator .tabulator-row .tabulator-cell {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            max-height: 120px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            line-height: 1.4 !important;
+            padding-top: 3px !important;
+            padding-bottom: 3px !important;
+        }
+
+        .tabulator-footer .tabulator-calcs-holder {
+            background-color: #e2e8f0 !important;
+            border-top: 2px solid #0d6efd !important;
+            font-weight: bold !important;
+            color: #0f172a !important;
+        }
+        .tabulator-footer .tabulator-calcs-holder .tabulator-cell {
+            background-color: #e2e8f0 !important;
+            border-right: 1px solid #cbd5e1 !important;
+        }
+
+        .dashboard-container {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding-bottom: 10px;
+        }
+        .stat-card {
+            background: #ffffff;
+            border-left: 4px solid #0d6efd;
+            border-radius: 6px;
+            padding: 8px 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-top: 1px solid #e9ecef;
+            border-right: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .chart-box {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            border: 1px solid #dee2e6;
+            height: 230px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .table-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            margin-top: 6px;
+        }
+        .table-section-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #334155;
+            margin: 0;
+        }
+
+        .cell-negative-price {
+            background-color: #f8d7da !important;
+            color: #dc3545 !important;
+            font-weight: bold !important;
+        }
+
+        .cell-date-green {
+            background-color: #d1e7dd !important;
+            color: #0f5132 !important;
+            font-weight: bold !important;
+        }
+
+        .zalo-price-box {
+            background-color: #ffffff;
+            border: 1px solid #106ba3;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            line-height: 1.35;
+            color: #000;
+        }
+
+        .scenario-card {
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            padding: 12px 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+        .scenario-input-group label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 2px;
+        }
+
+        // RESPONSIVE: Phóng to giao diện cho màn hình lớn (Màn 24 inch / Full HD trở lên)
+        @media (min-width: 1600px) {
+            html, body {
+                font-size: 17px !important; // Tăng cỡ chữ gốc lên 17px
+            }
+            
+            //Tăng khoảng cách các ô trong bảng Tabulator cho thoáng hơn
+            .tabulator .tabulator-header .tabulator-col-content { 
+                padding: 8px !important; 
+            }
+            .tabulator .tabulator-row .tabulator-cell {
+                padding-top: 6px !important;
+                padding-bottom: 6px !important;
+                line-height: 1.5 !important;
+            }
+
+            // Tăng kích thước nút điều hướng (View mode)
+            .view-mode-btn-group .btn { 
+                font-size: 1rem; 
+                padding: 6px 14px;
+            }
+
+            // Tăng kích thước bộ lọc Global
+            .filter-card .form-label {
+                font-size: 0.95rem;
+            }
+            
+            // Phóng to thẻ Thống kê (Stat card)
+            .stat-card {
+                padding: 12px 16px;
+            }
+            .stat-card h5 {
+                font-size: 1.5rem !important;
+            }
+            
+            // Tiêu đề bảng to hơn
+            .table-section-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="custom-tooltip"></div>
+<div id="loadingSpinner">
+    <div class="text-center">
+        <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+        <div class="mt-2 fw-bold text-dark" id="spinnerText">Đang nạp dữ liệu từ Google Sheets...</div>
+    </div>
+</div>
+
+<div class="container-fluid p-2 h-100">
+    <div class="table-container">
+        <!-- HEADER TRANG & NÚT CHUYỂN TAB -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
+            <div>
+                <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu (Tabulator)</h4>
+                <small class="text-muted fs-6" id="modeDescription">Đang hiển thị Trang tính: LAPTOP</small>
+            </div>
+            
+            <div class="btn-group view-mode-btn-group flex-wrap gap-1" role="group">
+                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">LAPTOP</button>
+                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">PC</button>
+                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">LCD</button>
+                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">AIO</button>
+                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">MÁY IN / SCAN</button>
+                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">BÁN HÀNG</button>
+                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
+                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
+                <button type="button" id="btnModeWebsite" class="btn btn-outline-primary" onclick="switchTableMode('WEBSITE')"><i class="fa-solid fa-globe me-1"></i>WEBSITE</button>
+                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
+                <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
+                <button type="button" id="btnModeKichBan" class="btn btn-outline-danger" onclick="switchTableMode('KICH_BAN_BAN_HANG')"><i class="fa-solid fa-calculator me-1"></i>KỊCH BẢN BÁN HÀNG</button>
+                <button type="button" id="btnModeBangLenGia" class="btn btn-outline-danger" onclick="switchTableMode('BANG_LEN_GIA')"><i class="fa-solid fa-tags me-1"></i>BẢNG LÊN GIÁ</button>
+                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
+                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
+                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
+            </div>
+
+            <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
+        </div>
+
+        <!-- BẢNG THÔNG BÁO MÃ CHƯA CÓ / THIẾU TRÊN WEBSITE -->
+        <div id="missingFromTabAlert" class="alert alert-warning py-2 px-3 mb-2 small d-none d-flex justify-content-between align-items-center" style="flex-shrink: 0;">
+            <div>
+                <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
+                <span id="missingAlertText"></span>
+            </div>
+        </div>
+
+        <!-- BỘ LỌC TOÀN CỤC CHO CÁC SHEET THƯỜNG -->
+        <div class="filter-card" id="globalFilterCard">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm kiếm nhanh toàn bảng:</label>
+                    <input type="text" id="globalSearchInput" class="form-control form-control-sm fs-6" placeholder="Nhập từ khóa bất kỳ..." onkeyup="applyGlobalSearch()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / NCC / Mã:</label>
+                    <input type="text" id="customerFilterInput" class="form-control form-control-sm fs-6" placeholder="Tìm tên KH, NCC hoặc Mã..." onkeyup="applyGlobalSearch()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-day me-1"></i>Từ ngày:</label>
+                    <input type="date" id="dateFromInput" class="form-control form-control-sm fs-6" onchange="applyGlobalSearch()">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-check me-1"></i>Đến ngày:</label>
+                    <input type="date" id="dateToInput" class="form-control form-control-sm fs-6" onchange="applyGlobalSearch()">
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button class="btn btn-sm btn-secondary w-100" onclick="resetAllFilters()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa bộ lọc</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NÚT THAO TÁC -->
+        <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
+            <div class="col-md-6 d-flex gap-2">
+                <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
+                <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
+                <button class="btn btn-sm btn-outline-danger" id="btnToggleHetHang" onclick="toggleHideHetHang()"><i class="fa-solid fa-filter-circle-xmark me-1"></i>Ẩn Hết Hàng</button>
+                <!-- NÚT COPY ZALO MỚI ĐƯỢC THÊM VÀO ĐÂY -->
+                <button class="btn btn-sm btn-info text-dark fw-bold d-none" id="btnCopyZalo" onclick="copyFilteredZaloPrices()">
+                    <i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo
+                </button>
+            </div>
+            <div class="col-md-6 d-flex justify-content-end gap-2" id="excelUploadContainer">
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
+                <button class="btn btn-sm btn-outline-success" onclick="document.getElementById('excelFileInput').click()">
+                    <i class="fa-solid fa-file-excel me-1"></i>Nhập Từ Excel Vào Sheet Này
+                </button>
+            </div>
+        </div>
+
+        <!-- BẢNG TABULATOR THƯỜNG -->
+        <div id="example-table"></div>
+
+        <!-- TAB KỊCH BẢN BÁN HÀNG -->
+        <div id="kichBanView" class="dashboard-container">
+            <!-- 1. THÔNG SỐ ĐẦU VÀO -->
+            <div class="scenario-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-danger m-0"><i class="fa-solid fa-sliders me-2"></i>1. Nhập Thông Số Sản Phẩm & Mục Tiêu Tài Chính</h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="autoBalanceScenario()"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Tự Động Phân Bổ Tối Ưu</button>
+                </div>
+                <div class="row g-2 scenario-input-group">
+                    <div class="col-md-3">
+                        <label>Tên / Mã Sản Phẩm:</label>
+                        <input type="text" id="scProductName" class="form-control form-control-sm fw-bold text-primary" value="LCD LENOVO L24-4e 23.8INCH (68C2KAC1VN)">
+                    </div>
+                    <div class="col-md-2">
+                        <label>Giá Cost Thực Tế (VNĐ):</label>
+                        <input type="number" id="scCostPrice" class="form-control form-control-sm text-end fw-bold text-secondary" value="1785000" oninput="autoBalanceScenario()">
+                    </div>
+                    <div class="col-md-2">
+                        <label>Giá Hóa Đơn/Nhập (VNĐ):</label>
+                        <input type="number" id="scInvoicePrice" class="form-control form-control-sm text-end fw-bold text-danger" value="1885200" oninput="autoBalanceScenario()">
+                    </div>
+                    <div class="col-md-2">
+                        <label>Target SL / Tháng (Cái):</label>
+                        <input type="number" id="scTargetQty" class="form-control form-control-sm text-end fw-bold text-success" value="200" oninput="autoBalanceScenario()">
+                    </div>
+                    <!-- KHUNG NHẬP LỢI NHUẬN MIN & MAX -->
+                    <div class="col-md-3">
+                        <label>Khung Lợi Nhuận Mong Muốn (%):</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light text-danger fw-bold">Min</span>
+                            <input type="number" id="scTargetMarginMin" class="form-control text-end fw-bold" value="2.5" step="0.1" oninput="autoBalanceScenario()">
+                            <span class="input-group-text bg-light text-success fw-bold">Max</span>
+                            <input type="number" id="scTargetMarginMax" class="form-control text-end fw-bold" value="5.0" step="0.1" oninput="autoBalanceScenario()">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. THỐNG KÊ TỔNG QUAN -->
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <span class="text-muted small fw-bold">TỔNG VỐN NHẬP (HÓA ĐƠN)</span>
+                        <h5 class="text-dark fw-bold mt-1 mb-0" id="scTotalCost">0 VNĐ</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #198754;">
+                        <span class="text-muted small fw-bold">TỔNG DOANH THU DỰ KIẾN</span>
+                        <h5 class="text-success fw-bold mt-1 mb-0" id="scTotalRevenue">0 VNĐ</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #dc3545;">
+                        <span class="text-muted small fw-bold">TỔNG LỢI NHUẬN GỘP</span>
+                        <h5 class="text-danger fw-bold mt-1 mb-0" id="scTotalProfit">0 VNĐ</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card" style="border-left-color: #0dcaf0;">
+                        <span class="text-muted small fw-bold">BIÊN LỢI NHUẬN ĐẠT ĐƯỢC</span>
+                        <h5 class="text-info fw-bold mt-1 mb-0" id="scAchievedMargin">0.00 %</h5>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. BẢNG PHÂN BỔ SẢN LƯỢNG & BIỂU ĐỒ -->
+            <div class="row g-2">
+                <div class="col-md-8">
+                    <div class="scenario-card h-100">
+                        <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-table-cells me-2"></i>2. Cơ Cấu Phân Bổ Giá Bán & Số Lượng Theo Nhóm Khách Hàng</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm align-middle text-center mb-0" style="font-size:0.9rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nhóm Khách Hàng</th>
+                                        <th style="width: 110px;">SL Bán (Cái)</th>
+                                        <th style="width: 150px;">Giá Bán Đề Xuất</th>
+                                        <th>Lãi / Chiếc</th>
+                                        <th>Tổng Doanh Thu</th>
+                                        <th>Tổng Lãi Gộp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-start fw-bold text-dark">1. Khách lẻ / Công ty (&lt; 5c)</td>
+                                        <td><input type="number" id="scQty1" class="form-control form-control-sm text-center fw-bold" value="30" oninput="autoBalanceScenario()"></td>
+                                        <td><input type="number" id="scPrice1" class="form-control form-control-sm text-end fw-bold text-success" value="2017000" oninput="calculateScenario()"></td>
+                                        <td id="scMarginUnit1" class="text-end fw-bold text-success">0</td>
+                                        <td id="scRev1" class="text-end">0</td>
+                                        <td id="scProf1" class="text-end fw-bold text-success">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold text-dark">2. Đại lý nhỏ / Dự án (5 - 20c)</td>
+                                        <td><input type="number" id="scQty2" class="form-control form-control-sm text-center fw-bold" value="30" oninput="autoBalanceScenario()"></td>
+                                        <td><input type="number" id="scPrice2" class="form-control form-control-sm text-end fw-bold text-success" value="1961000" oninput="calculateScenario()"></td>
+                                        <td id="scMarginUnit2" class="text-end fw-bold text-success">0</td>
+                                        <td id="scRev2" class="text-end">0</td>
+                                        <td id="scProf2" class="text-end fw-bold text-success">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold text-dark">3. Đại lý vừa / Dự án (20 - 50c)</td>
+                                        <td><input type="number" id="scQty3" class="form-control form-control-sm text-center fw-bold text-primary" value="40" oninput="autoBalanceScenario()"></td>
+                                        <td><input type="number" id="scPrice3" class="form-control form-control-sm text-end fw-bold text-primary" value="1935000" oninput="calculateScenario()"></td>
+                                        <td id="scMarginUnit3" class="text-end fw-bold text-primary">0</td>
+                                        <td id="scRev3" class="text-end">0</td>
+                                        <td id="scProf3" class="text-end fw-bold text-primary">0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold text-dark">4. Đại lý lớn / Bao lô (&gt; 50c)</td>
+                                        <td><input type="number" id="scQty4" class="form-control form-control-sm text-center fw-bold text-danger" value="100" oninput="autoBalanceScenario()"></td>
+                                        <td><input type="number" id="scPrice4" class="form-control form-control-sm text-end fw-bold text-danger" value="1916000" oninput="calculateScenario()"></td>
+                                        <td id="scMarginUnit4" class="text-end fw-bold text-danger">0</td>
+                                        <td id="scRev4" class="text-end">0</td>
+                                        <td id="scProf4" class="text-end fw-bold text-danger">0</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="table-secondary fw-bold">
+                                    <tr>
+                                        <td class="text-start">TỔNG CỘNG</td>
+                                        <td id="scTotalQtySum" class="text-center">200</td>
+                                        <td id="scAvgPrice" class="text-end text-primary">0</td>
+                                        <td>-</td>
+                                        <td id="scTotalRevSum" class="text-end">0</td>
+                                        <td id="scTotalProfSum" class="text-end text-danger">0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="scenario-card h-100 d-flex flex-column justify-content-center align-items-center">
+                        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.9rem;">Tỷ Trọng Số Lượng Bán Theo Nhóm</h6>
+                        <div style="height: 180px; width: 100%;">
+                            <canvas id="scenarioChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. KHUNG BẢN NHÁP GỬI ZALO -->
+            <div class="scenario-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-success m-0"><i class="fa-solid fa-comment-dots me-2"></i>3. Bản Nháp Kịch Bản Gửi Zalo / Khách Hàng / Kinh Doanh</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-success" onclick="copyScenarioZaloText()"><i class="fa-solid fa-copy me-1"></i>Copy Tin Nhắn Zalo</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportScenarioExcel()"><i class="fa-solid fa-file-excel me-1"></i>Xuất Excel Kịch Bản</button>
+                    </div>
+                </div>
+                <textarea id="scenarioZaloText" class="form-control font-monospace" rows="8" style="font-size: 0.88rem; background-color: #f8fafc; border: 1px solid #94a3b8;"></textarea>
+            </div>
+        </div>
+
+        <!-- DASHBOARD BÁO CÁO LỢI NHUẬN -->
+        <div id="profitReportView" class="dashboard-container">
+            <!-- BẢNG 1: NHẬP HÀNG -->
+            <div>
+                <div class="table-section-header">
+                    <div class="table-section-title text-success"><i class="fa-solid fa-boxes-packing me-1"></i> 1. Báo Cáo Nhập Hàng</div>
+                </div>
+                <!-- BỘ LỌC CHO NHẬP HÀNG -->
+                <div class="row g-2 mb-2 p-2 bg-light border rounded align-items-center">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Mã / Tên Hàng:</label>
+                        <input type="text" id="filterImportCodeInput" class="form-control form-control-sm fs-6" placeholder="Nhập mã hoặc tên hàng..." onkeyup="filterImportTable()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-day me-1"></i>Từ ngày:</label>
+                        <input type="date" id="filterImportDateFrom" class="form-control form-control-sm fs-6" onchange="filterImportTable()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-check me-1"></i>Đến ngày:</label>
+                        <input type="date" id="filterImportDateTo" class="form-control form-control-sm fs-6" onchange="filterImportTable()">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-sm btn-outline-secondary w-100 mt-3" onclick="clearImportFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
+                    </div>
+                </div>
+                <div id="table-profit-import" style="height: 300px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+            </div>
+        
+            <!-- BẢNG 2: BÁN HÀNG -->
+            <div>
+                <div class="table-section-header">
+                    <div class="table-section-title text-primary"><i class="fa-solid fa-cart-shopping me-1"></i> 2. Báo Cáo Bán Hàng</div>
+                </div>
+                <!-- BỘ LỌC CHO BÁN HÀNG -->
+                <div class="row g-2 mb-2 p-2 bg-light border rounded align-items-center">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Mã / Tên SP:</label>
+                        <input type="text" id="filterDetailCodeInput" class="form-control form-control-sm fs-6" placeholder="Mã hoặc tên sản phẩm..." onkeyup="filterProfitDetails()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-user me-1"></i>Khách hàng / Đơn:</label>
+                        <input type="text" id="filterDetailCustomerInput" class="form-control form-control-sm fs-6" placeholder="Tên KH hoặc số đơn..." onkeyup="filterProfitDetails()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-day me-1"></i>Từ ngày:</label>
+                        <input type="date" id="filterSalesDateFrom" class="form-control form-control-sm fs-6" onchange="filterProfitDetails()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-0 small"><i class="fa-solid fa-calendar-check me-1"></i>Đến ngày:</label>
+                        <input type="date" id="filterSalesDateTo" class="form-control form-control-sm fs-6" onchange="filterProfitDetails()">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-sm btn-outline-secondary w-100 mt-3" onclick="clearProfitDetailFilter()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
+                    </div>
+                </div>
+                <div id="table-profit-sales" style="height: 380px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD THỐNG KÊ QUÝ -->
+        <div id="dashboardView" class="dashboard-container">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <span class="text-muted small fw-bold" style="font-size: 0.8rem;">TỔNG SỐ LƯỢNG NHẬP KHO</span>
+                        <h5 class="text-primary fw-bold mt-1 mb-0" id="statTotalQty">0</h5>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card" style="border-left-color: #198754;">
+                        <span class="text-muted small fw-bold" style="font-size: 0.8rem;">TỔNG GIÁ TRỊ NHẬP KHO</span>
+                        <h5 class="text-success fw-bold mt-1 mb-0" id="statTotalAmount">0 VNĐ</h5>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card" style="border-left-color: #ffc107;">
+                        <span class="text-muted small fw-bold" style="font-size: 0.8rem;">SỐ LƯỢNG BẢN GHI THỐNG KÊ</span>
+                        <h5 class="text-dark fw-bold mt-1 mb-0" id="statTotalRecords">0</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-md-7">
+                    <div class="chart-box">
+                        <canvas id="barChartBrandQty"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="chart-box">
+                        <canvas id="doughnutChartType"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="table-section-header">
+                    <div class="table-section-title"><i class="fa-solid fa-table me-1"></i> 1. Chi Tiết Nhập Kho Theo Quý & Hãng</div>
+                </div>
+                <div class="row g-2 mb-1 p-2 bg-light border rounded">
+                    <div class="col-md-3">
+                        <select id="filter1Quarter" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Quý --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filter1Brand" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Hãng --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filter1Type" class="form-select form-select-sm" onchange="applyMultiFilterTable1()">
+                            <option value="">-- Lọc tất cả Loại sản phẩm --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilterTable1()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
+                    </div>
+                </div>
+                <div id="table-quarter-detail" style="height: 250px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+            </div>
+
+            <div>
+                <div class="table-section-header">
+                    <div class="table-section-title"><i class="fa-solid fa-bullseye me-1"></i> 2. Theo Dõi Mục Tiêu Doanh Số Quý Cho Từng Brand</div>
+                </div>
+                <div class="row g-2 mb-1 p-2 bg-light border rounded">
+                    <div class="col-md-3">
+                        <select id="filter2Quarter" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Quý --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filter2Brand" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Hãng --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="filter2Type" class="form-select form-select-sm" onchange="applyMultiFilterTable2()">
+                            <option value="">-- Lọc tất cả Loại sản phẩm --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilterTable2()"><i class="fa-solid fa-rotate-left me-1"></i>Xóa lọc</button>
+                    </div>
+                </div>
+                <div id="table-brand-summary" style="height: 420px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwtnjmgGV3YLY3YAmKjTjUeFidbMhgnkTRPDt5oJWlhK8rLGUjzZpK8_b65a8m_kEVG/exec";
+    
+    const SHEET_CONFIGS = {
+        'LAPTOP': [
+            { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã Hàng Hóa' },
+            { label: 'Brand' }, { label: 'Màn hình', width: 80 }, { label: 'Chip', width: 100 }, { label: 'RAM', width: 80},
+            { label: 'SSD', width: 50 }, { label: 'Win', width: 80 }, { label: 'Office', width: 80 }, { label: 'Bảo Hành', width: 50 },
+            { label: 'FP', width: 30 }, { label: 'PIN', width: 30 }, { label: 'LED KB', width: 50 }, { label: 'Alu', width: 80 },
+            { label: 'MX RTX', width: 80 }, { label: 'SL Nhập Tổng', numeric: true, width: 80 }, { label: 'SL Tồn', numeric: true , width: 80},
+            { label: 'SL Bán Ra', numeric: true }, 
+            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 100 }, 
+            { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 100 },
+            { label: 'Hàng gửi NPP', width: 80 }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
+            { label: '% GIÁ NHẬP LỆCH', numeric: true, percent: true, width: 80 }, 
+            { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
+            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 }, { label: 'NGÀY NHẬP CŨ', date: true },
+            { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+        ],
+        'PC': [
+            { label: 'NCC' }, { label: 'Mã SKU NPP, Hãng' }, { label: 'Mã Hàng Hóa' }, { label: 'Brand' },
+            { label: 'Chip' }, { label: 'RAM' }, { label: 'SSD' }, { label: 'Win' },
+            { label: 'Bảo Hành' }, { label: 'Office' },
+            { label: 'SL Nhập Tổng', numeric: true }, { label: 'SL Tồn', numeric: true },
+            { label: 'SL Bán Từ Ngày', numeric: true }, { label: 'Hàng gửi NPP' },
+            { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
+            { label: '% GIÁ LỆCH TRƯỚC', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true },
+            { label: '% Lợi Nhuận Tiền Mặt', numeric: true, percent: true, width: 80 }, { label: '% Lợi Nhuận Công Nợ', numeric: true, percent: true, width: 80 },
+            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN CÔNG NỢ', numeric: true, width: 120 },
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+        ],
+        'LCD': [
+            { label: 'NCC' }, { label: 'Mã NPP' }, { label: 'Mã Hàng Hóa' }, { label: 'Brand' },
+            { label: 'Kích Thước (inch)', numeric: true },
+            { label: 'Độ Trễ' }, { label: 'Tấm Nền' }, { label: 'Tần Số Quét' },
+            { label: 'Độ Phân Giải' }, { label: 'Cổng Xuất Hình 1' }, { label: 'Cổng Xuất Hình 2' },
+            { label: 'Cổng Xuất Hình 3' }, { label: 'Cổng Khác' }, { label: 'LOA' },
+            { label: 'GIÁ COST', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true }, { label: 'GIÁ NHẬP MỚI', numeric: true },
+            { label: 'GIÁ BÁN LẺ', numeric: true }, { label: 'GIÁ BÁN SL', numeric: true },
+            { label: 'NGÀY NHẬP CŨ', date: true }, { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'SL NHAP TONG', numeric: true },
+            { label: 'KHO KTB', numeric: true }, { label: 'SL bán ra từ ngày', numeric: true },
+            { label: '% LỢI NHUẬN GIÁ NHẬP', numeric: true, percent: true }, { label: '% LỢI NHUẬN GIÁ_COST', numeric: true, percent: true },
+            { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+        ],
+        'AIO': [
+            { label: 'NCC' }, { label: 'Mã Sản Phẩm (SKU) NPP, Hãng' }, { label: 'Mã KTB' }, { label: 'Brand' }, 
+            { label: 'chip' }, { label: 'ram',width: 80 }, { label: 'ssd' }, { label: 'win' }, { label: 'màn hình' }, 
+            { label: 'Bao_Hanh', width: 80 }, { label: 'office' }, { label: 'SL NHAP TONG', numeric: true, width: 80 }, 
+            { label: 'SL TON', numeric: true ,width: 80 }, { label: 'SL BÁN TỪ NGÀY', numeric: true ,width: 80 }, 
+            { label: '% Loi Nhuan Công Nợ', numeric: true, percent: true ,width: 80 }, { label: 'Hàng gửi NPP' ,width: 80 }, 
+            { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true }, 
+            { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true }, 
+            { label: '% Loi Nhuan Tiền Mặt', numeric: true, percent: true ,width: 80 }, { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, 
+            { label: 'GIÁ BÁN CÔNG NỢ', numeric: true ,width: 120 }, { label: 'GIÁ EU', numeric: true }, 
+            { label: 'NGÀY NHẬP TRƯỚC', date: true }, { label: 'NGÀY NHẬP GẦN NHẤT', date: true }, { label: 'Tên Hàng Hóa' },
+            { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+        ],
+        'SCAN_MAY_IN': [
+            { label: 'NCC' }, { label: '(SKU) NPP, Hãng' }, { label: 'Mã Hàng Hóa' }, { label: 'GHI CHÚ' },
+            { label: 'Độ phân giải DPI' }, { label: 'Bộ nhớ' }, { label: 'FIRST PAGE' }, { label: 'printing speed' },
+            { label: 'connect' }, { label: '(Auto-Duplex) Duplex / Manual Duplex' }, { label: 'In, Scan, Copy, Fax' },
+            { label: 'page/month', numeric: true }, { label: 'SL NHAP TONG', numeric: true, width: 80 },
+            { label: 'SL TON', numeric: true, width: 80 }, { label: 'SL bán ra từ ngày', numeric: true, width: 80 },
+            { label: 'Hàng gửi NPP', width: 80 }, { label: 'COST_KTB', numeric: true }, { label: 'GIÁ NHẬP CŨ', numeric: true },
+            { label: '% CHÊNH LỆCH NHẬP TRƯỚC', numeric: true, percent: true, width: 80 }, { label: 'GIÁ NHẬP MỚI', numeric: true, width: 120 },
+            { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 },
+            { label: 'NGÀY NHẬP CŨ', date: true }, { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
+        ],
+        'BAN_HANG': [
+            { label: 'Tên khách hàng(0)', customer: true }, { label: 'Số đơn hàng(1)' }, { label: 'Ngày ghi sổ(2)', date: true },
+            { label: 'Số đề nghị trả lại(3)' }, { label: 'Ngày đề nghị trả lại(4)', date: true }, { label: 'Mã hàng hóa(5)', code: true },
+            { label: 'Diễn giải(6)', code: true }, { label: 'Số lượng bán(7)', numeric: true }, { label: 'Thành tiền bán(8)', numeric: true },
+            { label: 'Tổng tiền bán(9)', numeric: true }, { label: 'Số lượng trả lại(10)', numeric: true }, { label: 'Thành tiền trả lại(11)', numeric: true },
+            { label: 'Tổng tiền trả lại(12)', numeric: true }, { label: 'Người thực hiện(13)' }, { label: 'Đơn vị(14)' },
+            { label: 'Là combo hàng hóa(15)' }, { label: 'ĐƠN GIÁ(16)', numeric: true }
+        ],
+        'NHAP_KHO': [
+            { label: 'Ngày HT(0)', date: true }, { label: 'Ngày CT(1)', date: true }, { label: 'Số CT(2)' }, { label: 'Ngày Hóa Đơn(3)', date: true },
+            { label: 'Mã NCC(4)', ncc: true }, { label: 'Tên NCC(5)', ncc: true }, { label: 'Diễn Giải(6)', code: true }, { label: 'Mã Hàng(7)', code: true },
+            { label: 'ĐVT(8)' }, { label: 'Số Lượng(9)', numeric: true }, { label: 'Đơn Giá(10)', numeric: true }, { label: 'Thành Tiền(11)', numeric: true },
+            { label: 'Giá cost(12)', numeric: true }, { label: 'Sell In Hãng(13)', numeric: true }, { label: 'Sell Out Hãng(14)', numeric: true },
+            { label: 'Chiết Khấu(15)', numeric: true }, { label: 'Tên nhóm VTHH(16)', desc: true }, { label: 'TỔNG SL NHẬP(17)', numeric: true },
+            { label: 'Sell In NPP(18)', numeric: true },{ label: 'Sell Out NPP(19)', numeric: true }, { label: 'SL SELL OUT HÃNG SUPPORT(20)', numeric: true }, 
+            { label: 'SL TON LUC DO(21)', numeric: true }, { label: 'TEN CHUONG TRINH(22)', numeric: true }
+        ],
+        'TON_KHO': [
+            { label: 'Loại Hàng Hóa', code: true }, { label: 'Mã Hàng Hóa', desc: true, width: 350 }, { label: 'Tên Hàng Hóa' , width: 300 },
+            { label: 'SL có thể đặt', numeric: true }, { label: 'SL đã đặt chưa giao', numeric: true },
+            { label: 'SL tồn tiếu thiểu', numeric: true }, { label: 'SL tồn', numeric: true },
+            { label: 'Đơn giá bán 1', numeric: true },  { label: 'Đơn giá bán sàn', numeric: true }, { label: 'Giá trị tồn kho', numeric: true },
+            { label: 'Đơn vị tính', numeric: true }
+        ],
+        'WEBSITE': [
+            { label: 'Danh Mục Cấp 1', width: 150 },
+            { label: 'Danh mục 2', width: 140 },
+            { label: 'Thương hiệu', width: 150 },
+            { label: 'Mã sản phẩm', code: true, width: 350 },
+            { label: 'Tên Sản phẩm', desc: true, width: 450 }
+        ],
+        'THONG_KE_QUY': [
+            { label: 'Quý / Thời gian', width: 140 },
+            { label: 'Hãng (Brand)', width: 130 },
+            { label: 'Loại Sản Phẩm', width: 220 },
+            { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 },
+            { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
+        ],
+        'BANG_LEN_GIA': [
+            { label: 'Mã hàng hóa', code: true, width: 180 },
+            { label: 'Tên Hàng', desc: true, width: 350 },
+            { label: 'GIÁ BÁN TIỀN MẶT', cashPrice: true, width: 120 },
+            { label: 'GIÁ BÁN CÔNG NỢ', creditPrice: true, width: 120 },
+            { label: 'TÌNH TRẠNG', width: 90 },
+            { label: 'NGÀY LÊN GIÁ', date: true, width: 120 },
+            { label: 'GIÁ TRÊN ZALO', zaloFormat: true, width: 520 },
+            { label: 'GHI CHÚ', width: 150 },
+            { label: 'SL TỒN', numeric: true, width: 80 },
+            { label: 'SL BÁN', numeric: true, width: 80 }
+        ],
+        'BANG_GIA_DELL': [
+            { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
+            { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
+        ],
+        'BANG_GIA_HP': [
+            { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
+            { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
+        ],
+        'BANG_GIA_LENOVO': [
+            { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
+            { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
+            { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
+        ]
+    };
+
+    let currentMode = 'LAPTOP';
+    
+    let tabDataCache = {}; // Biến lưu trữ dữ liệu đệm cho các tab
+    let table = null;
+    let tableQuarterDetail = null;
+    let tableBrandSummary = null;
+    let tableProfitImport = null;
+    let tableProfitSales = null;
+    let barChartInstance = null;
+    let doughnutChartInstance = null;
+    let scenarioChartInstance = null;
+    let globalActualData = [];
+    let globalTargetData = [];
+    
+    let rawTonKhoItems = [];
+
+    function customSumCalc(values) {
+        let sum = 0;
+        values.forEach(function(val) {
+            if (val !== null && val !== undefined && val !== '') {
+                let cleanVal = parseFloat(String(val).replace(/[,.]/g, ''));
+                if (!isNaN(cleanVal)) sum += cleanVal;
+            }
+        });
+        return sum;
+    }
+
+    function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
+
+    function switchTableMode(mode) {
+        // Cập nhật URL trên thanh địa chỉ mà không reload trang
+        window.history.pushState(null, '', '?mode=' + mode);
+        
+        currentMode = mode;
+        
+        document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
+            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+        });
+        
+        let btnObj = {
+            'LAPTOP': { id: 'btnModeLaptop', cls: 'btn-warning' },
+            'PC': { id: 'btnModePc', cls: 'btn-dark' },
+            'LCD': { id: 'btnModeLcd', cls: 'btn-danger' },
+            'AIO': { id: 'btnModeAio', cls: 'btn-secondary' },
+            'SCAN_MAY_IN': { id: 'btnModeScanMayIn', cls: 'btn-primary' },
+            'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
+            'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
+            'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
+            'WEBSITE': { id: 'btnModeWebsite', cls: 'btn-primary' },
+            'THONG_KE_QUY': { id: 'btnModeThongKeQuy', cls: 'btn-dark' },
+            'BAO_CAO_LOI_NHUAN': { id: 'btnModeLoiNhuan', cls: 'btn-success' },
+            'KICH_BAN_BAN_HANG': { id: 'btnModeKichBan', cls: 'btn-danger' },
+            'BANG_LEN_GIA': { id: 'btnModeBangLenGia', cls: 'btn-danger' },
+            'BANG_GIA_DELL': { id: 'btnModeBaoGia1', cls: 'btn-warning' },
+            'BANG_GIA_HP': { id: 'btnModeBaoGia2', cls: 'btn-warning' },
+            'BANG_GIA_LENOVO': { id: 'btnModeBaoGia3', cls: 'btn-warning' }
+        }[mode];
+
+        if (btnObj) {
+            let targetBtn = document.getElementById(btnObj.id);
+            if (targetBtn) targetBtn.className = `btn ${btnObj.cls} active`;
+        }
+        
+        let cols = getActiveColumns();
+        document.getElementById('modeDescription').innerText = `Đang hiển thị Trang tính: ${mode} (${cols.length} Cột)`;
+        
+        let isThongKe = (mode === 'THONG_KE_QUY');
+        let isLoiNhuan = (mode === 'BAO_CAO_LOI_NHUAN');
+        let isKichBan = (mode === 'KICH_BAN_BAN_HANG');
+        // Khai báo thêm biến nhận diện các tab Báo giá
+        let isBaoGia = ['BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO'].includes(mode);
+
+        document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
+        document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
+        document.getElementById('example-table').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
+        document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
+        document.getElementById('profitReportView').style.display = isLoiNhuan ? 'flex' : 'none';
+        document.getElementById('kichBanView').style.display = isKichBan ? 'flex' : 'none';
+        
+        // Điều khiển Nút Copy Zalo: Chỉ hiện khi ở các tab Báo giá
+        let btnCopy = document.getElementById('btnCopyZalo');
+        if (btnCopy) {
+            if (isBaoGia) {
+                btnCopy.classList.remove('d-none'); // Hiện nút
+            } else {
+                btnCopy.classList.add('d-none');    // Ẩn nút
+            }
+        }
+        if (isKichBan) {
+            autoBalanceScenario();
+            document.getElementById('missingFromTabAlert').classList.add('d-none');
+        } else {
+            resetAllFilters(false);
+            loadDataFromSheet(false);
+        }
+    }
+
+    function showLoading(show, text = "Đang nạp dữ liệu từ Google Sheets...") {
+        document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
+        document.getElementById('spinnerText').innerText = text;
+    }
+
+function autoBalanceScenario() {
+    let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
+    let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
+    
+    let targetMarginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
+    let targetMarginMax = parseFloat(document.getElementById('scTargetMarginMax').value) || 0;
+
+    let q1 = parseFloat(document.getElementById('scQty1').value) || 0;
+    let q2 = parseFloat(document.getElementById('scQty2').value) || 0;
+    let q3 = parseFloat(document.getElementById('scQty3').value) || 0;
+    let q4 = targetQty - q1 - q2 - q3;
+    if (q4 < 0) q4 = 0;
+    document.getElementById('scQty4').value = q4;
+
+    let priceMin = invoicePrice * (1 + targetMarginMin / 100);
+    let priceMax = invoicePrice * (1 + targetMarginMax / 100);
+
+    // Phân bổ mức giá từ Max (cho khách lẻ) xuống Min (cho đại lý lớn) trong khung %
+    let p1 = priceMax;
+    let p2 = priceMin + (priceMax - priceMin) * 0.7;
+    let p3 = priceMin + (priceMax - priceMin) * 0.35;
+    let p4 = priceMin + (priceMax - priceMin) * 0.05;
+
+    document.getElementById('scPrice1').value = Math.round(p1 / 1000) * 1000;
+    document.getElementById('scPrice2').value = Math.round(p2 / 1000) * 1000;
+    document.getElementById('scPrice3').value = Math.round(p3 / 1000) * 1000;
+    document.getElementById('scPrice4').value = Math.round(p4 / 1000) * 1000;
+
+    calculateScenario();
+}
+
+function calculateScenario() {
+    let productName = document.getElementById('scProductName').value.trim();
+    let invoicePrice = parseFloat(document.getElementById('scInvoicePrice').value) || 0;
+    let targetQty = parseFloat(document.getElementById('scTargetQty').value) || 0;
+
+    let marginMin = parseFloat(document.getElementById('scTargetMarginMin').value) || 0;
+    let marginMax = parseFloat(document.getElementById('scTargetMarginMax').value) || 0;
+
+    let qty1 = parseFloat(document.getElementById('scQty1').value) || 0;
+    let price1 = parseFloat(document.getElementById('scPrice1').value) || 0;
+    
+    let qty2 = parseFloat(document.getElementById('scQty2').value) || 0;
+    let price2 = parseFloat(document.getElementById('scPrice2').value) || 0;
+
+    let qty3 = parseFloat(document.getElementById('scQty3').value) || 0;
+    let price3 = parseFloat(document.getElementById('scPrice3').value) || 0;
+
+    let qty4 = parseFloat(document.getElementById('scQty4').value) || 0;
+    let price4 = parseFloat(document.getElementById('scPrice4').value) || 0;
+
+    let totalCost = targetQty * invoicePrice;
+    
+    let marginUnit1 = price1 > 0 ? (price1 - invoicePrice) : 0;
+    let rev1 = qty1 * price1;
+    let prof1 = qty1 * marginUnit1;
+
+    let marginUnit2 = price2 > 0 ? (price2 - invoicePrice) : 0;
+    let rev2 = qty2 * price2;
+    let prof2 = qty2 * marginUnit2;
+
+    let marginUnit3 = price3 > 0 ? (price3 - invoicePrice) : 0;
+    let rev3 = qty3 * price3;
+    let prof3 = qty3 * marginUnit3;
+
+    let marginUnit4 = price4 > 0 ? (price4 - invoicePrice) : 0;
+    let rev4 = qty4 * price4;
+    let prof4 = qty4 * marginUnit4;
+
+    let totalQtySum = qty1 + qty2 + qty3 + qty4;
+    let totalRevSum = rev1 + rev2 + rev3 + rev4;
+    let totalProfSum = prof1 + prof2 + prof3 + prof4;
+    let achievedMargin = totalCost > 0 ? (totalProfSum / totalCost) * 100 : 0;
+    let avgPrice = totalQtySum > 0 ? totalRevSum / totalQtySum : 0;
+
+    document.getElementById('scMarginUnit1').innerText = marginUnit1.toLocaleString('vi-VN');
+    document.getElementById('scRev1').innerText = rev1.toLocaleString('vi-VN');
+    document.getElementById('scProf1').innerText = prof1.toLocaleString('vi-VN');
+
+    document.getElementById('scMarginUnit2').innerText = marginUnit2.toLocaleString('vi-VN');
+    document.getElementById('scRev2').innerText = rev2.toLocaleString('vi-VN');
+    document.getElementById('scProf2').innerText = prof2.toLocaleString('vi-VN');
+
+    document.getElementById('scMarginUnit3').innerText = marginUnit3.toLocaleString('vi-VN');
+    document.getElementById('scRev3').innerText = rev3.toLocaleString('vi-VN');
+    document.getElementById('scProf3').innerText = prof3.toLocaleString('vi-VN');
+
+    document.getElementById('scMarginUnit4').innerText = marginUnit4.toLocaleString('vi-VN');
+    document.getElementById('scRev4').innerText = rev4.toLocaleString('vi-VN');
+    document.getElementById('scProf4').innerText = prof4.toLocaleString('vi-VN');
+
+    document.getElementById('scTotalCost').innerText = totalCost.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('scTotalRevenue').innerText = totalRevSum.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('scTotalProfit').innerText = totalProfSum.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('scAchievedMargin').innerText = `${achievedMargin.toFixed(2)}% (Mục tiêu: ${marginMin}% - ${marginMax}%)`;
+
+    document.getElementById('scTotalQtySum').innerText = totalQtySum;
+    document.getElementById('scAvgPrice').innerText = avgPrice.toLocaleString('vi-VN');
+    document.getElementById('scTotalRevSum').innerText = totalRevSum.toLocaleString('vi-VN');
+    document.getElementById('scTotalProfSum').innerText = totalProfSum.toLocaleString('vi-VN');
+
+    document.getElementById('rowCountBadge').innerText = `Kịch bản: ${totalQtySum} chiếc | Biên Lãi: ${achievedMargin.toFixed(2)}%`;
+
+    let ctx = document.getElementById('scenarioChart').getContext('2d');
+    if (scenarioChartInstance) scenarioChartInstance.destroy();
+    scenarioChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Khách Lẻ (<5c)', 'Đại Lý Nhỏ (5-20c)', 'Đại Lý Vừa (20-50c)', 'Đại Lý Lớn (>50c)'],
+            datasets: [{
+                data: [qty1, qty2, qty3, qty4],
+                backgroundColor: ['#ffc107', '#fd7e14', '#0d6efd', '#198754']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+            }
+        }
+    });
+
+    updateScenarioZaloText(productName, totalQtySum, totalRevSum, totalProfSum, achievedMargin, qty1, price1, qty2, price2, qty3, price3, qty4, price4, marginMin, marginMax);
+}
+
+function updateScenarioZaloText(productName, totalQty, totalRev, totalProf, achievedMargin, q1, p1, q2, p2, q3, p3, q4, p4, marginMin, marginMax) {
+    let text = `🔥 [KỊCH BẢN BÁN HÀNG PHÂN BỔ DỰ ÁN SL LỚN] 🔥\n`;
+    text += `📌 Sản phẩm: ${productName}\n`;
+    text += `🎯 Tổng sản lượng target: ${totalQty} chiếc/tháng\n`;
+    text += `💰 Doanh thu dự kiến: ${totalRev.toLocaleString('vi-VN')} VNĐ\n`;
+    text += `📈 Biên lợi nhuận khung: ${marginMin}% -> ${marginMax}% (Thực tế đạt: ${achievedMargin.toFixed(2)}%)\n\n`;
+    text += `CƠ CẤU KHUNG GIÁ BÁN THƯƠNG LƯỢNG:\n`;
+    text += `1️⃣ Khách lẻ (< 5c): ${p1.toLocaleString('vi-VN')} đ (Bán ${q1}c)\n`;
+    text += `2️⃣ Đại lý nhỏ (5-20c): ${p2.toLocaleString('vi-VN')} đ (Bán ${q2}c)\n`;
+    text += `3️⃣ Đại lý vừa (20-50c): ${p3.toLocaleString('vi-VN')} đ (Bán ${q3}c)\n`;
+    text += `4️⃣ Đại lý lớn (> 50c): ${p4.toLocaleString('vi-VN')} đ (Bán ${q4}c)\n\n`;
+    text += `👉 Khung giá thương lượng áp dụng theo dải sản lượng. Anh/chị Sales chủ động chốt đơn trong biên độ!`;
+    
+    document.getElementById('scenarioZaloText').value = text;
+}
+
+function exportScenarioExcel() {
+    let productName = document.getElementById('scProductName').value;
+    let totalCost = document.getElementById('scTotalCost').innerText;
+    let totalRev = document.getElementById('scTotalRevenue').innerText;
+    let totalProf = document.getElementById('scTotalProfit').innerText;
+    let margin = document.getElementById('scAchievedMargin').innerText;
+
+    let data = [
+        ["KỊCH BẢN PHÂN BỔ BÁN HÀNG TỔNG HỢP"],
+        ["Sản phẩm", productName],
+        ["Tổng vốn nhập", totalCost],
+        ["Tổng doanh thu dự kiến", totalRev],
+        ["Tổng lợi nhuận gộp", totalProf],
+        ["Biên lợi nhuận gộp", margin],
+        [],
+        ["Nhóm Khách Hàng", "SL Bán (Cái)", "Giá Bán (VNĐ)", "Lãi / Chiếc (VNĐ)", "Tổng Doanh Thu (VNĐ)", "Tổng Lãi Gộp (VNĐ)"],
+        ["Khách lẻ (<5c)", document.getElementById('scQty1').value, document.getElementById('scPrice1').value, document.getElementById('scMarginUnit1').innerText, document.getElementById('scRev1').innerText, document.getElementById('scProf1').innerText],
+        ["Đại lý nhỏ (5-20c)", document.getElementById('scQty2').value, document.getElementById('scPrice2').value, document.getElementById('scMarginUnit2').innerText, document.getElementById('scRev2').innerText, document.getElementById('scProf2').innerText],
+        ["Đại lý vừa (20-50c)", document.getElementById('scQty3').value, document.getElementById('scPrice3').value, document.getElementById('scMarginUnit3').innerText, document.getElementById('scRev3').innerText, document.getElementById('scProf3').innerText],
+        ["Đại lý lớn (>50c)", document.getElementById('scQty4').value, document.getElementById('scPrice4').value, document.getElementById('scMarginUnit4').innerText, document.getElementById('scRev4').innerText, document.getElementById('scProf4').innerText],
+        ["TỔNG CỘNG", document.getElementById('scTotalQtySum').innerText, document.getElementById('scAvgPrice').innerText, "-", document.getElementById('scTotalRevSum').innerText, document.getElementById('scTotalProfSum').innerText]
+    ];
+
+    let ws = XLSX.utils.aoa_to_sheet(data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Kich_Ban_Ban_Hang");
+    XLSX.writeFile(wb, "Kich_Ban_Phan_Bo_Ban_Hang.xlsx");
+}
+
+function loadDataFromSheet(bypassCache = true) {
+        let timeStamp = new Date().getTime();
+
+        // 1. Load ngầm dữ liệu Tồn Kho (nếu chưa có) để đối chiếu mã
+        if (rawTonKhoItems.length === 0 && currentMode !== 'TON_KHO') {
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=TON_KHO&nocache=${bypassCache}&t=${timeStamp}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 1) {
+                        rawTonKhoItems = data.slice(1).map(r => ({
+                            type: String(r[0] || '').trim(),
+                            code: String(r[1] || '').trim(),
+                            name: String(r[2] || '').trim()
+                        })).filter(x => x.code !== '');
+                    }
+                })
+                .catch(err => console.error("Lỗi nạp bộ nhớ Tồn Kho:", err));
+        }
+
+        // 2. KIỂM TRA CACHE TRƯỚC KHI GỌI API
+        if (!bypassCache && tabDataCache[currentMode]) {
+            if (currentMode === 'THONG_KE_QUY') {
+                globalActualData = tabDataCache[currentMode].actuals || [];
+                globalTargetData = tabDataCache[currentMode].targets || [];
+                renderThongKeQuyTab();
+            } else if (currentMode === 'BAO_CAO_LOI_NHUAN') {
+                renderProfitReportTab(tabDataCache[currentMode]);
+            } else if (currentMode === 'KICH_BAN_BAN_HANG') {
+                autoBalanceScenario();
+            } else {
+                buildTabulatorTable(tabDataCache[currentMode]);
+            }
+            return; // Nếu có cache thì dừng luôn, không fetch server nữa
+        }
+
+        // 3. NẾU CHƯA CÓ CACHE HOẶC BẤM NÚT "TẢI LẠI", GỌI LÊN GOOGLE SHEETS
+        if (currentMode === 'THONG_KE_QUY') {
+            showLoading(true, "Đang tải dữ liệu Thống kê Quý...");
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=THONG_KE_QUY&nocache=${bypassCache}&t=${timeStamp}`)
+                .then(res => res.json())
+                .then(data => {
+                    showLoading(false);
+                    tabDataCache[currentMode] = data; // Lưu vào Cache
+                    globalActualData = data.actuals || [];
+                    globalTargetData = data.targets || [];
+                    renderThongKeQuyTab();
+                })
+                .catch(err => { showLoading(false); alert("Lỗi tải dữ liệu Thống kê quý!"); });
+        } else if (currentMode === 'BAO_CAO_LOI_NHUAN') {
+            showLoading(true, "Đang tính toán Báo cáo Lợi nhuận FIFO từ các lô nhập kho...");
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAO_CAO_LOI_NHUAN&nocache=${bypassCache}&t=${timeStamp}`)
+                .then(res => res.json())
+                .then(data => {
+                    showLoading(false);
+                    tabDataCache[currentMode] = data; // Lưu vào Cache
+                    renderProfitReportTab(data);
+                })
+                .catch(err => { showLoading(false); alert("Lỗi tải Báo cáo lợi nhuận!"); });
+        } else if (currentMode === 'KICH_BAN_BAN_HANG') {
+            autoBalanceScenario();
+        } else {
+            showLoading(true, `Đang tải dữ liệu Sheet ${currentMode}...`);
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(currentMode)}&nocache=${bypassCache}&t=${timeStamp}`)
+                .then(res => res.json())
+                .then(data => {
+                    showLoading(false);
+                    if (data && data.status === "error") {
+                        alert("Lỗi từ server: " + data.message);
+                        return;
+                    }
+
+                    if (currentMode === 'TON_KHO' && Array.isArray(data) && data.length > 1) {
+                        rawTonKhoItems = data.slice(1).map(r => ({
+                            type: String(r[0] || '').trim(),
+                            code: String(r[1] || '').trim(),
+                            name: String(r[2] || '').trim()
+                        })).filter(x => x.code !== '');
+                    }
+
+                    tabDataCache[currentMode] = data; // LƯU VÀO CACHE BỘ NHỚ
+                    buildTabulatorTable(data);
+                })
+                .catch(err => { showLoading(false); alert("Lỗi kết nối đến Google Sheets!"); });
+        }
+    }
+
+    function checkMissingTonKhoItems(tabRows) {
+        let alertEl = document.getElementById('missingFromTabAlert');
+        let textEl = document.getElementById('missingAlertText');
+
+        if (currentMode === 'WEBSITE') {
+            let activeCols = getActiveColumns();
+            let codeColIdx = activeCols.findIndex(c => {
+                let l = c.label.trim().toUpperCase();
+                return l === 'MÃ SẢN PHẨM' || l === 'MÃ HÀNG HÓA' || l === 'SKU';
+            });
+
+            if (codeColIdx === -1) codeColIdx = 3; 
+
+            let currentWebsiteCodesSet = new Set(
+                tabRows.map(r => String(r[codeColIdx] || '').trim().toUpperCase()).filter(c => c !== '')
+            );
+
+            let missingTonKhoOnWebsite = [];
+
+            rawTonKhoItems.forEach(item => {
+                let itemTypeUpper = item.type.toUpperCase();
+                let itemCodeUpper = item.code.toUpperCase();
+                let itemNameUpper = item.name.toUpperCase();
+
+                let isAio = itemTypeUpper.includes('AIO') || itemTypeUpper.includes('ALL-IN-ONE') || itemTypeUpper.includes('ALL IN ONE') ||
+                            itemCodeUpper.includes('AIO') || itemNameUpper.includes('AIO');
+                let isLaptop = itemTypeUpper.includes('MÁY TÍNH XÁCH TAY') || itemTypeUpper.includes('LAPTOP') || itemTypeUpper.includes('NOTEBOOK');
+                let isDesktop = (itemTypeUpper.includes('MÁY TÍNH ĐỂ BÀN') || itemTypeUpper.includes('DESKTOP') || itemTypeUpper.includes('PC')) && !isAio;
+                let isLcd = itemTypeUpper.includes('MÀN HÌNH MÁY TÍNH') || itemTypeUpper.includes('MÀN HÌNH') || itemTypeUpper.includes('MONITOR') || itemTypeUpper.includes('LCD');
+                let isPrinterScan = itemTypeUpper.includes('MÁY IN') || itemTypeUpper.includes('MÁY SCAN') || itemTypeUpper.includes('SCAN') || itemTypeUpper.includes('PRINTER');
+
+                let isDevice = isLaptop || isDesktop || isLcd || isAio || isPrinterScan;
+
+                if (isDevice && itemCodeUpper && !currentWebsiteCodesSet.has(itemCodeUpper)) {
+                    missingTonKhoOnWebsite.push(item.code);
+                }
+            });
+
+            if (missingTonKhoOnWebsite.length > 0) {
+                alertEl.classList.remove('d-none');
+                textEl.innerHTML = `Phát hiện <b>${missingTonKhoOnWebsite.length}</b> mã thiết bị trong <b>TỒN KHO</b> chưa được đăng lên <b>WEBSITE</b>: <strong class="text-danger">${missingTonKhoOnWebsite.join(', ')}</strong>`;
+            } else {
+                alertEl.classList.add('d-none');
+            }
+            return;
+        }
+
+        if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
+            alertEl.classList.add('d-none');
+            return;
+        }
+
+        let activeCols = getActiveColumns();
+        let codeColIdx = activeCols.findIndex(c => {
+            let l = c.label.trim().toUpperCase();
+            return l === 'MÃ HÀNG HÓA' || l === 'MÃ KTB';
+        });
+
+        if (codeColIdx === -1) {
+            alertEl.classList.add('d-none');
+            return;
+        }
+
+        let currentTabCodesSet = new Set(
+            tabRows.map(r => String(r[codeColIdx] || '').trim().toUpperCase()).filter(c => c !== '')
+        );
+
+        let missingCodes = [];
+
+        rawTonKhoItems.forEach(item => {
+            let itemTypeUpper = item.type.toUpperCase();
+            let itemCodeUpper = item.code.toUpperCase();
+
+            let hasAioKeywords = itemTypeUpper.includes('AIO') || itemTypeUpper.includes('ALL-IN-ONE') || itemTypeUpper.includes('ALL IN ONE') ||
+                                itemCodeUpper.includes('AIO');
+
+            let isTargetType = false;
+
+            if (currentMode === 'LAPTOP') {
+                isTargetType = itemTypeUpper.includes('MÁY TÍNH XÁCH TAY') || itemTypeUpper.includes('LAPTOP');
+            } else if (currentMode === 'PC') {
+                let isDesktop = itemTypeUpper.includes('MÁY TÍNH ĐỂ BÀN') || itemTypeUpper.includes('DESKTOP') || itemTypeUpper.includes('PC');
+                isTargetType = isDesktop && !hasAioKeywords;
+            } else if (currentMode === 'LCD') {
+                isTargetType = itemTypeUpper.includes('MÀN HÌNH MÁY TÍNH') || itemTypeUpper.includes('MÀN HÌNH') || itemTypeUpper.includes('MONITOR') || itemTypeUpper.includes('LCD');
+            } else if (currentMode === 'AIO') {
+                isTargetType = hasAioKeywords;
+            } else if (currentMode === 'SCAN_MAY_IN') {
+                isTargetType = itemTypeUpper.includes('MÁY IN') || itemTypeUpper.includes('MÁY SCAN') || itemTypeUpper.includes('SCAN') || itemTypeUpper.includes('PRINTER');
+            }
+
+            if (isTargetType && !currentTabCodesSet.has(itemCodeUpper)) {
+                missingCodes.push(item.code);
+            }
+        });
+
+        if (missingCodes.length > 0) {
+            alertEl.classList.remove('d-none');
+            textEl.innerHTML = `Có <b>${missingCodes.length}</b> mã tồn kho thuộc nhóm này chưa có trong Tab <b>${currentMode}</b>: <strong class="text-danger">${missingCodes.join(', ')}</strong>`;
+        } else {
+            alertEl.classList.add('d-none');
+        }
+    }
+
+    function renderProfitReportTab(data) {
+        document.getElementById('missingFromTabAlert').classList.add('d-none');
+        
+        let listNhap = (data && data.dataNhap) ? data.dataNhap : [];
+        let listBan = (data && data.dataBan) ? data.dataBan : [];
+
+        let badgeEl = document.getElementById('rowCountBadge');
+        if (badgeEl) {
+            badgeEl.innerText = `NHẬP KHO: ${listNhap.length} dòng | BÁN HÀNG: ${listBan.length} đơn`;
+        }
+
+        // ==========================================
+        // 1. BẢNG 1: NHẬP HÀNG (TABULATOR)
+        // ==========================================
+        if (tableProfitImport) tableProfitImport.destroy();
+
+        tableProfitImport = new Tabulator("#table-profit-import", {
+            data: listNhap,
+            layout: "fitColumns",
+            height: "300px",
+            pagination: "local",
+            paginationSize: 10,
+            paginationSizeSelector: [10, 20, 50, 100],
+            columns: [
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
+                { title: "Mã Hàng Hóa", field: "name", width: 180 },
+                { title: "Tên Hàng Hóa", field: "code", width: 500 },
+                { title: "Ngày Nhập", field: "date", hozAlign: "center", width: 120 },
+                { title: "SL Nhập", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Giá Cost / Đơn Giá Nhập", field: "cost", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị Nhập (VNĐ)", field: "totalCost", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
+            ],
+            rowClick: function(e, row) {
+                let rowData = row.getData();
+                if (rowData && rowData.code) {
+                    let codeInput = document.getElementById('filterDetailCodeInput');
+                    if (codeInput) {
+                        codeInput.value = rowData.code;
+                        filterProfitDetails();
+                    }
+                }
+            }
+        });
+
+        // ==========================================
+        // 2. BẢNG 2: BÁN HÀNG (TABULATOR)
+        // ==========================================
+        if (tableProfitSales) tableProfitSales.destroy();
+
+        tableProfitSales = new Tabulator("#table-profit-sales", {
+            data: listBan,
+            layout: "fitColumns",
+            height: "380px",
+            pagination: "local",
+            paginationSize: 20,
+            paginationSizeSelector: [10, 20, 50, 100],
+            columns: [
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
+                { title: "Mã Hàng Hóa", field: "code", width: 180 },  // Đã chuẩn field code
+                { title: "Tên Sản Phẩm", field: "name", width: 500 },  // Đã chuẩn field name
+                { title: "Ngày Bán", field: "date", hozAlign: "center", width: 120 },
+                { title: "Khách Hàng", field: "customer", width: 250 },
+                { title: "Số Đơn Hàng", field: "orderNo", width: 130 },
+                { title: "SL Bán", field: "qty", hozAlign: "right", width: 100, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 170, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Đơn Giá Nhập (VNĐ)", field: "importUnitPrice", hozAlign: "right", width: 150, formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+            ]
+        });
+    }
+
+// --- HÀM LỌC CHO BẢNG NHẬP HÀNG ---
+    let importFilterTimeout = null;
+    function filterImportTable() {
+        if (!tableProfitImport) return;
+        if (importFilterTimeout) clearTimeout(importFilterTimeout);
+
+        importFilterTimeout = setTimeout(() => {
+            let codeKw = document.getElementById('filterImportCodeInput').value.trim().toLowerCase();
+            let dateFromVal = document.getElementById('filterImportDateFrom').value;
+            let dateToVal = document.getElementById('filterImportDateTo').value;
+
+            let dateFrom = dateFromVal ? new Date(dateFromVal) : null;
+            let dateTo = dateToVal ? new Date(dateToVal) : null;
+            if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+            tableProfitImport.setFilter(function(data) {
+                let matchCode = !codeKw || String(data.code || '').toLowerCase().includes(codeKw) || String(data.name || '').toLowerCase().includes(codeKw);
+                let matchDate = true;
+                if ((dateFrom || dateTo) && data.date) {
+                    let cellDate = new Date(data.date);
+                    if (!isNaN(cellDate.getTime())) {
+                        if (dateFrom && cellDate < dateFrom) matchDate = false;
+                        if (dateTo && cellDate > dateTo) matchDate = false;
+                    }
+                }
+                return matchCode && matchDate;
+            });
+        }, 300);
+    }
+
+function clearImportFilter() {
+        document.getElementById('filterImportCodeInput').value = '';
+        document.getElementById('filterImportDateFrom').value = '';
+        document.getElementById('filterImportDateTo').value = '';
+        if (tableProfitImport) tableProfitImport.clearFilter();
+    }
+
+    // --- HÀM LỌC CHO BẢNG BÁN HÀNG ---
+    let profitDetailTimeout = null;
+    function filterProfitDetails() {
+        if (!tableProfitSales) return;
+        if (profitDetailTimeout) clearTimeout(profitDetailTimeout);
+
+        profitDetailTimeout = setTimeout(() => {
+            let codeKw = document.getElementById('filterDetailCodeInput').value.trim().toLowerCase();
+            let cusKw = document.getElementById('filterDetailCustomerInput').value.trim().toLowerCase();
+            let dateFromVal = document.getElementById('filterSalesDateFrom').value;
+            let dateToVal = document.getElementById('filterSalesDateTo').value;
+
+            let dateFrom = dateFromVal ? new Date(dateFromVal) : null;
+            let dateTo = dateToVal ? new Date(dateToVal) : null;
+            if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+            tableProfitSales.setFilter(function(data) {
+                let matchCode = !codeKw || String(data.code || '').toLowerCase().includes(codeKw) || String(data.name || '').toLowerCase().includes(codeKw);
+                let matchCus = !cusKw || String(data.customer || '').toLowerCase().includes(cusKw) || String(data.orderNo || '').toLowerCase().includes(cusKw);
+                let matchDate = true;
+                if ((dateFrom || dateTo) && data.date) {
+                    let cellDate = new Date(data.date);
+                    if (!isNaN(cellDate.getTime())) {
+                        if (dateFrom && cellDate < dateFrom) matchDate = false;
+                        if (dateTo && cellDate > dateTo) matchDate = false;
+                    }
+                }
+                return matchCode && matchCus && matchDate;
+            });
+        }, 300);
+    }
+
+function clearProfitDetailFilter() {
+        document.getElementById('filterDetailCodeInput').value = '';
+        document.getElementById('filterDetailCustomerInput').value = '';
+        document.getElementById('filterSalesDateFrom').value = '';
+        document.getElementById('filterSalesDateTo').value = '';
+        if (tableProfitSales) tableProfitSales.clearFilter();
+    }
+
+    function renderThongKeQuyTab() {
+        document.getElementById('missingFromTabAlert').classList.add('d-none');
+        let actualRows = globalActualData.length > 1 ? globalActualData.slice(1) : [];
+        let targetRows = globalTargetData.length > 1 ? globalTargetData.slice(1) : [];
+
+        let totalQty = 0;
+        let totalAmount = 0;
+        let brandQtyMap = {};
+        let typeAmountMap = {};
+
+        let quartersSet = new Set();
+        let brandsSet = new Set();
+        let typesSet = new Set();
+
+        actualRows.forEach(item => {
+            let q = String(item[0] || '').trim();
+            let b = String(item[1] || '').trim();
+            let t = String(item[2] || '').trim();
+            let qty = parseFloat(item[3]) || 0;
+            let amt = parseFloat(item[4]) || 0;
+
+            totalQty += qty;
+            totalAmount += amt;
+
+            if (b) brandQtyMap[b] = (brandQtyMap[b] || 0) + qty;
+            if (t) typeAmountMap[t] = (typeAmountMap[t] || 0) + amt;
+
+            if (q) quartersSet.add(q);
+            if (b) brandsSet.add(b);
+            if (t) typesSet.add(t);
+        });
+
+        targetRows.forEach(item => {
+            if (item[0]) quartersSet.add(String(item[0]).trim());
+            if (item[1]) brandsSet.add(String(item[1]).trim());
+            if (item[2]) typesSet.add(String(item[2]).trim());
+        });
+
+        document.getElementById('statTotalQty').innerText = totalQty.toLocaleString('vi-VN');
+        document.getElementById('statTotalAmount').innerText = totalAmount.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('statTotalRecords').innerText = actualRows.length;
+        document.getElementById('rowCountBadge').innerText = `Hiển thị: ${actualRows.length} mục`;
+
+        resetFilterTable1(false);
+        resetFilterTable2(false);
+
+        populateSelectOptions('filter1Quarter', 'filter2Quarter', quartersSet);
+        populateSelectOptions('filter1Brand', 'filter2Brand', brandsSet);
+        populateSelectOptions('filter1Type', 'filter2Type', typesSet);
+
+        let ctxBar = document.getElementById('barChartBrandQty').getContext('2d');
+        if (barChartInstance) barChartInstance.destroy();
+        barChartInstance = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(brandQtyMap),
+                datasets: [{ label: 'Tổng SL Nhập', data: Object.values(brandQtyMap), backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Thống Kê Số Lượng Nhập Theo Hãng' }, legend: { display: false } } }
+        });
+
+        let ctxDoughnut = document.getElementById('doughnutChartType').getContext('2d');
+        if (doughnutChartInstance) doughnutChartInstance.destroy();
+        doughnutChartInstance = new Chart(ctxDoughnut, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(typeAmountMap),
+                datasets: [{ data: Object.values(typeAmountMap), backgroundColor: ['#0dcaf0', '#6f42c1', '#fd7e14', '#20c997'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Tỷ Trọng Giá Trị Nhập Theo Loại' }, legend: { position: 'bottom' } } }
+        });
+
+        let detailTableData = actualRows.map((r, idx) => ({ 
+            id: idx + 1, 
+            col_0: String(r[0] || '').trim(), 
+            col_1: String(r[1] || '').trim(), 
+            col_2: String(r[2] || '').trim(), 
+            col_3: parseFloat(r[3]) || 0, 
+            col_4: parseFloat(r[4]) || 0 
+        }));
+
+        if (tableQuarterDetail) tableQuarterDetail.destroy();
+        tableQuarterDetail = new Tabulator("#table-quarter-detail", {
+            data: detailTableData,
+            layout: "fitColumns",
+            height: "250px",
+            pagination: "local",
+            paginationSize: 8,
+            columns: [
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
+                { title: "Quý / Thời gian", field: "col_0" },
+                { title: "Hãng (Brand)", field: "col_1" },
+                { title: "Loại Sản Phẩm", field: "col_2" },
+                { title: "Tổng Số Lượng", field: "col_3", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Tổng Giá Trị (VNĐ)", field: "col_4", hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
+            ]
+        });
+
+        let summaryKeys = new Set();
+        actualRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
+        targetRows.forEach(r => summaryKeys.add(`${String(r[0]).trim()}_${String(r[1]).trim()}_${String(r[2]).trim()}`));
+
+        let summaryTableData = [];
+        let idxCounter = 1;
+
+        summaryKeys.forEach(key => {
+            let parts = key.split('_');
+            let q = parts[0], b = parts[1], t = parts[2];
+
+            let actualMatch = actualRows.find(r => String(r[0]).trim() === q && String(r[1]).trim().toLowerCase() === b.toLowerCase() && String(r[2]).trim().toLowerCase() === t.toLowerCase());
+            let actualAmt = actualMatch ? parseFloat(actualMatch[4]) || 0 : 0;
+
+            let targetMatch = targetRows.find(r => String(r[0]).trim() === q && String(r[1]).trim().toLowerCase() === b.toLowerCase() && String(r[2]).trim().toLowerCase() === t.toLowerCase());
+            let targetAmt = targetMatch ? parseFloat(targetMatch[4]) || 0 : 0;
+
+            let pctAct = targetAmt > 0 ? (actualAmt / targetAmt) * 100 : 0;
+            let remAmt = targetAmt - actualAmt;
+            let pctRem = targetAmt > 0 ? (remAmt / targetAmt) * 100 : 0;
+
+            summaryTableData.push({
+                id: idxCounter++,
+                quarter: q,
+                brand: b,
+                productType: t,
+                targetAmount: targetAmt > 0 ? targetAmt : '',
+                actualAmount: actualAmt,
+                pctActual: pctAct,
+                remainingAmount: remAmt,
+                pctRemaining: pctRem
+            });
+        });
+
+        if (tableBrandSummary) tableBrandSummary.destroy();
+        tableBrandSummary = new Tabulator("#table-brand-summary", {
+            data: summaryTableData,
+            layout: "fitColumns",
+            height: "420px",
+            pagination: "local",
+            paginationSize: 8,
+            cellEdited: function(cell) {
+                if (cell.getField() === "targetAmount") {
+                    let row = cell.getRow();
+                    let d = row.getData();
+                    let target = parseFloat(String(d.targetAmount).replace(/[,.]/g, '')) || 0;
+                    let actual = parseFloat(d.actualAmount) || 0;
+
+                    if (target > 0) {
+                        d.pctActual = (actual / target) * 100;
+                        d.remainingAmount = target - actual;
+                        d.pctRemaining = (d.remainingAmount / target) * 100;
+                    } else {
+                        d.pctActual = 0;
+                        d.remainingAmount = 0 - actual;
+                        d.pctRemaining = 0;
+                    }
+                    row.update(d);
+
+                    saveTargetToGoogleSheet(d.quarter, d.brand, d.productType, target);
+                }
+            },
+            columns: [
+                { formatter: "rownum", hozAlign: "center", width: 50, title: "STT", bottomCalc: function(){ return "TỔNG"; } },
+                { title: "Quý / Brand", field: "quarter", width: 210, formatter: function(cell){
+                    let data = cell.getRow().getData();
+                    return `<b>${data.quarter}</b><br><small class="text-primary">${data.brand} - ${data.productType}</small>`;
+                }},
+                { 
+                    title: "Mục tiêu doanh số", 
+                    field: "targetAmount", 
+                    hozAlign: "right", 
+                    editor: "number",
+                    cssClass: "bg-light text-primary fw-bold",
+                    bottomCalc: customSumCalc,
+                    bottomCalcFormatter: function(cell) {
+                        let val = cell.getValue();
+                        return val ? val.toLocaleString('vi-VN') : "-";
+                    },
+                    formatter: function(cell) {
+                        let val = cell.getValue();
+                        if (!val) return "-";
+                        let num = parseFloat(String(val).replace(/[,.]/g, ''));
+                        return isNaN(num) || num <= 0 ? "-" : num.toLocaleString('vi-VN');
+                    }
+                },
+                { 
+                    title: "Đã thực hiện", 
+                    field: "actualAmount", 
+                    hozAlign: "right", 
+                    bottomCalc: customSumCalc,
+                    bottomCalcFormatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toLocaleString('vi-VN') : "-";
+                    },
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toLocaleString('vi-VN') : "-";
+                    }
+                },
+                { 
+                    title: "% Đã thực hiện", 
+                    field: "pctActual", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v > 0 ? v.toFixed(2) + "%" : "-";
+                    }
+                },
+                { 
+                    title: "Còn thực hiện", 
+                    field: "remainingAmount", 
+                    hozAlign: "right", 
+                    bottomCalc: customSumCalc,
+                    bottomCalcFormatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v ? v.toLocaleString('vi-VN') : "-";
+                    },
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v === 0 && cell.getRow().getData().targetAmount === 0 ? "-" : v.toLocaleString('vi-VN');
+                    }
+                },
+                { 
+                    title: "% Còn thực hiện", 
+                    field: "pctRemaining", 
+                    hozAlign: "right", 
+                    formatter: function(cell) {
+                        let v = parseFloat(cell.getValue()) || 0;
+                        return v === 0 && cell.getRow().getData().targetAmount === 0 ? "-" : v.toFixed(2) + "%";
+                    }
+                }
+            ]
+        });
+
+        resetFilterTable1(true);
+        resetFilterTable2(true);
+    }
+
+    function saveTargetToGoogleSheet(quarter, brand, productType, targetAmount) {
+        showLoading(true, "Đang lưu mục tiêu doanh số...");
+        
+        // CHÈN DÒNG NÀY: Xóa bộ đệm của tab hiện tại
+        delete tabDataCache[currentMode];
+        
+        var payloadData = {
+            action: "updateTarget",
+            quarter: quarter,
+            brand: brand,
+            productType: productType,
+            targetAmount: targetAmount
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+        })
+        .then(res => res.json())
+        .then(resData => {
+            showLoading(false);
+            if (resData.status !== 'success') alert("Lỗi khi lưu mục tiêu: " + (resData.message || "Không thể cập nhật"));
+        })
+        .catch(err => {
+            showLoading(false);
+            alert("Lỗi kết nối khi lưu dữ liệu mục tiêu!");
+        });
+    }
+
+    function populateSelectOptions(selectId1, selectId2, setValues) {
+        let sel1 = document.getElementById(selectId1);
+        let sel2 = document.getElementById(selectId2);
+        let defaultText1 = sel1.options[0].text;
+        let defaultText2 = sel2.options[0].text;
+
+        sel1.innerHTML = `<option value="">${defaultText1}</option>`;
+        sel2.innerHTML = `<option value="">${defaultText2}</option>`;
+
+        let sortedArray = Array.from(setValues).filter(v => v !== null && v !== undefined && String(v).trim() !== '').sort();
+
+        sortedArray.forEach(val => {
+            let opt1 = document.createElement('option');
+            opt1.value = val;
+            opt1.text = val;
+            sel1.appendChild(opt1);
+
+            let opt2 = document.createElement('option');
+            opt2.value = val;
+            opt2.text = val;
+            sel2.appendChild(opt2);
+        });
+
+        sel1.value = "";
+        sel2.value = "";
+    }
+
+    function applyMultiFilterTable1() {
+        if (!tableQuarterDetail) return;
+        let qVal = document.getElementById('filter1Quarter').value.trim();
+        let bVal = document.getElementById('filter1Brand').value.trim();
+        let tVal = document.getElementById('filter1Type').value.trim();
+
+        if (!qVal && !bVal && !tVal) {
+            tableQuarterDetail.clearFilter();
+            return;
+        }
+
+        tableQuarterDetail.setFilter(function(data) {
+            let matchQ = !qVal || String(data.col_0 || '').trim() === qVal;
+            let matchB = !bVal || String(data.col_1 || '').trim().toLowerCase() === bVal.toLowerCase();
+            let matchT = !tVal || String(data.col_2 || '').trim().toLowerCase() === tVal.toLowerCase();
+            return matchQ && matchB && matchT;
+        });
+    }
+
+    function resetFilterTable1(reapply = true) {
+        document.getElementById('filter1Quarter').value = "";
+        document.getElementById('filter1Brand').value = "";
+        document.getElementById('filter1Type').value = "";
+        if (tableQuarterDetail && reapply) tableQuarterDetail.clearFilter();
+    }
+
+    function applyMultiFilterTable2() {
+        if (!tableBrandSummary) return;
+        let qVal = document.getElementById('filter2Quarter').value.trim();
+        let bVal = document.getElementById('filter2Brand').value.trim();
+        let tVal = document.getElementById('filter2Type').value.trim();
+
+        if (!qVal && !bVal && !tVal) {
+            tableBrandSummary.clearFilter();
+            return;
+        }
+
+        tableBrandSummary.setFilter(function(data) {
+            let matchQ = !qVal || String(data.quarter || '').trim() === qVal;
+            let matchB = !bVal || String(data.brand || '').trim().toLowerCase() === bVal.toLowerCase();
+            let matchT = !tVal || String(data.productType || '').trim().toLowerCase() === tVal.toLowerCase();
+            return matchQ && matchB && matchT;
+        });
+    }
+
+    function resetFilterTable2(reapply = true) {
+        document.getElementById('filter2Quarter').value = "";
+        document.getElementById('filter2Brand').value = "";
+        document.getElementById('filter2Type').value = "";
+        if (tableBrandSummary && reapply) tableBrandSummary.clearFilter();
+    }
+
+    function buildTabulatorTable(rawData) {
+        if (!rawData || rawData.length === 0) {
+            if (table) table.clearData();
+            document.getElementById('missingFromTabAlert').classList.add('d-none');
+            return;
+        }
+
+        let activeCols = getActiveColumns();
+        let columnsConfig = [
+            { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT", bottomCalc: function() { return "TỔNG"; } }
+        ];
+
+        columnsConfig.push({
+            title: "Thao tác",
+            field: "_actionCol",
+            formatter: function(cell) {
+                let rowData = cell.getRow().getData();
+                return rowData._isEditing ? `<button class="btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action"><i class="fa-solid fa-floppy-disk me-1"></i>Lưu</button>` : `<button class="btn btn-sm btn-outline-primary px-3 py-1 rounded-pill btn-edit-action"><i class="fa-solid fa-pen-to-square me-1"></i>Sửa</button>`;
+            },
+            width: 95, hozAlign: "center", headerSort: false, frozen: true,
+            cellClick: function(e, cell) {
+                let row = cell.getRow();
+                let rowData = row.getData();
+                let cellEl = cell.getElement();
+                let btn = cellEl.querySelector('button');
+
+                if (!rowData._isEditing) {
+                    // Chuyển sang chế độ Sửa
+                    rowData._isEditing = true;
+                    btn.className = "btn btn-sm btn-danger fw-bold px-3 py-1 rounded-pill shadow btn-edit-action";
+                    btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-1"></i>Lưu`;
+                    row.update(rowData);
+
+                    let cells = row.getCells();
+                    for (let c of cells) {
+                        let fieldName = c.getColumn().getField();
+                        if (fieldName && fieldName.startsWith('col_')) {
+                            let colIdx = parseInt(fieldName.replace('col_', ''));
+                            let colMeta = activeCols[colIdx];
+                            let lbl = colMeta ? colMeta.label.trim().toUpperCase() : '';
+                            if (lbl.includes('GIÁ BÁN') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP MỚI')) {
+                                c.edit();
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // KHI BẤM LƯU: Xây dựng mảng tọa độ (Targeted Updates) thay vì gửi cả dòng
+                    let updates = [];
+                    
+                    activeCols.forEach((col, i) => {
+                        let colNameUpper = col.label.trim().toUpperCase();
+                        
+                        // Điều kiện giống hệt lúc bạn khóa ô, có chặn thêm chữ CHECK và %
+                        let isEditable = (
+                            colNameUpper.includes('GIÁ BÁN') || 
+                            colNameUpper.includes('GIÁ COST') || 
+                            colNameUpper.includes('COST_KTB') || 
+                            colNameUpper.includes('SELL IN HÃNG') ||
+                            colNameUpper.includes('SELL OUT HÃNG') ||
+                            colNameUpper.includes('CHIẾT KHẤU') ||
+                            colNameUpper.includes('SELL IN NPP') ||
+                            colNameUpper.includes('SELL OUT NPP') ||
+                            colNameUpper.includes('SL SELL OUT HÃNG SUPPORT') ||
+                            colNameUpper.includes('SL TON LUC DO') ||
+                            colNameUpper.includes('TÌNH TRẠNG') ||
+                            colNameUpper.includes('GHI CHÚ') ||
+                            colNameUpper.includes('NGÀY LÊN GIÁ') ||
+                            colNameUpper.includes('TEN CHUONG TRINH')
+                        ) 
+                        && !colNameUpper.includes('CHECK') 
+                        && !colNameUpper.includes('% LOI NHUAN')
+                        && !colNameUpper.includes('% LỢI NHUẬN')
+                        && !colNameUpper.includes('% LỢI NHUẬN GIÁ COST')
+                        && !colNameUpper.includes('CHÊNH LỆCH');
+
+                        if (isEditable) {
+                            let val = rowData["col_" + i] !== undefined ? rowData["col_" + i] : '';
+                            if (col.date && val) {
+                                let d = new Date(val);
+                                if (!isNaN(d.getTime())) {
+                                    let yyyy = d.getFullYear();
+                                    let mm = String(d.getMonth() + 1).padStart(2, '0');
+                                    let dd = String(d.getDate()).padStart(2, '0');
+                                    val = `${yyyy}-${mm}-${dd}`;
+                                }
+                            }
+                            // Thêm vào mảng: Cột thứ mấy (i+1) và Giá trị mới là gì
+                            updates.push({ colIndex: i + 1, value: val });
+                        }
+                    });
+
+                    // Gửi mảng tọa độ updates lên Google Apps Script
+                    saveRowToSheet(rowData.sheetRowIndex, updates);
+                    
+                    rowData._isEditing = false;
+                    row.update(rowData);
+                    row.reformat();
+                }
+            }
+        });
+
+        let idxCodeCol = activeCols.findIndex(c => c.code);
+        let idxDescCol = activeCols.findIndex(c => c.desc);
+        let idxCashCol = activeCols.findIndex(c => c.cashPrice);
+        let idxCreditCol = activeCols.findIndex(c => c.creditPrice);
+        let idxIconCol = activeCols.findIndex(c => c.statusIcon);
+
+        activeCols.forEach((col, index) => {
+            let colNameUpper = col.label.trim().toUpperCase();
+
+            // CHỈ CHO PHÉP CHỈNH SỬA CÁC CỘT GIÁ VÀ CHI PHÍ (GIÁ BÁN, GIÁ COST, COST_KTB)
+            let isPriceOrCostColumn = colNameUpper.includes('GIÁ BÁN') || 
+                                       colNameUpper.includes('GIÁ COST') || 
+                                       colNameUpper.includes('COST_KTB') || 
+                                       colNameUpper.includes('SELL IN HÃNG') ||
+                                       colNameUpper.includes('SELL OUT HÃNG') ||
+                                       colNameUpper.includes('CHIẾT KHẤU') ||
+                                       colNameUpper.includes('SELL IN NPP') ||
+                                       colNameUpper.includes('SELL OUT NPP') ||
+                                       colNameUpper.includes('SL SELL OUT HÃNG SUPPORT') ||
+                                       colNameUpper.includes('SL TON LUC DO') ||
+                                        colNameUpper.includes('TÌNH TRẠNG') ||
+                                        colNameUpper.includes('GHI CHÚ') ||
+                                        colNameUpper.includes('NGÀY LÊN GIÁ') ||
+                                       colNameUpper.includes('TEN CHUONG TRINH');
+
+            let colDef = {
+                title: col.label,
+                field: "col_" + index,
+                width: col.width || undefined, 
+                minWidth: 80, 
+                editor: "input",
+                editable: function(cell) {
+                    let rowData = cell.getRow().getData();
+                    // Phải đang bấm Sửa (_isEditing = true) VÀ đúng là cột giá/chi phí mới cho phép edit
+                    return (rowData._isEditing && isPriceOrCostColumn);
+                },
+                editorParams: { selectContents: true },
+                headerFilter: "input", 
+                headerFilterFunc: function(headerValue, rowValue, rowData, filterParams){
+                    if (!headerValue) return true;
+                    if (rowValue === null || rowValue === undefined) return false;
+                    
+                    // Tách từ khóa theo khoảng trắng (ví: "DELL I3" thành ["dell", "i3"])
+                    let keywords = String(headerValue).toLowerCase().split(' ').filter(k => k.trim() !== '');
+                    let cellStr = String(rowValue).toLowerCase();
+                    
+                    // Kiểm tra xem TẤT CẢ các từ khóa có xuất hiện trong ô hay không
+                    return keywords.every(k => cellStr.includes(k));
+                },
+                headerFilterPlaceholder: "Lọc..."
+            };
+            // LỆNH TÔ MÀU NỀN XANH CHO CỘT ĐƯỢC PHÉP SỬA
+            if (isPriceOrCostColumn) {
+                colDef.cssClass = "highlight-editable";
+            }
+            // Khúc dưới của bạn giữ nguyên
+            if (col.cashPrice) {
+                colDef.hozAlign = "left";
+                colDef.formatter = function(cell) {
+                    let val = cell.getValue();
+                    if (val === null || val === undefined || String(val).trim() === '') return '';
+                    let cleanStr = String(val).replace(/[^\d]/g, '');
+                    let num = parseFloat(cleanStr);
+                    if (isNaN(num)) return val;
+                    return `Giá tiền mặt: ${num.toLocaleString('vi-VN')}`;
+                };
+            }
+            else if (col.creditPrice) {
+                colDef.hozAlign = "left";
+                colDef.formatter = function(cell) {
+                    let val = cell.getValue();
+                    if (val === null || val === undefined || String(val).trim() === '') return '';
+                    let cleanStr = String(val).replace(/[^\d]/g, '');
+                    let num = parseFloat(cleanStr);
+                    if (isNaN(num)) return val;
+                    return `Giá công nợ: ${num.toLocaleString('vi-VN')}`;
+                };
+            }
+            else if (colNameUpper === 'TÌNH TRẠNG') {
+                colDef.hozAlign = "center";
+                colDef.formatter = function(cell) {
+                    let val = String(cell.getValue() || '').trim().toUpperCase();
+                    if (val === 'GIẢM') {
+                        return `<div class="p-1 border text-center bg-light rounded fw-bold text-danger" style="font-size: 0.85rem;"><i class="fa-solid fa-arrow-trend-down me-1"></i>GIẢM</div>`;
+                    } else if (val === 'TĂNG') {
+                        return `<div class="p-1 border text-center bg-light rounded fw-bold text-success" style="font-size: 0.85rem;"><i class="fa-solid fa-arrow-trend-up me-1"></i>TĂNG</div>`;
+                    } else if (val === 'NEW') {
+                        return `<div class="p-1 border text-center bg-light rounded fw-bold text-warning" style="font-size: 0.85rem;"><i class="fa-solid fa-fire me-1"></i>NEW</div>`;
+                    }
+                    return cell.getValue(); // Nếu là chữ khác thì hiển thị bình thường
+                };
+            }
+            else if (col.zaloFormat) {
+                colDef.formatter = function(cell) {
+                    let rowData = cell.getRow().getData();
+
+                    let codeVal = idxCodeCol !== -1 ? String(rowData["col_" + idxCodeCol] || '').trim() : '';
+                    let descVal = idxDescCol !== -1 ? String(rowData["col_" + idxDescCol] || '').trim() : '';
+                    
+                    let rawCash = idxCashCol !== -1 ? String(rowData["col_" + idxCashCol] || '').trim() : '';
+                    let rawCredit = idxCreditCol !== -1 ? String(rowData["col_" + idxCreditCol] || '').trim() : '';
+
+                    // CẢI TIẾN: Tự động quét toàn bộ các cột trong dòng để tìm xem cột nào chứa giá trị GIẢM, TĂNG hoặc NEW
+                    let rawIcon = '';
+                    for (let key in rowData) {
+                        if (key.startsWith('col_')) {
+                            let valStr = String(rowData[key] || '').trim().toUpperCase();
+                            if (valStr === 'GIẢM' || valStr === 'TĂNG' || valStr === 'NEW') {
+                                rawIcon = valStr;
+                                break;
+                            }
+                        }
+                    }
+
+                    let cashNum = parseFloat(rawCash.replace(/[^\d]/g, ''));
+                    let creditNum = parseFloat(rawCredit.replace(/[^\d]/g, ''));
+
+                    let cashStr = !isNaN(cashNum) ? `Giá tiền mặt: ${cashNum.toLocaleString('vi-VN')}` : '';
+                    let creditStr = !isNaN(creditNum) ? `Giá công nợ: ${creditNum.toLocaleString('vi-VN')}` : '';
+
+                    let iconSymbol = '';
+                    if (rawIcon === 'GIẢM') iconSymbol = ' ⬇️';
+                    else if (rawIcon === 'TĂNG') iconSymbol = ' ⬆️';
+                    else if (rawIcon === 'NEW') iconSymbol = ' 💥';
+
+                    if (!codeVal && !descVal && !cashStr && !creditStr) return '';
+
+                    return `<div class="zalo-price-box">
+                        <div class="fw-bold">${codeVal}</div>
+                        <div>${descVal}</div>
+                        ${cashStr ? `<div>${cashStr}</div>` : ''}
+                        ${creditStr ? `<div>${creditStr}${iconSymbol}</div>` : ''}
+                    </div>`;
+                };
+            }
+            else if (col.numeric) {
+                colDef.hozAlign = "right";
+                colDef.formatter = function(cell) {
+                    let val = cell.getValue();
+                    if (val === null || val === undefined || val === '') return '';
+
+                    if (col.percent) {
+                        let cleanVal = String(val).replace('%', '').trim();
+                        let num = parseFloat(cleanVal);
+                        if (isNaN(num)) return val;
+                        return num > 1 ? num.toFixed(2) + '%' : (num * 100).toFixed(2) + '%';
+                    }
+
+                    let cleanValStr = String(val).replace(/[,.]/g, '');
+                    let num = parseFloat(cleanValStr);
+
+                    let isCheckPriceCol = colNameUpper.includes('CHECK GIÁ BÁN') || colNameUpper.includes('CHECK GIÁ') || colNameUpper.includes('GIÁ BÁN');
+                    
+                    if (!isNaN(num) && num < 0 && isCheckPriceCol) {
+                        cell.getElement().classList.add("cell-negative-price");
+                    } else {
+                        cell.getElement().classList.remove("cell-negative-price");
+                    }
+
+                    return isNaN(num) ? val : num.toLocaleString('vi-VN');
+                };
+
+                if (!col.percent) {
+                    colDef.bottomCalc = customSumCalc;
+                    colDef.bottomCalcFormatter = function(cell) {
+                        let val = cell.getValue();
+                        if (val === null || val === undefined || val === 0) return "0";
+                        return val.toLocaleString('vi-VN');
+                    };
+                }
+            } 
+            else if (col.date) {
+                colDef.hozAlign = "center";
+                colDef.formatter = function(cell) {
+                    let val = cell.getValue();
+                    if (!val) return '';
+                    let d = new Date(val);
+
+                    if (colNameUpper.includes('NGÀY LÊN GIÁ')) {
+                        cell.getElement().classList.add("cell-date-green");
+                    }
+
+                    return !isNaN(d.getTime()) ? d.toLocaleDateString('vi-VN') : val;
+                };
+            }
+
+            columnsConfig.push(colDef);
+        });
+
+        let rowsToProcess = [];
+        let startRowOffset = 2;
+
+        if (rawData && rawData.length > 0) {
+            rowsToProcess = rawData.slice(1);
+        }
+
+        checkMissingTonKhoItems(rowsToProcess);
+
+        let tableData = rowsToProcess.map((row, rowIndex) => {
+            let actualSheetRow = startRowOffset + rowIndex;
+            let obj = { sheetRowIndex: actualSheetRow, _isEditing: false }; 
+            activeCols.forEach((col, index) => {
+                obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
+            });
+            return obj;
+        });
+
+        if (table) table.destroy();
+
+        table = new Tabulator("#example-table", {
+            data: tableData,
+            layout: "fitColumns",
+            responsiveLayout: false,
+            height: "100%",
+            columns: columnsConfig,
+            pagination: "local",
+            paginationSize: 50,
+            paginationSizeSelector: [25, 50, 100, 200, 500],
+            movableColumns: true,
+            columnDefaults: { resizable: true},
+            // ĐẶT TOOLTIP Ở ĐÂY (Cấp bảng chính, dùng tham số cell)
+            tooltip: function(cell) {
+                if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
+                    return false;
+                }
+                
+                let rowData = cell.getRow().getData();
+                let activeCols = getActiveColumns();
+                
+                let importPrice = "";
+                let price1 = "";
+                let price2 = "";
+                
+                activeCols.forEach((col, idx) => {
+                    let lbl = col.label.trim().toUpperCase();
+                    let val = rowData["col_" + idx];
+                    if (val !== undefined && val !== null && val !== '') {
+                        if (lbl.includes('GIÁ NHẬP MỚI') || lbl.includes('GIÁ NHẬP CŨ') || lbl.includes('GIÁ COST') || lbl.includes('COST_KTB') || lbl.includes('GIÁ NHẬP')) {
+                            if (!importPrice) importPrice = val;
+                        }
+                        if (lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl.includes('GIÁ BÁN SỈ') || lbl.includes('GIÁ BÁN KTB') || lbl.includes('GIÁ BÁN LẺ')) {
+                            if (!price1) price1 = val;
+                        }
+                        if (lbl.includes('GIÁ BÁN CÔNG NỢ') || lbl.includes('GIÁ BÁN SL') || lbl.includes('GIÁ ĐỀ XUẤT')) {
+                            if (!price2) price2 = val;
+                        }
+                    }
+                });
+                
+                let formatMoney = (v) => {
+                    let num = parseFloat(String(v).replace(/[,.]/g, ''));
+                    return isNaN(num) ? v : num.toLocaleString('vi-VN') + ' đ';
+                };
+                
+                let label1 = (currentMode === 'LCD') ? 'Giá Sỉ:' : 'Tiền Mặt:';
+                let label2 = (currentMode === 'LCD') ? 'Giá SL:' : 'Công Nợ:';
+                
+                return `📦 [${currentMode}] THÔNG TIN GIÁ NHANH\n` +
+                       `• Giá Nhập / Cost: ${importPrice ? formatMoney(importPrice) : 'Chưa có'}\n` +
+                       `• ${label1} ${price1 ? formatMoney(price1) : 'Chưa có'}\n` +
+                       `• ${label2} ${price2 ? formatMoney(price2) : 'Chưa có'}`;
+            }
+        });
+
+            table.on("dataFiltered", function(filters, rows){
+            document.getElementById('rowCountBadge').innerText = `Hiển thị: ${rows.length} / ${tableData.length} dòng`;
+
+            // Dùng setTimeout để ép JS đợi Tabulator render xong mới gán class
+            setTimeout(() => {
+                // Xóa màu ở tất cả các cột trước
+                let allCols = table.getColumns();
+                allCols.forEach(col => {
+                    let elem = col.getElement();
+                    if (elem) elem.classList.remove('is-filtered');
+                });
+
+                // Tìm và tô màu cột đang được lọc
+                filters.forEach(f => {
+                    if (f.field) {
+                        let col = table.getColumn(f.field);
+                        if (col) {
+                            let elem = col.getElement();
+                            if (elem) elem.classList.add('is-filtered');
+                        }
+                    }
+                });
+            }, 50); // Trì hoãn 50ms
+        });
+
+        table.on("tableBuilt", function() {
+            document.getElementById('rowCountBadge').innerText = `Hiển thị: ${tableData.length} / ${tableData.length} dòng`;
+        });
+    }
+
+    let globalSearchTimeout = null; 
+
+    function applyGlobalSearch() {
+        if (!table) return;
+
+        if (globalSearchTimeout) clearTimeout(globalSearchTimeout);
+
+        globalSearchTimeout = setTimeout(() => {
+            let kw = document.getElementById('globalSearchInput').value.toLowerCase();
+            let kwCus = document.getElementById('customerFilterInput').value.toLowerCase();
+            let dateFromVal = document.getElementById('dateFromInput').value;
+            let dateToVal = document.getElementById('dateToInput').value;
+
+            let dateFrom = dateFromVal ? new Date(dateFromVal) : null;
+            let dateTo = dateToVal ? new Date(dateToVal) : null;
+            if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+            let activeCols = getActiveColumns();
+
+            table.setFilter(function(data){
+                let matchGlobal = true, matchCus = true, matchDate = true;
+
+                if (kw) {
+                    // Tách từ khóa bằng khoảng trắng thành mảng các từ
+                    let keywords = kw.split(' ').filter(k => k.trim() !== '');
+                    
+                    // Gộp tất cả dữ liệu của dòng thành một chuỗi duy nhất để tìm kiếm
+                    let rowDataString = Object.values(data).join(' ').toLowerCase();
+                    
+                    // Yêu cầu MỌI từ khóa đều phải xuất hiện trong chuỗi dữ liệu của dòng
+                    matchGlobal = keywords.every(k => rowDataString.includes(k));
+                }
+
+                if (kwCus) {
+                    matchCus = Object.entries(data).some(([key, val]) => {
+                        if (key.startsWith('col_')) {
+                            let idx = parseInt(key.replace('col_', ''));
+                            let col = activeCols[idx];
+                            if (col && (col.customer || col.ncc || col.code)) return String(val).toLowerCase().includes(kwCus);
+                        }
+                        return false;
+                    });
+                }
+
+                if (dateFrom || dateTo) {
+                    matchDate = Object.entries(data).some(([key, val]) => {
+                        if (key.startsWith('col_')) {
+                            let idx = parseInt(key.replace('col_', ''));
+                            let col = activeCols[idx];
+                            if (col && col.date && val) {
+                                let cellDate = new Date(val);
+                                if (!isNaN(cellDate.getTime())) {
+                                    if (dateFrom && cellDate < dateFrom) return false;
+                                    if (dateTo && cellDate > dateTo) return false;
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    });
+                }
+
+                return matchGlobal && matchCus && matchDate;
+            });
+        }, 400); 
+    }
+    
+    function resetAllFilters(reload = true) {
+        document.getElementById('globalSearchInput').value = '';
+        document.getElementById('customerFilterInput').value = '';
+        document.getElementById('dateFromInput').value = '';
+        document.getElementById('dateToInput').value = '';
+        if (table) {
+            table.clearFilter(true);
+            table.clearHeaderFilter();
+        }
+    }
+
+    function saveRowToSheet(sheetRowIndex, fullRowData) {
+        showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
+        
+        // CHÈN DÒNG NÀY: Xóa bộ đệm của tab hiện tại để lần sau bắt buộc tải dữ liệu mới
+        delete tabDataCache[currentMode];
+        
+        var payloadData = { action: "updateRow", sheetName: currentMode.trim(), rowIndex: sheetRowIndex, rowData: fullRowData };
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+        })
+        .then(res => res.json())
+        .then(resData => {
+            showLoading(false);
+            if (resData.status !== 'success') alert("Lỗi từ máy chủ: " + (resData.message || "Không thể cập nhật dòng"));
+        })
+        .catch(err => {
+            showLoading(false);
+            alert("Lỗi kết nối khi lưu dữ liệu!");
+        });
+    }
+
+    function addRow() {
+        var activeCols = getActiveColumns();
+        var emptyRow = new Array(activeCols.length).fill('');
+        showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
+        var payloadData = { action: "appendRows", sheetName: currentMode.trim(), rows: [emptyRow] };
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+        })
+        .then(res => res.json())
+        .then(resData => {
+            showLoading(false);
+            if (resData.status === 'success') loadDataFromSheet(true);
+            else alert("Lỗi khi thêm dòng: " + resData.message);
+        })
+        .catch(err => {
+            showLoading(false);
+            alert("Lỗi kết nối khi thêm dòng!");
+        });
+    }
+
+    function handleExcelUpload(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var activeCols = getActiveColumns();
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var data = new Uint8Array(e.target.result);
+            var workbook = XLSX.read(data, { type: 'array' });
+            var worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            var excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            var rawRows = excelData.slice(1).filter(r => r.length > 0 && r.some(cell => cell !== null && cell !== ''));
+            if (rawRows.length === 0) {
+                alert("File Excel không chứa dữ liệu!");
+                return;
+            }
+
+            var formattedRows = rawRows.map(row => {
+                var newRow = [];
+                for (var i = 0; i < activeCols.length; i++) {
+                    var cellVal = row[i] !== undefined && row[i] !== null ? row[i] : '';
+                    newRow.push(String(cellVal));
+                }
+                return newRow;
+            });
+
+            showLoading(true, `Đang đẩy ${formattedRows.length} dòng vào Sheet '${currentMode}'...`);
+            var payloadData = { action: "appendRows", sheetName: currentMode.trim(), rows: formattedRows };
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "payload=" + encodeURIComponent(JSON.stringify(payloadData))
+            })
+            .then(res => res.json())
+            .then(resData => {
+                showLoading(false);
+                if (resData.status === 'success') {
+                    alert(`Đã hoàn tất tải lên ${formattedRows.length} dòng vào Sheet '${currentMode}'!`);
+                    loadDataFromSheet(true);
+                } else {
+                    alert("Lỗi khi tải file Excel: " + resData.message);
+                }
+            })
+            .catch(err => {
+                showLoading(false);
+                alert("Lỗi kết nối khi tải file Excel!");
+            });
+
+            event.target.value = '';
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        if (mode && SHEET_CONFIGS[mode]) {
+            switchTableMode(mode);
+        } else {
+            loadDataFromSheet(true);
+        }
+    };
+
+
+    let isHideHetHangActive = false;
+function toggleHideHetHang() {
+    isHideHetHangActive = !isHideHetHangActive;
+    let btn = document.getElementById('btnToggleHetHang');
+    
+    if (isHideHetHangActive) {
+        btn.className = "btn btn-sm btn-danger";
+        btn.innerHTML = `<i class="fa-solid fa-filter-circle-xmark me-1"></i>Đang ẩn Hết Hàng`;
+    } else {
+        btn.className = "btn btn-sm btn-outline-danger";
+        btn.innerHTML = `<i class="fa-solid fa-filter-circle-xmark me-1"></i>Ẩn Hết Hàng`;
+    }
+
+    if (table) {
+        table.setFilter(function(data) {
+            if (!isHideHetHangActive) return true;
+            // Kiểm tra tất cả các cột trong dòng xem có chữ "hết hàng" hay không
+            let hasHetHang = Object.values(data).some(val => 
+                String(val || '').toLowerCase().includes('hết hàng')
+            );
+            return !hasHetHang; // Chỉ giữ lại các dòng KHÔNG CÓ chữ hết hàng
+        });
+    }
+}
+
+
+    function copyFilteredZaloPrices() {
+        if (!table) return;
+
+        // Lấy danh sách các dòng ĐANG HIỂN THỊ (đã vượt qua bộ lọc)
+        let activeRows = table.getData("active");
+
+        if (activeRows.length === 0) {
+            alert("Không có dữ liệu nào để Copy!");
+            return;
+        }
+
+        let activeCols = getActiveColumns();
+        let idxCodeCol = activeCols.findIndex(c => c.code);
+        let idxDescCol = activeCols.findIndex(c => c.desc);
+        let idxCashCol = activeCols.findIndex(c => c.cashPrice);
+        let idxCreditCol = activeCols.findIndex(c => c.creditPrice);
+        let idxIconCol = activeCols.findIndex(c => c.statusIcon);
+
+        let finalCopiedText = "BÁO GIÁ THIẾT BỊ\n\n";
+
+        activeRows.forEach(rowData => {
+            let codeVal = idxCodeCol !== -1 ? String(rowData["col_" + idxCodeCol] || '').trim() : '';
+            let descVal = idxDescCol !== -1 ? String(rowData["col_" + idxDescCol] || '').trim() : '';
+            
+            let rawCash = idxCashCol !== -1 ? String(rowData["col_" + idxCashCol] || '').trim() : '';
+            let rawCredit = idxCreditCol !== -1 ? String(rowData["col_" + idxCreditCol] || '').trim() : '';
+            let rawIcon = idxIconCol !== -1 ? String(rowData["col_" + idxIconCol] || '').trim().toUpperCase() : '';
+
+            let cashNum = parseFloat(rawCash.replace(/[^\d]/g, ''));
+            let creditNum = parseFloat(rawCredit.replace(/[^\d]/g, ''));
+
+            let cashStr = !isNaN(cashNum) ? `💰 Giá tiền mặt: ${cashNum.toLocaleString('vi-VN')} đ` : '';
+            let creditStr = !isNaN(creditNum) ? `💳 Giá công nợ: ${creditNum.toLocaleString('vi-VN')} đ` : '';
+
+            let iconSymbol = '';
+            if (rawIcon === 'GIẢM') iconSymbol = ' ⬇️ (GIẢM)';
+            else if (rawIcon === 'TĂNG') iconSymbol = ' ⬆️ (TĂNG)';
+            else if (rawIcon === 'NEW') iconSymbol = ' 💥 (NEW)';
+
+            if (codeVal || descVal || cashStr || creditStr) {
+                 finalCopiedText += `📌 [${codeVal}]\n`;
+                 finalCopiedText += `👉 ${descVal}\n`;
+                 if(cashStr) finalCopiedText += `${cashStr}\n`;
+                 if(creditStr) finalCopiedText += `${creditStr}${iconSymbol}\n`;
+                 finalCopiedText += `------------------------\n`;
+            }
+        });
+
+        // Copy vào Clipboard của máy tính
+        navigator.clipboard.writeText(finalCopiedText).then(() => {
+            alert(`✅ Đã copy thành công ${activeRows.length} mã sản phẩm. Bạn có thể mở Zalo và dán (Ctrl+V) ngay!`);
+        }).catch(err => {
+            console.error('Lỗi khi copy: ', err);
+            alert("Trình duyệt không hỗ trợ copy hoặc bị lỗi!");
+        });
+    }
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
