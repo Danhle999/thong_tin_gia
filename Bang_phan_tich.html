@@ -1338,7 +1338,11 @@ function loadDataFromSheet(bypassCache = true) {
                 { title: "Đơn Giá Bán (VNĐ)", field: "unitPrice", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Thành Tiền Bán (VNĐ)", field: "revenue", hozAlign: "right", width: 130, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Nhập (VNĐ)", field: "importUnitPrice", hozAlign: "right", width: 120, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
-                { title: "Chi Tiết Lô FIFO", field: "costDetail", width: 180, hozAlign: "left" }
+                { title: "Chi Tiết Lô FIFO", field: "costDetail", width: 180, hozAlign: "left" },
+                // 👉 Cột mới: Chi tiết FIFO theo Giá Cost
+                { title: "Chi Tiết Giá Cost", field: "costDetailCost", width: 150, hozAlign: "left" },
+                // 👉 Cột mới: Kết quả tính toán theo Giá Cost
+                { title: "Lãi/Lỗ Giá Cost (VNĐ)", field: "profitCalcCost", hozAlign: "right", width: 140, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
             ]
         });
     }
