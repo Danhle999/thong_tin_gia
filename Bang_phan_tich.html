@@ -1301,6 +1301,8 @@ function loadDataFromSheet(bypassCache = true) {
                 { title: "Ngày Nhập", field: "date", hozAlign: "center", width: 120 },
                 { title: "SL Nhập", field: "qty", hozAlign: "right", width: 110, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
                 { title: "Đơn Giá Nhập", field: "cost", hozAlign: "right", width: 160, formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                // 👉 Thêm cột Giá Cost vào bảng Nhập Hàng
+                { title: "Giá Cost", field: "costDetailCost", width: 130, hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } },
                 { title: "Tổng Giá Trị Nhập (VNĐ)", field: "totalCost", hozAlign: "right", width: 180, formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } }
             ],
             rowClick: function(e, row) {
