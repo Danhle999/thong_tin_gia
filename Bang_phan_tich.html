@@ -786,7 +786,31 @@
             { label: 'GIÁ BÁN TIỀN MẶT', cashPrice: true, width: 120 },
             { label: 'GIÁ BÁN CÔNG NỢ', creditPrice: true, width: 120 },
             { label: 'TÌNH TRẠNG', width: 90 },
-            { label: 'NGÀY LÊN GIÁ', date: true, width: 120 },
+            // SỬA ĐOẠN NÀY: Thêm hàm headerFilterFunc để lọc chính xác ngày/tháng thay vì lọc chuỗi ký tự thô
+            { 
+                label: 'NGÀY LÊN GIÁ', 
+                date: true, 
+                width: 120,
+                headerFilterFunc: function(headerValue, rowValue, rowData, filterParams) {
+                    if (!headerValue) return true;
+                    if (!rowValue) return false;
+                    
+                    let searchKey = String(headerValue).trim().toLowerCase();
+                    let dateObj = new Date(rowValue);
+                    
+                    if (isNaN(dateObj.getTime())) {
+                        return String(rowValue).toLowerCase().includes(searchKey);
+                    }
+                    
+                    let day = String(dateObj.getDate());
+                    let month = String(dateObj.getMonth() + 1);
+                    let year = String(dateObj.getFullYear());
+                    let fullDateStr = `${day}/${month}/${year}`;
+                    
+                    // Nếu gõ đúng định dạng ngày hoặc tháng (ví dụ gõ '3' sẽ hiểu là ngày 3 hoặc tháng 3)
+                    return day === searchKey || month === searchKey || fullDateStr.includes(searchKey);
+                }
+            },
             { label: 'GIÁ TRÊN ZALO', zaloFormat: true, width: 520 },
             { label: 'GHI CHÚ', width: 150 },
             { label: 'SL TỒN', numeric: true, width: 80 },
