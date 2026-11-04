@@ -2023,8 +2023,8 @@ function clearProfitDetailFilter() {
                     let cashNum = parseFloat(rawCash.replace(/[^\d]/g, ''));
                     let creditNum = parseFloat(rawCredit.replace(/[^\d]/g, ''));
 
-                    let cashStr = !isNaN(cashNum) ? `Giá tiền mặt: ${cashNum.toLocaleString('vi-VN')}` : '';
-                    let creditStr = !isNaN(creditNum) ? `Giá công nợ: ${creditNum.toLocaleString('vi-VN')}` : '';
+                    let cashStr = !isNaN(cashNum) ? `Giá tiền mặt: ${cashNum.toLocaleString('vi-VN')} Full VAT` : '';
+                    let creditStr = !isNaN(creditNum) ? `Giá công nợ: ${creditNum.toLocaleString('vi-VN')} Full VAT` : '';
 
                     let iconSymbol = '';
                     if (rawIcon === 'GIẢM') iconSymbol = ' ⬇️';
