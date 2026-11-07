@@ -352,6 +352,10 @@
                 <button class="btn btn-sm btn-info text-dark fw-bold d-none" id="btnCopyZalo" onclick="copyFilteredZaloPrices()">
                     <i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo
                 </button>
+                <!-- Nút 2: Xuất PDF (Hoàn toàn độc lập) -->
+                <button class="btn btn-sm btn-danger fw-bold d-none" id="btnExportPDF" onclick="exportFilteredQuotationPDF()">
+                    <i class="fa-solid fa-file-pdf me-1"></i>Xuất PDF Báo Giá
+                </button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2" id="excelUploadContainer">
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
@@ -919,7 +923,19 @@
         let isKichBan = (mode === 'KICH_BAN_BAN_HANG');
         // Khai báo thêm biến nhận diện các tab Báo giá
         let isBaoGia = ['BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO'].includes(mode);
-
+        // Điều khiển nút Copy Zalo độc lập
+        let btnCopy = document.getElementById('btnCopyZalo');
+        if (btnCopy) {
+            if (isBaoGia) btnCopy.classList.remove('d-none');
+            else btnCopy.classList.add('d-none');
+        }
+        
+        // Điều khiển nút Xuất PDF độc lập
+        let btnPDF = document.getElementById('btnExportPDF');
+        if (btnPDF) {
+            if (isBaoGia) btnPDF.classList.remove('d-none');
+            else btnPDF.classList.add('d-none');
+        }
         document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
         document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
         document.getElementById('example-table').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
@@ -2488,6 +2504,37 @@ function toggleHideHetHang() {
         });
     }
 
+    //để lấy dữ liệu đang lọc trên bảng Tabulator, tạo trang in tạm thời và gọi hộp thoại lưu PDF:
+    function exportFilteredQuotationPDF() {
+    if (!table) return;
+    let activeRows = table.getData("active"); // Lấy các dòng đang lọc/hiển thị
+    if (activeRows.length === 0) {
+        alert("Không có dữ liệu để xuất PDF!");
+        return;
+    }
+    
+    let activeCols = getActiveColumns();
+    let win = window.open('', '_blank');
+    let html = '<html><head><title>Báo Giá</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border:1px solid #ddd;padding:8px;font-size:12px;}th{background:#f2f2f2;text-align:center;}</style></head><body>';
+    html += '<h2>BÁO GIÁ THIẾT BỊ (' + currentMode + ')</h2>';
+    html += '<table><thead><tr>';
+    activeCols.forEach(c => { html += '<th>' + c.label + '</th>'; });
+    html += '</tr></thead><tbody>';
+    
+    activeRows.forEach(row => {
+        html += '<tr>';
+        activeCols.forEach((c, idx) => {
+            let val = row["col_" + idx] !== undefined ? row["col_" + idx] : '';
+            html += '<td>' + val + '</td>';
+        });
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table></body></html>';
+    win.document.write(html);
+    win.document.close();
+    win.print(); // Mở bảng điều khiển in của trình duyệt (chọn Save as PDF)
+}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
