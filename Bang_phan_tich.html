@@ -342,16 +342,15 @@
             </div>
         </div>
         
+        <!-- NÚT THAO TÁC -->
         <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
                 <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
                 <button class="btn btn-sm btn-outline-danger" id="btnToggleHetHang" onclick="toggleHideHetHang()"><i class="fa-solid fa-filter-circle-xmark me-1"></i>Ẩn Hết Hàng</button>
+                <!-- NÚT COPY ZALO MỚI ĐƯỢC THÊM VÀO ĐÂY -->
                 <button class="btn btn-sm btn-info text-dark fw-bold d-none" id="btnCopyZalo" onclick="copyFilteredZaloPrices()">
                     <i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo
-                </button>
-                <button class="btn btn-sm btn-danger fw-bold d-none" id="btnExportPDF" onclick="exportFilteredQuotationPDF()">
-                    <i class="fa-solid fa-file-pdf me-1"></i>Xuất PDF Báo Giá
                 </button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2" id="excelUploadContainer">
@@ -920,19 +919,7 @@
         let isKichBan = (mode === 'KICH_BAN_BAN_HANG');
         // Khai báo thêm biến nhận diện các tab Báo giá
         let isBaoGia = ['BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO'].includes(mode);
-        // Điều khiển nút Copy Zalo độc lập
-        let btnCopy = document.getElementById('btnCopyZalo');
-        if (btnCopy) {
-            if (isBaoGia) btnCopy.classList.remove('d-none');
-            else btnCopy.classList.add('d-none');
-        }
-        
-        // Điều khiển nút Xuất PDF độc lập
-        let btnPDF = document.getElementById('btnExportPDF');
-        if (btnPDF) {
-            if (isBaoGia) btnPDF.classList.remove('d-none');
-            else btnPDF.classList.add('d-none');
-        }
+
         document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
         document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
         document.getElementById('example-table').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
@@ -2501,7 +2488,6 @@ function toggleHideHetHang() {
         });
     }
 
-                    
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
