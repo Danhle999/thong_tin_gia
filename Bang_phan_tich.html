@@ -923,6 +923,18 @@
         let isKichBan = (mode === 'KICH_BAN_BAN_HANG');
         // Khai báo thêm biến nhận diện các tab Báo giá
         let isBaoGia = ['BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO'].includes(mode);
+        
+        let btnCopy = document.getElementById('btnCopyZalo');
+        if (btnCopy) {
+            if (isBaoGia) btnCopy.classList.remove('d-none');
+            else btnCopy.classList.add('d-none');
+        }
+        
+        let btnPDF = document.getElementById('btnExportPDF');
+        if (btnPDF) {
+            if (isBaoGia) btnPDF.classList.remove('d-none');
+            else btnPDF.classList.add('d-none');
+        }
 
         document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
         document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
