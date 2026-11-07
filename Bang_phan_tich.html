@@ -352,6 +352,10 @@
                 <button class="btn btn-sm btn-info text-dark fw-bold d-none" id="btnCopyZalo" onclick="copyFilteredZaloPrices()">
                     <i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo
                 </button>
+                <!-- Nút 2: Xuất PDF (Hoàn toàn độc lập) -->
+                <button class="btn btn-sm btn-danger fw-bold d-none" id="btnExportPDF" onclick="exportFilteredQuotationPDF()">
+                    <i class="fa-solid fa-file-pdf me-1"></i>Xuất PDF Báo Giá
+                </button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2" id="excelUploadContainer">
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
