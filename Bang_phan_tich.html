@@ -2504,37 +2504,67 @@ function toggleHideHetHang() {
         });
     }
 
-    //để lấy dữ liệu đang lọc trên bảng Tabulator, tạo trang in tạm thời và gọi hộp thoại lưu PDF:
-    function exportFilteredQuotationPDF() {
-    if (!table) return;
-    let activeRows = table.getData("active"); // Lấy các dòng đang lọc/hiển thị
-    if (activeRows.length === 0) {
-        alert("Không có dữ liệu để xuất PDF!");
-        return;
-    }
-    
-    let activeCols = getActiveColumns();
-    let win = window.open('', '_blank');
-    let html = '<html><head><title>Báo Giá</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border:1px solid #ddd;padding:8px;font-size:12px;}th{background:#f2f2f2;text-align:center;}</style></head><body>';
-    html += '<h2>BÁO GIÁ THIẾT BỊ (' + currentMode + ')</h2>';
-    html += '<table><thead><tr>';
-    activeCols.forEach(c => { html += '<th>' + c.label + '</th>'; });
-    html += '</tr></thead><tbody>';
-    
-    activeRows.forEach(row => {
-        html += '<tr>';
-        activeCols.forEach((c, idx) => {
-            let val = row["col_" + idx] !== undefined ? row["col_" + idx] : '';
-            html += '<td>' + val + '</td>';
-        });
-        html += '</tr>';
-    });
-    
-    html += '</tbody></table></body></html>';
-    win.document.write(html);
-    win.document.close();
-    win.print(); // Mở bảng điều khiển in của trình duyệt (chọn Save as PDF)
-}
+    // để lấy dữ liệu đang lọc trên bảng Tabulator, tạo trang in tạm thời và gọi hộp thoại lưu PDF:
+            function exportFilteredQuotationPDF() {
+            if (!table) return;
+            let activeRows = table.getData("active");
+            if (activeRows.length === 0) {
+                alert("Không có dữ liệu để xuất PDF!");
+                return;
+            }
+            
+            let activeCols = getActiveColumns();
+            let win = window.open('', '_blank');
+            
+            let html = `<html>
+                <head>
+                    <title>Báo Giá - ${currentMode}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; color: #333; }
+                        h2 { text-align: center; color: #0d6efd; margin-bottom: 5px; }
+                        .subtitle { text-align: center; font-size: 13px; color: #666; margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        th, td { border: 1px solid #cbd5e1; padding: 8px 10px; font-size: 13px; }
+                        th { background-color: #f1f5f9; color: #0f172a; text-align: center; font-weight: bold; }
+                        td:nth-child(n+5) { text-align: right; } /* Căn phải các cột giá và số lượng */
+                    </style>
+                </head>
+                <body>
+                    <h2>BẢNG BÁO GIÁ THIẾT BỊ</h2>
+                    <div class="subtitle">Thương hiệu / Nhóm: ${currentMode} | Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>STT</th>`;
+            
+            activeCols.forEach(c => { html += `<th>${c.label}</th>`; });
+            html += `</tr></thead><tbody>`;
+            
+            activeRows.forEach((row, index) => {
+                html += `<tr><td style="text-align: center; font-weight: bold;">${index + 1}</td>`;
+                activeCols.forEach((c, idx) => {
+                    let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
+                    
+                    // Tự động định dạng số tiền nếu là cột số
+                    if (c.numeric && !isNaN(val) && val !== '') {
+                        val = Number(val).toLocaleString('vi-VN');
+                    }
+                    
+                    html += `<td>${val}</td>`;
+                });
+                html += `</tr>`;
+            });
+            
+            html += `</tbody></table></body></html>`;
+            
+            win.document.write(html);
+            win.document.close();
+            
+            // Tự động kích hoạt hộp thoại in / lưu PDF sau khi trang tải xong
+            setTimeout(() => {
+                win.print();
+            }, 300);
+        }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
