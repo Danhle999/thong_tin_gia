@@ -342,17 +342,14 @@
             </div>
         </div>
         
-        // NÚT THAO TÁC
         <div class="row mb-2" style="flex-shrink: 0;" id="actionButtonsRow">
             <div class="col-md-6 d-flex gap-2">
                 <button class="btn btn-sm btn-success" id="btnAddRow" onclick="addRow()"><i class="fa-solid fa-plus me-1"></i>Thêm Dòng Mới</button>
                 <button class="btn btn-sm btn-primary" onclick="loadDataFromSheet(true)"><i class="fa-solid fa-rotate me-1"></i>Tải Lại Sheet Này</button>
                 <button class="btn btn-sm btn-outline-danger" id="btnToggleHetHang" onclick="toggleHideHetHang()"><i class="fa-solid fa-filter-circle-xmark me-1"></i>Ẩn Hết Hàng</button>
-                // NÚT COPY ZALO MỚI ĐƯỢC THÊM VÀO ĐÂY
                 <button class="btn btn-sm btn-info text-dark fw-bold d-none" id="btnCopyZalo" onclick="copyFilteredZaloPrices()">
                     <i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo
                 </button>
-                // Nút 2: Xuất PDF (Hoàn toàn độc lập)
                 <button class="btn btn-sm btn-danger fw-bold d-none" id="btnExportPDF" onclick="exportFilteredQuotationPDF()">
                     <i class="fa-solid fa-file-pdf me-1"></i>Xuất PDF Báo Giá
                 </button>
