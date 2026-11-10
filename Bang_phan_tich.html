@@ -2616,7 +2616,7 @@ function exportFilteredQuotationExcel() {
     
     // Tự động thiết lập kích thước độ rộng (width) tối ưu cho từng cột để Excel hiển thị thoáng, không bị bó chữ
     // Thứ tự cột: [NCC, Mã part, Tên sản phẩm, Giá tiền mặt, Giá công nợ, Tồn kho]
-    let customWidths = [120, 220, 450, 140, 140, 90];
+    let customWidths = [120, 220, 1000, 140, 140, 90];
     exportedCols.forEach((c, idx) => {
         let w = customWidths[idx] || 150;
         html += `<col style="width: ${w}px;">`;
