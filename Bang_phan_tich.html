@@ -2577,7 +2577,7 @@ function toggleHideHetHang() {
             }, 300);
         }
 
-    // Xuất file Excel (Dựa trên cấu trúc xuất PDF)
+    // Xuất file Excel chuẩn định dạng có phong cách màu sắc, căn lề và số liệu
         function exportFilteredQuotationExcel() {
             if (!table) return;
             let activeRows = table.getData("active"); // Lấy các dòng đang lọc/hiển thị
@@ -2588,7 +2588,7 @@ function toggleHideHetHang() {
             
             let activeCols = getActiveColumns();
             
-            // 1. Tạo mảng chứa tiêu đề cột (Thêm STT ở đầu)
+            // 1. Tạo dòng tiêu đề cột giống hệt bảng giao diện (Thêm STT ở đầu)
             let headers = ["STT"];
             activeCols.forEach(c => {
                 headers.push(c.label);
@@ -2596,14 +2596,14 @@ function toggleHideHetHang() {
             
             let excelData = [headers];
             
-            // 2. Duyệt qua các dòng dữ liệu đang hiển thị
+            // 2. Đổ dữ liệu từng dòng và xử lý định dạng số liệu
             activeRows.forEach((row, index) => {
                 let rowData = [index + 1]; // Cột STT
                 
                 activeCols.forEach((c, idx) => {
                     let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
                     
-                    // Nếu là cột số liệu và có giá trị thì format kiểu số nguyên (hoặc giữ nguyên dạng số để Excel dễ tính toán)
+                    // Nếu là cột số lượng / giá tiền: chuyển về kiểu số (Number) để Excel hiểu và tự động format
                     if (c.numeric && !isNaN(val) && val !== '') {
                         val = Number(val);
                     }
@@ -2614,12 +2614,22 @@ function toggleHideHetHang() {
                 excelData.push(rowData);
             });
             
-            // 3. Tạo Workbook và Worksheet từ SheetJS
+            // 3. Khởi tạo Workbook và Worksheet qua SheetJS
             let ws = XLSX.utils.aoa_to_sheet(excelData);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Bao_Gia");
             
-            // 4. Tải file về máy
+            // --- TÙY CHỈNH ĐỊNH DẠNG GIAO DIỆN CHO FILE EXCEL ---
+            // Định dạng độ rộng cột tự động để không bị che chữ
+            let colWidths = [{ wch: 6 }]; // Cột STT
+            activeCols.forEach(c => {
+                let maxLen = Math.max(c.label.length, 12);
+                colWidths.push({ wch: maxLen + 4 });
+            });
+            ws['!cols'] = colWidths;
+
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Bao_Gia_" + currentMode);
+            
+            // 4. Tải file về máy với tên tương ứng chế độ hiện tại
             let fileName = `Bao_Gia_${currentMode}_${new Date().toISOString().slice(0,10)}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
