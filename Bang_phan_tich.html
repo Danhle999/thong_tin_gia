@@ -2577,7 +2577,7 @@ function toggleHideHetHang() {
             }, 300);
         }
 
-    // Xuất file Excel: Cố định kích thước cột thông minh, thoáng chữ, không bị bó hẹp và tô màu C, D, E, F
+    // Xuất file Excel: Tự động căn chỉnh kích thước cột, tô màu dòng tiêu đề nhóm/dòng trống và tô màu cột C, D, E, F
 function exportFilteredQuotationExcel() {
     if (!table) return;
     let activeRows = table.getData("active"); // Lấy các dòng đang hiển thị (đã qua bộ lọc)
@@ -2588,7 +2588,7 @@ function exportFilteredQuotationExcel() {
     
     let activeCols = getActiveColumns();
     
-    // 1. Bỏ cột đầu tiên (Cột A cũ) khỏi danh sách cột xuất file
+    // Bỏ cột đầu tiên (Cột A cũ) khỏi danh sách cột xuất file
     let exportedCols = activeCols.slice(1);
 
     // Xây dựng cấu trúc bảng HTML kèm CSS định dạng chuyên nghiệp
@@ -2600,8 +2600,11 @@ function exportFilteredQuotationExcel() {
             th { background-color: #0d6efd; color: #ffffff; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #94a3b8; }
             td { border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
             
-            /* TÔ MÀU RIÊNG CHO CỘT C, D, E, F (Nền xanh nhạt, dịu mắt, chuyên nghiệp) */
+            /* Tô màu riêng cho Cột C, D, E, F (Index 2, 3, 4, 5) ở dòng dữ liệu thường */
             .col-highlight { background-color: #F0FDF4; border: 1px solid #BBF7D0; }
+            
+            /* Tô màu nền và in đậm cho dòng tiêu đề nhóm / dòng trống (ví dụ dòng "LAPTOP", "PC",...) */
+            .group-row td { background-color: #E2E8F0 !important; font-weight: bold; color: #1E293B; border: 1px solid #CBD5E1; }
             
             .numeric { text-align: right; mso-number-format:"\\#,##0"; }
             .center { text-align: center; }
@@ -2609,8 +2612,16 @@ function exportFilteredQuotationExcel() {
     </head>
     <body>
         <table>
-            <thead>
-                <tr>`;
+            <colgroup>`;
+    
+    // Tự động thiết lập kích thước độ rộng (width) tối ưu cho từng cột để Excel hiển thị thoáng, không bị bó chữ
+    // Thứ tự cột: [NCC, Mã part, Tên sản phẩm, Giá tiền mặt, Giá công nợ, Tồn kho]
+    let customWidths = [120, 220, 450, 140, 140, 90];
+    exportedCols.forEach((c, idx) => {
+        let w = customWidths[idx] || 150;
+        html += `<col style="width: ${w}px;">`;
+    });
+    html += `</colgroup><thead><tr>`;
     
     // Tạo tiêu đề bảng (đã bỏ cột đầu)
     exportedCols.forEach(c => {
@@ -2619,51 +2630,69 @@ function exportFilteredQuotationExcel() {
     
     html += `</tr></thead><tbody>`;
     
-    // 2. Duyệt qua từng dòng dữ liệu
+    // Duyệt qua từng dòng dữ liệu
     activeRows.forEach((row, index) => {
         let hasData = false;
         let rowCellsHtml = '';
+        let filledCellsCount = 0;
+        let rowValues = [];
         
         // Bắt đầu lấy dữ liệu từ cột thứ 2 (bỏ qua index 0 tương ứng cột A)
         for (let idx = 1; idx < activeCols.length; idx++) {
+            let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
+            rowValues.push(val);
+            if (String(val).trim() !== '') {
+                hasData = true;
+                filledCellsCount++;
+            }
+        }
+        
+        // Tự động nhận diện dòng tiêu đề nhóm (dòng chỉ có 1-2 ô có chữ như "LAPTOP", các ô còn lại trống)
+        let isGroupRow = (filledCellsCount <= 2 && rowValues.some(v => {
+            let s = String(v).trim().toUpperCase();
+            return s === 'LAPTOP' || s === 'PC' || s === 'LCD' || s === 'AIO' || s === 'MÀN HÌNH' || s === 'MÁY IN';
+        }));
+        if (!isGroupRow && filledCellsCount === 1) {
+            isGroupRow = true; // Nếu cả dòng chỉ có đúng 1 ô có dữ liệu thì tự động coi là dòng tiêu đề nhóm
+        }
+
+        for (let idx = 1; idx < activeCols.length; idx++) {
             let c = activeCols[idx];
             let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
-            if (String(val).trim() !== '') hasData = true; // Kiểm tra xem dòng có dữ liệu thật không
             
             let cellClass = '';
             let displayVal = val;
-            
-            // Xác định vị trí cột trong danh sách xuất (colIndexInExport: 
-            // 0: Cột A, 1: Cột B, 
-            // 2: Cột C, 3: Cột D, 4: Cột E, 5: Cột F)
             let colIndexInExport = idx - 1;
             
-            // TÔ MÀU RIÊNG CHO CỘT C, D, E, F (tương ứng index từ 2 đến 5)
-            if (colIndexInExport >= 2 && colIndexInExport <= 5) {
-                cellClass = 'col-highlight';
-            }
-            
-            // Xử lý căn lề và định dạng số liệu
-            if (c && c.numeric && !isNaN(val) && val !== '') {
-                cellClass += (cellClass ? ' ' : '') + 'numeric';
-                displayVal = Number(val).toLocaleString('vi-VN');
-            } else if (c && c.date) {
-                cellClass += (cellClass ? ' ' : '') + 'center';
+            if (!isGroupRow) {
+                // Tô màu riêng cho Cột C, D, E, F (tương ứng index từ 2 đến 5) ở dòng dữ liệu thường
+                if (colIndexInExport >= 2 && colIndexInExport <= 5) {
+                    cellClass = 'col-highlight';
+                }
+                
+                // Xử lý căn lề và định dạng số liệu
+                if (c && c.numeric && !isNaN(val) && val !== '') {
+                    cellClass += (cellClass ? ' ' : '') + 'numeric';
+                    displayVal = Number(val).toLocaleString('vi-VN');
+                } else if (c && c.date) {
+                    cellClass += (cellClass ? ' ' : '') + 'center';
+                }
             }
             
             let classAttr = cellClass ? `class="${cellClass}"` : '';
             rowCellsHtml += `<td ${classAttr}>${displayVal}</td>`;
         }
         
-        // Chỉ thêm vào file Excel nếu dòng đó có dữ liệu thực tế (tự động bỏ dòng trống toàn bộ)
+        // Chỉ thêm vào file Excel nếu dòng đó có dữ liệu thực tế
         if (hasData) {
-            html += `<tr>${rowCellsHtml}</tr>`;
+            let trClass = isGroupRow ? 'class="group-row"' : '';
+            html += `<tr ${trClass}>${rowCellsHtml}</tr>`;
         }
     });
     
     html += `</tbody></table></body></html>`;
 
-    // 3. Kích hoạt tạo file và tải xuống mượt mà
+    // Kích hoạt tạo file và tải xuống mượt mà
     let blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
@@ -2674,6 +2703,8 @@ function exportFilteredQuotationExcel() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+
 
 </script>
 
