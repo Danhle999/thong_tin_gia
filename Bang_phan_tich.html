@@ -2577,10 +2577,10 @@ function toggleHideHetHang() {
             }, 300);
         }
 
-    // Xuất file Excel chuẩn: Bỏ cột đầu tiên (Cột A), lọc sạch dòng trống và tải về máy
+    // Xuất file Excel: Bỏ cột đầu tiên, co giãn hàng/cột tự động và tô màu theo dòng chỉ định (1, 2, 26, 46)
 function exportFilteredQuotationExcel() {
     if (!table) return;
-    let activeRows = table.getData("active"); // Lấy các dòng đang hiển thị (đã qua bộ lọc)
+    let activeRows = table.getData("active"); // Lấy các dòng đang hiển thị
     if (activeRows.length === 0) {
         alert("Không có dữ liệu để xuất Excel!");
         return;
@@ -2588,10 +2588,9 @@ function exportFilteredQuotationExcel() {
     
     let activeCols = getActiveColumns();
     
-    // Bỏ cột đầu tiên (Cột A) khỏi danh sách cột xuất file
+    // 1. Bỏ cột đầu tiên (Cột A) khỏi danh sách cột xuất file
     let exportedCols = activeCols.slice(1);
     
-    // Tạo danh sách tiêu đề từ các cột còn lại
     let headers = [];
     exportedCols.forEach(c => {
         headers.push(c.label);
@@ -2599,7 +2598,10 @@ function exportFilteredQuotationExcel() {
     
     let excelData = [headers];
     
-    // Duyệt qua từng dòng dữ liệu
+    // Định nghĩa các dòng cần tô màu/in đậm đặc biệt (Dòng 1, 2, 26, 46 tính trên file Excel)
+    // Lưu ý: Dòng 0 là Header, nên dòng dữ liệu thứ 1 nằm ở index 1.
+    let specialRowIndices = [1, 2, 26, 46]; 
+
     activeRows.forEach((row, index) => {
         let rowData = [];
         let hasData = false;
@@ -2608,16 +2610,15 @@ function exportFilteredQuotationExcel() {
         for (let idx = 1; idx < activeCols.length; idx++) {
             let c = activeCols[idx];
             let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
-            if (String(val).trim() !== '') hasData = true; // Kiểm tra dòng có dữ liệu thật không
+            if (String(val).trim() !== '') hasData = true;
             
-            // Ép kiểu số cho các cột số lượng / giá tiền để Excel nhận diện
+            // Ép kiểu số cho các cột số lượng / giá tiền
             if (c && c.numeric && !isNaN(val) && val !== '') {
                 val = Number(val);
             }
             rowData.push(val);
         }
         
-        // Chỉ thêm vào file Excel nếu dòng đó có dữ liệu
         if (hasData) {
             excelData.push(rowData);
         }
@@ -2628,22 +2629,9 @@ function exportFilteredQuotationExcel() {
         return;
     }
     
-    // Khởi tạo Worksheet từ SheetJS
     let ws = XLSX.utils.aoa_to_sheet(excelData);
     
-    // Thiết lập định dạng số liệu (Format dạng #,##0 cho các cột số để hiển thị dấu chấm phân cách hàng nghìn)
-    let range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-            let cellAddress = XLSX.utils.encode_cell({r: R, c: C});
-            let cell = ws[cellAddress];
-            if (cell && typeof cell.v === 'number') {
-                cell.z = '#,##0';
-            }
-        }
-    }
-    
-    // Tự động căn chỉnh độ rộng các cột cho thoáng chữ
+    // 2. Co giãn độ rộng cột tự động cho thoáng chữ
     let colWidths = [];
     exportedCols.forEach(c => {
         let maxLen = Math.max(c.label.length, 12);
@@ -2651,7 +2639,57 @@ function exportFilteredQuotationExcel() {
     });
     ws['!cols'] = colWidths;
 
-    // Tạo file workbook và kích hoạt tải xuống
+    // 3. Co giãn chiều cao hàng (Row height) cho dễ nhìn
+    let rowHeights = [{ hpt: 28 }]; // Dòng tiêu đề cao hơn chút
+    for (let i = 1; i <= excelData.length; i++) {
+        rowHeights.push({ hpt: 22 }); // Các dòng dữ liệu co giãn đều 22pt
+    }
+    ws['!rows'] = rowHeights;
+
+    // 4. Áp dụng tô màu, kẻ khung viền và định dạng riêng cho từng dòng
+    let range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            let cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+            if (!ws[cellAddress]) continue;
+            let cell = ws[cellAddress];
+            
+            if (!cell.s) cell.s = {};
+
+            // Kẻ khung viền mỏng xám nhạt cho toàn bộ bảng
+            cell.s.border = {
+                top: { style: "thin", color: { rgb: "D1D5DB" } },
+                bottom: { style: "thin", color: { rgb: "D1D5DB" } },
+                left: { style: "thin", color: { rgb: "D1D5DB" } },
+                right: { style: "thin", color: { rgb: "D1D5DB" } }
+            };
+
+            // Định dạng dòng Tiêu đề (Header - R = 0)
+            if (R === 0) {
+                cell.s.fill = { fgColor: { rgb: "0D6EFD" } }; // Nền xanh dương chủ đạo
+                cell.s.font = { name: "Segoe UI", sz: 11, bold: true, color: { rgb: "FFFFFF" } }; // Chữ trắng in đậm
+                cell.s.alignment = { horizontal: "center", vertical: "center", wrapText: true };
+            } 
+            else {
+                // Định dạng mặc định cho các dòng thường
+                cell.s.font = { name: "Segoe UI", sz: 10, color: { rgb: "333333" } };
+                cell.s.alignment = { vertical: "center" };
+                
+                // Định dạng số (Dấu phẩy phân cách hàng nghìn)
+                if (typeof cell.v === 'number') {
+                    cell.z = '#,##0';
+                    cell.s.alignment.horizontal = "right";
+                }
+
+                // Tô màu riêng cho các dòng chỉ định (1, 2, 26, 46)
+                if (specialRowIndices.includes(R)) {
+                    cell.s.fill = { fgColor: { rgb: "FEF3C7" } }; // Tô nền vàng nhạt nổi bật
+                    cell.s.font.bold = true;                     // In đậm chữ
+                }
+            }
+        }
+    }
+
     let wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Bao_Gia");
     
