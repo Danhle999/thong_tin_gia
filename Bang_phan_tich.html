@@ -2577,10 +2577,10 @@ function toggleHideHetHang() {
             }, 300);
         }
 
-    // Xuất file Excel chuẩn định dạng đẹp mắt, có màu tiêu đề, kẻ khung và không bị lặp STT
+    // Xuất file Excel: Bỏ cột đầu tiên (Cột A) và định dạng riêng theo các dòng chỉ định (1, 2, 26, 46,...)
 function exportFilteredQuotationExcel() {
     if (!table) return;
-    let activeRows = table.getData("active"); // Lấy các dòng đang lọc/hiển thị
+    let activeRows = table.getData("active"); // Lấy các dòng đang hiển thị
     if (activeRows.length === 0) {
         alert("Không có dữ liệu để xuất Excel!");
         return;
@@ -2588,44 +2588,96 @@ function exportFilteredQuotationExcel() {
     
     let activeCols = getActiveColumns();
     
-    // 1. Chỉ dùng 1 cột STT duy nhất làm tiêu đề đầu tiên
-    let headers = ["STT"];
-    activeCols.forEach(c => {
+    // YÊU CẦU 1: Bỏ cột đầu tiên (Cột A) khỏi danh sách cột xuất file
+    let exportedCols = activeCols.slice(1);
+    
+    // Tạo tiêu đề (bỏ cột đầu)
+    let headers = [];
+    exportedCols.forEach(c => {
         headers.push(c.label);
     });
     
     let excelData = [headers];
     
-    // 2. Duyệt qua từng dòng dữ liệu và loại bỏ các cột dữ liệu thừa bị lệch
+    // YÊU CẦU 2: Định nghĩa các dòng cần định dạng đặc biệt (Ví dụ: dòng 1, 2, 26, 46 tính từ dữ liệu)
+    // Lưu ý: Trong mảng excelData, index 0 là Header, nên dòng dữ liệu thứ 1 nằm ở index 1.
+    let specialRowIndices = [1, 2, 26, 46]; 
+
     activeRows.forEach((row, index) => {
-        let rowData = [index + 1]; // Cột STT tăng dần chuẩn xác
+        let rowData = [];
+        let hasData = false;
         
-        activeCols.forEach((c, idx) => {
+        // Bắt đầu lấy dữ liệu từ cột thứ 2 (bỏ qua index 0 tương ứng cột A)
+        for (let idx = 1; idx < activeCols.length; idx++) {
+            let c = activeCols[idx];
             let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
+            if (String(val).trim() !== '') hasData = true;
             
-            // Nếu là cột số lượng / giá tiền: Ép kiểu về số để Excel hiểu và căn phải
-            if (c.numeric && !isNaN(val) && val !== '') {
+            // Ép kiểu số cho các cột số liệu
+            if (c && c.numeric && !isNaN(val) && val !== '') {
                 val = Number(val);
             }
-            
             rowData.push(val);
-        });
+        }
         
-        excelData.push(rowData);
+        // Chỉ thêm dòng nếu có dữ liệu thực tế
+        if (hasData) {
+            excelData.push(rowData);
+        }
     });
     
-    // 3. Khởi tạo Worksheet
+    if (excelData.length <= 1) {
+        alert("Không có dòng dữ liệu hợp lệ để xuất!");
+        return;
+    }
+    
     let ws = XLSX.utils.aoa_to_sheet(excelData);
     
-    // 4. Thiết lập độ rộng cột tự động cho thoáng chữ
-    let colWidths = [{ wch: 6 }]; // Độ rộng cột STT
-    activeCols.forEach(c => {
+    // Tùy chỉnh độ rộng cột (tương ứng với các cột đã cắt bỏ cột đầu)
+    let colWidths = [];
+    exportedCols.forEach(c => {
         let maxLen = Math.max(c.label.length, 12);
         colWidths.push({ wch: maxLen + 6 });
     });
     ws['!cols'] = colWidths;
 
-    // 5. Tạo file và tải về máy
+    // Duyệt và áp dụng định dạng nâng cao cho toàn bộ bảng và các dòng đặc biệt
+    let range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            let cellAddress = XLSX.utils.encode_cell({r: R, C: C});
+            if (!ws[cellAddress]) continue;
+            let cell = ws[cellAddress];
+            
+            if (!cell.s) cell.s = {};
+
+            // Viền mỏng cho toàn bộ bảng
+            cell.s.border = {
+                top: { style: "thin", color: { rgb: "E2E8F0" } },
+                bottom: { style: "thin", color: { rgb: "E2E8F0" } },
+                left: { style: "thin", color: { rgb: "E2E8F0" } },
+                right: { style: "thin", color: { rgb: "E2E8F0" } }
+            };
+
+            // Định dạng dòng Tiêu đề (Header - R = 0)
+            if (R === 0) {
+                cell.s.fill = { fgColor: { rgb: "0D6EFD" } }; // Nền xanh dương
+                cell.s.font = { name: "Segoe UI", sz: 11, bold: true, color: { rgb: "FFFFFF" } }; // Chữ trắng in đậm
+                cell.s.alignment = { horizontal: "center", vertical: "center" };
+            } 
+            else {
+                // Định dạng các dòng dữ liệu thông thường
+                cell.s.font = { name: "Segoe UI", sz: 10, color: { rgb: "333333" } };
+                
+                // YÊU CẦU 2 (Tiếp theo): Định dạng riêng cho các dòng chỉ định (1, 2, 26, 46)
+                if (specialRowIndices.includes(R)) {
+                    cell.s.fill = { fgColor: { rgb: "FEF3C7" } }; // Tô nền vàng nhạt nổi bật cho các dòng đặc biệt
+                    cell.s.font.bold = true;                     // In đậm chữ
+                }
+            }
+        }
+    }
+
     let wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Bao_Gia");
     
