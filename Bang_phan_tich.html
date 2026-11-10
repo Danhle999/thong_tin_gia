@@ -929,9 +929,16 @@
         let isBaoGia = ['BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO'].includes(mode);
         
         let btnPDF = document.getElementById('btnExportPDF');
-        if (btnPDF) {
-            if (isBaoGia) btnPDF.classList.remove('d-none'); // Chỉ hiện khi đúng các tab trên
-            else btnPDF.classList.add('d-none');            // Ẩn đi ở các tab còn lại (Laptop, PC, Tồn kho,...)
+        let btnExcel = document.getElementById('btnExportExcel'); // <--- Thêm dòng này
+        
+        if (btnPDF && btnExcel) {
+            if (isBaoGia) {
+                btnPDF.classList.remove('d-none');   // Hiện nút PDF
+                btnExcel.classList.remove('d-none'); // Hiện nút Excel
+            } else {
+                btnPDF.classList.add('d-none');      // Ẩn nút PDF
+                btnExcel.classList.add('d-none');    // Ẩn nút Excel
+            }
         }
 
         document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
