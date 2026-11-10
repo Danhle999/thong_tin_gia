@@ -2577,7 +2577,7 @@ function toggleHideHetHang() {
             }, 300);
         }
 
-    // Xuất file Excel: Bỏ cột đầu tiên, lọc dòng trống và chỉ tô màu từ cột A đến cột F (Cột 1 đến Cột 6) cho các ô trống
+    // Xuất file Excel: Chuyên nghiệp, kẻ khung, căn chỉnh và tô màu riêng cho các cột C, D, E, F (Index 2, 3, 4, 5)
 function exportFilteredQuotationExcel() {
     if (!table) return;
     let activeRows = table.getData("active"); // Lấy các dòng đang hiển thị (đã qua bộ lọc)
@@ -2588,20 +2588,20 @@ function exportFilteredQuotationExcel() {
     
     let activeCols = getActiveColumns();
     
-    // 1. Bỏ cột đầu tiên (Cột A) khỏi danh sách cột xuất file
+    // 1. Bỏ cột đầu tiên (Cột A cũ) khỏi danh sách cột xuất file
     let exportedCols = activeCols.slice(1);
 
-    // Xây dựng cấu trúc bảng HTML kèm CSS định dạng trực tiếp
+    // Xây dựng cấu trúc bảng HTML kèm CSS định dạng chuyên nghiệp
     let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
     <head>
         <meta charset="UTF-8">
         <style>
-            table { border-collapse: collapse; width: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 11pt; }
-            th { background-color: #0d6efd; color: #ffffff; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #999; }
-            td { border: 1px solid #d1d5db; padding: 6px 8px; vertical-align: middle; }
+            table { border-collapse: collapse; width: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 10pt; }
+            th { background-color: #0d6efd; color: #ffffff; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #94a3b8; }
+            td { border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
             
-            /* Style tô màu cảnh báo đỏ nhạt chỉ riêng cho ô trống ở Cột 1 hoặc Cột 2 */
-            .empty-cell { background-color: #FEE2E2; border: 1px solid #EF4444; }
+            /* TÔ MÀU RIÊNG CHO CỘT C, D, E, F (Nền xanh nhạt, dịu mắt, chuyên nghiệp) */
+            .col-highlight { background-color: #F0FDF4; border: 1px solid #BBF7D0; }
             
             .numeric { text-align: right; mso-number-format:"\\#,##0"; }
             .center { text-align: center; }
@@ -2633,14 +2633,14 @@ function exportFilteredQuotationExcel() {
             let cellClass = '';
             let displayVal = val;
             
-            // Xác định vị trí cột trong danh sách xuất (colIndexInExport: 0 là Cột A / Cột 1, 1 là Cột B / Cột 2, ..., 5 là Cột F / Cột 6)
+            // Xác định vị trí cột trong danh sách xuất (colIndexInExport: 
+            // 0: Cột A, 1: Cột B, 
+            // 2: Cột C, 3: Cột D, 4: Cột E, 5: Cột F)
             let colIndexInExport = idx - 1;
             
-            // CHỈ XÉT TỪ CỘT A ĐẾN CỘT F (từ index 0 đến 5): Nếu Cột 1 hoặc Cột 2 bị trống thì tô màu ô đó
-            if (colIndexInExport >= 0 && colIndexInExport <= 5) {
-                if ((colIndexInExport === 0 || colIndexInExport === 1) && String(val).trim() === '') {
-                    cellClass = 'empty-cell';
-                }
+            // TÔ MÀU RIÊNG CHO CỘT C, D, E, F (tương ứng index từ 2 đến 5)
+            if (colIndexInExport >= 2 && colIndexInExport <= 5) {
+                cellClass = 'col-highlight';
             }
             
             // Xử lý căn lề và định dạng số liệu
@@ -2674,7 +2674,6 @@ function exportFilteredQuotationExcel() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
-
 
 </script>
 
