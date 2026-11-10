@@ -827,17 +827,17 @@
             { label: 'SL BÁN', numeric: true, width: 80 }
         ],
         'BANG_GIA_DELL': [
-            { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
+            { label: 'STT', numeric: true, width: 50  }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 300 },
             { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
             { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
         ],
         'BANG_GIA_HP': [
-            { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
+            { label: 'STT', numeric: true, width: 50  }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 300 },
             { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
             { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
         ],
         'BANG_GIA_LENOVO': [
-            { label: 'STT', numeric: true }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 350 },
+            { label: 'STT', numeric: true, width: 50 }, { label: 'NCC' }, { label: 'Mã part', code: true, width: 300 },
             { label: 'TÊN SẢN PHẨM', desc: true, width: 920 }, { label: 'GIÁ TIỀN MẶT', numeric: true },
             { label: 'GIÁ CÔNG NỢ', numeric: true }, { label: 'Tồn kho', numeric: true }
         ],
@@ -2632,11 +2632,6 @@ function exportFilteredQuotationExcel() {
     let fileName = `Bao_Gia_${currentMode}_${new Date().toISOString().slice(0,10)}.xlsx`;
     XLSX.writeFile(wb, fileName);
 }
-```[cite: 1]
-
-### Các điểm đã được khắc phục trong đoạn code trên:
-1. **Khắc phục lỗi lặp cột STT:** Loại bỏ hoàn toàn việc bị trùng lặp cột `STT` ở cột A và cột B như trong hình ảnh[cite: 2] của anh.
-2. **Định dạng số liệu chuẩn:** Các cột giá tiền và tồn kho được ép kiểu dạng số nguyên giúp Excel tự động căn lề phải và hiển thị dấu phân cách hàng nghìn rõ ràng[cite: 1, 2].
 
 
 </script>
