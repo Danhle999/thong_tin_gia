@@ -2648,10 +2648,10 @@ function exportFilteredQuotationExcel() {
         }
         
         // Tự động nhận diện dòng tiêu đề nhóm (dòng chỉ có 1-2 ô có chữ như "LAPTOP", các ô còn lại trống)
-        let isGroupRow = (filledCellsCount <= 2 && rowValues.some(v => {
+        let isGroupRow = rowValues.some(v => {
             let s = String(v).trim().toUpperCase();
-            return s === 'LAPTOP' || s === 'PC' || s === 'LCD' || s === 'AIO' || s === 'MÀN HÌNH' || s === 'MÁY IN';
-        }));
+            return s.includes('LAPTOP') || s.includes('PC') || s.includes('MÀN HÌNH') || s.includes('LCD') || s.includes('AIO') || s.includes('MÁY IN');
+        });
         if (!isGroupRow && filledCellsCount === 1) {
             isGroupRow = true; // Nếu cả dòng chỉ có đúng 1 ô có dữ liệu thì tự động coi là dòng tiêu đề nhóm
         }
