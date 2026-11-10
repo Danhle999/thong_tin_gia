@@ -356,6 +356,10 @@
                 <button class="btn btn-sm btn-danger fw-bold d-none" id="btnExportPDF" onclick="exportFilteredQuotationPDF()">
                     <i class="fa-solid fa-file-pdf me-1"></i>Xuất PDF Báo Giá
                 </button>
+                <!-- Nút Xuất Excel Báo Giá -->
+                <button class="btn btn-sm btn-success fw-bold d-none" id="btnExportExcel" onclick="exportFilteredQuotationExcel()">
+                    <i class="fa-solid fa-file-excel me-1"></i>Xuất Excel Báo Giá
+                </button>
             </div>
             <div class="col-md-6 d-flex justify-content-end gap-2" id="excelUploadContainer">
                 <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelUpload(event)">
@@ -2564,6 +2568,53 @@ function toggleHideHetHang() {
             setTimeout(() => {
                 win.print();
             }, 300);
+        }
+
+    // Xuất file Excel (Dựa trên cấu trúc xuất PDF)
+        function exportFilteredQuotationExcel() {
+            if (!table) return;
+            let activeRows = table.getData("active"); // Lấy các dòng đang lọc/hiển thị
+            if (activeRows.length === 0) {
+                alert("Không có dữ liệu để xuất Excel!");
+                return;
+            }
+            
+            let activeCols = getActiveColumns();
+            
+            // 1. Tạo mảng chứa tiêu đề cột (Thêm STT ở đầu)
+            let headers = ["STT"];
+            activeCols.forEach(c => {
+                headers.push(c.label);
+            });
+            
+            let excelData = [headers];
+            
+            // 2. Duyệt qua các dòng dữ liệu đang hiển thị
+            activeRows.forEach((row, index) => {
+                let rowData = [index + 1]; // Cột STT
+                
+                activeCols.forEach((c, idx) => {
+                    let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
+                    
+                    // Nếu là cột số liệu và có giá trị thì format kiểu số nguyên (hoặc giữ nguyên dạng số để Excel dễ tính toán)
+                    if (c.numeric && !isNaN(val) && val !== '') {
+                        val = Number(val);
+                    }
+                    
+                    rowData.push(val);
+                });
+                
+                excelData.push(rowData);
+            });
+            
+            // 3. Tạo Workbook và Worksheet từ SheetJS
+            let ws = XLSX.utils.aoa_to_sheet(excelData);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Bao_Gia");
+            
+            // 4. Tải file về máy
+            let fileName = `Bao_Gia_${currentMode}_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
         }
 </script>
 
