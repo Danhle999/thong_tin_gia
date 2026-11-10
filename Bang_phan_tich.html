@@ -2577,7 +2577,7 @@ function toggleHideHetHang() {
             }, 300);
         }
 
-    // Xuất file Excel: Bỏ cột đầu tiên (Cột A) và định dạng riêng theo các dòng chỉ định (1, 2, 26, 46,...)
+    // Xuất file Excel: Bỏ cột đầu tiên và định dạng riêng theo dòng (1, 2, 26, 46)
 function exportFilteredQuotationExcel() {
     if (!table) return;
     let activeRows = table.getData("active"); // Lấy các dòng đang hiển thị
@@ -2588,10 +2588,9 @@ function exportFilteredQuotationExcel() {
     
     let activeCols = getActiveColumns();
     
-    // YÊU CẦU 1: Bỏ cột đầu tiên (Cột A) khỏi danh sách cột xuất file
+    // 1. Bỏ cột đầu tiên (Cột A) khỏi danh sách cột xuất file
     let exportedCols = activeCols.slice(1);
     
-    // Tạo tiêu đề (bỏ cột đầu)
     let headers = [];
     exportedCols.forEach(c => {
         headers.push(c.label);
@@ -2599,15 +2598,15 @@ function exportFilteredQuotationExcel() {
     
     let excelData = [headers];
     
-    // YÊU CẦU 2: Định nghĩa các dòng cần định dạng đặc biệt (Ví dụ: dòng 1, 2, 26, 46 tính từ dữ liệu)
-    // Lưu ý: Trong mảng excelData, index 0 là Header, nên dòng dữ liệu thứ 1 nằm ở index 1.
+    // 2. Định nghĩa các dòng cần định dạng đặc biệt (Dòng 1, 2, 26, 46 tính trên file Excel)
+    // Lưu ý: Dòng 0 là Header, nên dòng dữ liệu thứ 1 nằm ở index 1.
     let specialRowIndices = [1, 2, 26, 46]; 
 
     activeRows.forEach((row, index) => {
         let rowData = [];
         let hasData = false;
         
-        // Bắt đầu lấy dữ liệu từ cột thứ 2 (bỏ qua index 0 tương ứng cột A)
+        // Bắt đầu lấy dữ liệu từ cột thứ 2 (bỏ qua index 0 của giao diện)
         for (let idx = 1; idx < activeCols.length; idx++) {
             let c = activeCols[idx];
             let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
@@ -2620,7 +2619,6 @@ function exportFilteredQuotationExcel() {
             rowData.push(val);
         }
         
-        // Chỉ thêm dòng nếu có dữ liệu thực tế
         if (hasData) {
             excelData.push(rowData);
         }
@@ -2633,7 +2631,7 @@ function exportFilteredQuotationExcel() {
     
     let ws = XLSX.utils.aoa_to_sheet(excelData);
     
-    // Tùy chỉnh độ rộng cột (tương ứng với các cột đã cắt bỏ cột đầu)
+    // Tự động căn chỉnh độ rộng cột
     let colWidths = [];
     exportedCols.forEach(c => {
         let maxLen = Math.max(c.label.length, 12);
@@ -2641,22 +2639,22 @@ function exportFilteredQuotationExcel() {
     });
     ws['!cols'] = colWidths;
 
-    // Duyệt và áp dụng định dạng nâng cao cho toàn bộ bảng và các dòng đặc biệt
+    // 3. Áp dụng Style màu sắc, khung viền và định dạng dòng đặc biệt
     let range = XLSX.utils.decode_range(ws['!ref']);
     for (let R = range.s.r; R <= range.e.r; ++R) {
         for (let C = range.s.c; C <= range.e.c; ++C) {
-            let cellAddress = XLSX.utils.encode_cell({r: R, C: C});
+            let cellAddress = XLSX.utils.encode_cell({r: R, c: C});
             if (!ws[cellAddress]) continue;
             let cell = ws[cellAddress];
             
             if (!cell.s) cell.s = {};
 
-            // Viền mỏng cho toàn bộ bảng
+            // Kẻ khung viền mỏng xám nhạt cho toàn bộ bảng
             cell.s.border = {
-                top: { style: "thin", color: { rgb: "E2E8F0" } },
-                bottom: { style: "thin", color: { rgb: "E2E8F0" } },
-                left: { style: "thin", color: { rgb: "E2E8F0" } },
-                right: { style: "thin", color: { rgb: "E2E8F0" } }
+                top: { style: "thin", color: { rgb: "D1D5DB" } },
+                bottom: { style: "thin", color: { rgb: "D1D5DB" } },
+                left: { style: "thin", color: { rgb: "D1D5DB" } },
+                right: { style: "thin", color: { rgb: "D1D5DB" } }
             };
 
             // Định dạng dòng Tiêu đề (Header - R = 0)
@@ -2666,12 +2664,12 @@ function exportFilteredQuotationExcel() {
                 cell.s.alignment = { horizontal: "center", vertical: "center" };
             } 
             else {
-                // Định dạng các dòng dữ liệu thông thường
+                // Định dạng mặc định cho các dòng thường
                 cell.s.font = { name: "Segoe UI", sz: 10, color: { rgb: "333333" } };
                 
-                // YÊU CẦU 2 (Tiếp theo): Định dạng riêng cho các dòng chỉ định (1, 2, 26, 46)
+                // Định dạng riêng cho các dòng chỉ định (1, 2, 26, 46)
                 if (specialRowIndices.includes(R)) {
-                    cell.s.fill = { fgColor: { rgb: "FEF3C7" } }; // Tô nền vàng nhạt nổi bật cho các dòng đặc biệt
+                    cell.s.fill = { fgColor: { rgb: "FEF3C7" } }; // Tô nền vàng nhạt nổi bật
                     cell.s.font.bold = true;                     // In đậm chữ
                 }
             }
