@@ -2639,7 +2639,7 @@ function exportFilteredQuotationExcel() {
             let colIndexInExport = idx - 1;
             
             // TÔ MÀU RIÊNG CHO CỘT C, D, E, F (tương ứng index từ 2 đến 5)
-            if (colIndexInExport >= 2 && colIndexInExport <= 5) {
+            if (colIndexInExport >= 0 && colIndexInExport <= 5) {
                 cellClass = 'col-highlight';
             }
             
