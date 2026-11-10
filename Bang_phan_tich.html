@@ -2577,74 +2577,109 @@ function toggleHideHetHang() {
             }, 300);
         }
 
-    // Xuất file Excel chuẩn định dạng đẹp mắt, tự động định dạng số và căn chỉnh
-        function exportFilteredQuotationExcel() {
-            if (!table) return;
-            let activeRows = table.getData("active"); // Lấy các dòng đang lọc/hiển thị
-            if (activeRows.length === 0) {
-                alert("Không có dữ liệu để xuất Excel!");
-                return;
+    // Xuất file Excel chuẩn định dạng đẹp mắt (Có màu tiêu đề, kẻ khung viền và canh chỉnh)
+function exportFilteredQuotationExcel() {
+    if (!table) return;
+    let activeRows = table.getData("active"); // Lấy các dòng đang lọc/hiển thị
+    if (activeRows.length === 0) {
+        alert("Không có dữ liệu để xuất Excel!");
+        return;
+    }
+    
+    let activeCols = getActiveColumns();
+    
+    // 1. Tạo danh sách tiêu đề chuẩn
+    let headers = ["STT"];
+    activeCols.forEach(c => {
+        headers.push(c.label);
+    });
+    
+    let excelData = [headers];
+    
+    // 2. Duyệt qua từng dòng dữ liệu
+    activeRows.forEach((row, index) => {
+        let rowData = [index + 1]; // Cột STT chuẩn tăng dần
+        
+        activeCols.forEach((c, idx) => {
+            let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
+            
+            // Nếu là cột số lượng / giá tiền: Ép kiểu về số
+            if (c.numeric && !isNaN(val) && val !== '') {
+                val = Number(val);
             }
             
-            let activeCols = getActiveColumns();
+            rowData.push(val);
+        });
+        
+        excelData.push(rowData);
+    });
+    
+    // 3. Khởi tạo Worksheet từ SheetJS
+    let ws = XLSX.utils.aoa_to_sheet(excelData);
+    
+    // 4. Thiết lập định dạng số liệu và giao diện từng ô (Border, Font, Alignment, Background)
+    let range = XLSX.utils.decode_range(ws['!ref']);
+    
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            let cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+            if (!ws[cellAddress]) continue;
             
-            // 1. Tạo danh sách tiêu đề chuẩn (bỏ cột STT thừa, chỉ giữ lại 1 cột STT đầu tiên)
-            let headers = ["STT"];
-            activeCols.forEach(c => {
-                headers.push(c.label);
-            });
+            let cell = ws[cellAddress];
             
-            let excelData = [headers];
+            // Khởi tạo khung style cơ bản cho ô
+            if (!cell.s) cell.s = {};
             
-            // 2. Duyệt qua từng dòng dữ liệu
-            activeRows.forEach((row, index) => {
-                let rowData = [index + 1]; // Cột STT chuẩn tăng dần
+            // Viền mỏng màu xám cho toàn bộ bảng
+            cell.s.border = {
+                top: { style: "thin", color: { rgb: "CBD5E1" } },
+                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+                left: { style: "thin", color: { rgb: "CBD5E1" } },
+                right: { style: "thin", color: { rgb: "CBD5E1" } }
+            };
+            
+            // Định dạng riêng cho dòng tiêu đề (Header - R = 0)
+            if (R === 0) {
+                cell.s.fill = { fgColor: { rgb: "0D6EFD" } }; // Nền xanh dương chủ đạo
+                cell.s.font = { name: "Segoe UI", sz: 11, bold: true, color: { rgb: "FFFFFF" } }; // Chữ trắng, in đậm
+                cell.s.alignment = { horizontal: "center", vertical: "center", wrapText: true };
+            } 
+            else {
+                // Định dạng cho các dòng dữ liệu bên dưới
+                cell.s.font = { name: "Segoe UI", sz: 10, color: { rgb: "333333" } };
+                cell.s.alignment = { vertical: "center" };
                 
-                activeCols.forEach((c, idx) => {
-                    let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
-                    
-                    // Nếu là cột số lượng / giá tiền: Ép kiểu về số (Number) để Excel nhận diện và định dạng dấu phẩy phân cách
-                    if (c.numeric && !isNaN(val) && val !== '') {
-                        val = Number(val);
-                    }
-                    
-                    rowData.push(val);
-                });
-                
-                excelData.push(rowData);
-            });
-            
-            // 3. Khởi tạo Worksheet từ SheetJS
-            let ws = XLSX.utils.aoa_to_sheet(excelData);
-            
-            // 4. Thiết lập định dạng số liệu (Format dạng #,##0 cho các cột số để hiển thị dấu chấm phân cách hàng nghìn)
-            let range = XLSX.utils.decode_range(ws['!ref']);
-            for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    let cellAddress = XLSX.utils.encode_cell({r: R, c: C});
-                    let cell = ws[cellAddress];
-                    if (cell && typeof cell.v === 'number') {
-                        // Kiểm tra nếu là số tiền hoặc số lượng lớn thì áp dụng format phân cách hàng nghìn
-                        cell.z = '#,##0';
-                    }
+                // Định dạng số (Dấu phẩy phân cách hàng nghìn)
+                if (typeof cell.v === 'number') {
+                    cell.z = '#,##0';
+                    cell.s.alignment.horizontal = "right"; // Số căn phải
+                } else if (activeCols[C - 1] && activeCols[C - 1].date) {
+                    cell.s.alignment.horizontal = "center"; // Ngày tháng căn giữa
+                } else {
+                    cell.s.alignment.horizontal = "left"; // Chữ căn trái
                 }
             }
-            
-            // 5. Tự động căn chỉnh độ rộng các cột cho thoáng, không bị che chữ
-            let colWidths = [{ wch: 6 }]; // Độ rộng cột STT
-            activeCols.forEach(c => {
-                let maxLen = Math.max(c.label.length, 12);
-                colWidths.push({ wch: maxLen + 6 });
-            });
-            ws['!cols'] = colWidths;
-
-            // 6. Tạo file và tải về máy
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Bao_Gia");
-            
-            let fileName = `Bao_Gia_${currentMode}_${new Date().toISOString().slice(0,10)}.xlsx`;
-            XLSX.writeFile(wb, fileName);
         }
+    }
+    
+    // 5. Tự động căn chỉnh độ rộng các cột cho thoáng
+    let colWidths = [{ wch: 8 }]; // Độ rộng cột STT
+    activeCols.forEach(c => {
+        let maxLen = Math.max(c.label.length, 12);
+        colWidths.push({ wch: maxLen + 6 });
+    });
+    ws['!cols'] = colWidths;
+
+    // Thiết lập chiều cao dòng tiêu đề cho thoáng
+    ws['!rows'] = [{ hpt: 28 }];
+
+    // 6. Tạo file và tải về máy
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Bao_Gia");
+    
+    let fileName = `Bao_Gia_${currentMode}_${new Date().toISOString().slice(0,10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
