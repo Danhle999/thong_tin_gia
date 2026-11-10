@@ -2577,7 +2577,7 @@ function toggleHideHetHang() {
             }, 300);
         }
 
-    // Xuất file Excel: Bỏ cột đầu tiên, định dạng màu sắc và tô điểm riêng các dòng (1, 2, 26, 46)
+    // Xuất file Excel: Bỏ cột đầu tiên, lọc dòng trống và chỉ tô màu từ cột A đến cột F (Cột 1 đến Cột 6) cho các ô trống
 function exportFilteredQuotationExcel() {
     if (!table) return;
     let activeRows = table.getData("active"); // Lấy các dòng đang hiển thị (đã qua bộ lọc)
@@ -2590,11 +2590,8 @@ function exportFilteredQuotationExcel() {
     
     // 1. Bỏ cột đầu tiên (Cột A) khỏi danh sách cột xuất file
     let exportedCols = activeCols.slice(1);
-    
-    // 2. Chỉ định các dòng cần tô màu / làm nổi bật đặc biệt (Dòng 1, 2, 26, 46)
-    let specialRows = [1, 2, 26, 46];
 
-    // Xây dựng cấu trúc bảng HTML kèm Style trực tiếp để Excel đọc chuẩn xác
+    // Xây dựng cấu trúc bảng HTML kèm CSS định dạng trực tiếp
     let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
     <head>
         <meta charset="UTF-8">
@@ -2602,8 +2599,10 @@ function exportFilteredQuotationExcel() {
             table { border-collapse: collapse; width: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 11pt; }
             th { background-color: #0d6efd; color: #ffffff; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #999; }
             td { border: 1px solid #d1d5db; padding: 6px 8px; vertical-align: middle; }
-            /* Định dạng riêng cho các dòng đặc biệt (1, 2, 26, 46) */
-            .special-row { background-color: #FEF3C7; font-weight: bold; color: #92400E; }
+            
+            /* Style tô màu cảnh báo đỏ nhạt chỉ riêng cho ô trống ở Cột 1 hoặc Cột 2 */
+            .empty-cell { background-color: #FEE2E2; border: 1px solid #EF4444; }
+            
             .numeric { text-align: right; mso-number-format:"\\#,##0"; }
             .center { text-align: center; }
         </style>
@@ -2620,9 +2619,7 @@ function exportFilteredQuotationExcel() {
     
     html += `</tr></thead><tbody>`;
     
-    let validRowCounter = 1;
-    
-    // Duyệt qua từng dòng dữ liệu
+    // 2. Duyệt qua từng dòng dữ liệu
     activeRows.forEach((row, index) => {
         let hasData = false;
         let rowCellsHtml = '';
@@ -2631,34 +2628,42 @@ function exportFilteredQuotationExcel() {
         for (let idx = 1; idx < activeCols.length; idx++) {
             let c = activeCols[idx];
             let val = row["col_" + idx] !== undefined && row["col_" + idx] !== null ? row["col_" + idx] : '';
-            if (String(val).trim() !== '') hasData = true;
+            if (String(val).trim() !== '') hasData = true; // Kiểm tra xem dòng có dữ liệu thật không
             
             let cellClass = '';
             let displayVal = val;
             
-            // Xử lý căn lề và định dạng số
-            if (c && c.numeric && !isNaN(val) && val !== '') {
-                cellClass = 'numeric';
-                displayVal = Number(val).toLocaleString('vi-VN');
-            } else if (c && c.date) {
-                cellClass = 'center';
+            // Xác định vị trí cột trong danh sách xuất (colIndexInExport: 0 là Cột A / Cột 1, 1 là Cột B / Cột 2, ..., 5 là Cột F / Cột 6)
+            let colIndexInExport = idx - 1;
+            
+            // CHỈ XÉT TỪ CỘT A ĐẾN CỘT F (từ index 0 đến 5): Nếu Cột 1 hoặc Cột 2 bị trống thì tô màu ô đó
+            if (colIndexInExport >= 0 && colIndexInExport <= 5) {
+                if ((colIndexInExport === 0 || colIndexInExport === 1) && String(val).trim() === '') {
+                    cellClass = 'empty-cell';
+                }
             }
             
-            rowCellsHtml += `<td class="${cellClass}">${displayVal}</td>`;
+            // Xử lý căn lề và định dạng số liệu
+            if (c && c.numeric && !isNaN(val) && val !== '') {
+                cellClass += (cellClass ? ' ' : '') + 'numeric';
+                displayVal = Number(val).toLocaleString('vi-VN');
+            } else if (c && c.date) {
+                cellClass += (cellClass ? ' ' : '') + 'center';
+            }
+            
+            let classAttr = cellClass ? `class="${cellClass}"` : '';
+            rowCellsHtml += `<td ${classAttr}>${displayVal}</td>`;
         }
         
-        // Nếu dòng có dữ liệu thực tế thì đưa vào file
+        // Chỉ thêm vào file Excel nếu dòng đó có dữ liệu thực tế (tự động bỏ dòng trống toàn bộ)
         if (hasData) {
-            let isSpecial = specialRows.includes(validRowCounter);
-            let trClass = isSpecial ? 'class="special-row"' : '';
-            html += `<tr ${trClass}>${rowCellsHtml}</tr>`;
-            validRowCounter++;
+            html += `<tr>${rowCellsHtml}</tr>`;
         }
     });
     
     html += `</tbody></table></body></html>`;
 
-    // Kích hoạt tạo file và tải xuống mượt mà qua Blob
+    // 3. Kích hoạt tạo file và tải xuống mượt mà
     let blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
@@ -2669,6 +2674,9 @@ function exportFilteredQuotationExcel() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+```[cite: 3]
+
+Anh thay thế đoạn code này vào file, bấm xuất Excel là sẽ thấy đúng ý: các dòng trống được loại bỏ hoàn toàn, không bị tô màu cả dòng mà chỉ tô đúng vào ô trống nằm trong khoảng từ cột A đến cột F thôi nhé[cite: 3]!
 
 
 
