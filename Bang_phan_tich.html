@@ -2697,7 +2697,7 @@ function exportFilteredQuotationExcel() {
     let url = URL.createObjectURL(blob);
     let a = document.createElement('a');
     a.href = url;
-    a.download = `Bao_Gia_${currentMode}_${new Date().toISOString().slice(0,10)}.xls`;
+    a.download = `${currentMode}_${new Date().toISOString().slice(0,10)}.xls`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
