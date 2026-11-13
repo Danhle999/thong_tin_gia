@@ -292,6 +292,7 @@
                 <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">LCD</button>
                 <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">AIO</button>
                 <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">MÁY IN / SCAN</button>
+                <button type="button" id="btnModeLinhKien" class="btn btn-outline-warning" onclick="switchTableMode('LINH_KIỆN')">LINH KIỆN</button>
                 <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">BÁN HÀNG</button>
                 <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
                 <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
@@ -750,6 +751,14 @@
             { label: 'GIÁ BÁN TIỀN MẶT', numeric: true, width: 120 }, { label: 'GIÁ BÁN ĐỀ XUẤT', numeric: true, width: 120 },
             { label: 'NGÀY NHẬP CŨ', date: true }, { label: 'NGÀY NHẬP MỚI', date: true }, { label: 'CHECK GIÁ BÁN', numeric: true, width: 130 }
         ],
+        'LINH_KIỆN': [
+            { label: 'STT', numeric: true, width: 50 },
+            { label: 'NCC', width: 100 },
+            { label: 'Mã part', code: true, width: 250 },
+            { label: 'TÊN SẢN PHẨM', desc: true, width: 600 },
+            { label: 'GIÁ FULL VAT', numeric: true, width: 150 },
+            { label: 'GHI CHÚ', width: 250 }
+        ],
         'BAN_HANG': [
             { label: 'Mã Khách Hàng' },
             { label: 'Tên khách hàng(0)', customer: true }, { label: 'Số đơn hàng(1)' }, { label: 'Ngày ghi sổ(2)', date: true },
@@ -900,6 +909,7 @@
             'LCD': { id: 'btnModeLcd', cls: 'btn-danger' },
             'AIO': { id: 'btnModeAio', cls: 'btn-secondary' },
             'SCAN_MAY_IN': { id: 'btnModeScanMayIn', cls: 'btn-primary' },
+            'LINH_KIỆN': { id: 'btnModeLinhKien', cls: 'btn-warning' },
             'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
             'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
             'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
