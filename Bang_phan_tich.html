@@ -2717,8 +2717,53 @@ function exportFilteredQuotationExcel() {
     URL.revokeObjectURL(url);
 }
 
+    
+// kiểm tra cảnh báo giá
+function checkPriceWarning(rowData, mode) {
+    // Chỉ áp dụng cho tab LCD hoặc các tab có cấu trúc tương tự
+    if (mode !== 'LCD') return '';
 
+    // Lấy giá trị từ các cột (tùy thuộc vào vị trí hoặc tên trường trong cấu hình của bạn)
+    // Ví dụ giả định các cột: GIÁ COST, GIÁ NHẬP MỚI, GIÁ BÁN LẺ, GIÁ BÁN SL
+    let activeCols = getActiveColumns();
+    
+    let getColVal = (keyword) => {
+        let colIdx = activeCols.findIndex(c => c.label.trim().toUpperCase().includes(keyword));
+        if (colIdx === -1) return 0;
+        let val = rowData["col_" + colIdx];
+        let num = parseFloat(String(val).replace(/[^\d.-]/g, ''));
+        return isNaN(num) ? 0 : num;
+    };
 
+    let costPrice = getColVal('GIÁ COST');
+    let newImportPrice = getColVal('GIÁ NHẬP MỚI');
+    let retailPrice = getColVal('GIÁ BÁN LẺ');
+    let wholesalePrice = getColVal('GIÁ BÁN SL');
+
+    let warnings = [];
+
+    // Kiểm tra giá bán lẻ
+    if (retailPrice > 0) {
+        if (costPrice > 0 && retailPrice < costPrice) {
+            warnings.push("Lẻ: Thấp hơn giá cost");
+        } else if (newImportPrice > 0 && retailPrice < newImportPrice) {
+            warnings.push("Lẻ: Thấp hơn giá nhập");
+        }
+    }
+
+    // Kiểm tra giá bán sỉ (SL)
+    if (wholesalePrice > 0) {
+        if (costPrice > 0 && wholesalePrice < costPrice) {
+            warnings.push("Sỉ: Thấp hơn giá cost");
+        } else if (newImportPrice > 0 && wholesalePrice < newImportPrice) {
+            warnings.push("Sỉ: Thấp hơn giá nhập");
+        }
+    }
+
+    return warnings.join(" | ");
+}
+
+    
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
