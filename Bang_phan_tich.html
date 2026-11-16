@@ -2728,12 +2728,17 @@ function exportFilteredQuotationExcel() {
 }
 
     // CHECK BẢNG LÊN GIÁ
-// Dùng phiên bản tối ưu này để loại bỏ hoàn toàn lỗi kết nối Google Sheets
 function checkPriceMismatchInBangLenGia(tabRows) {
     let alertEl = document.getElementById('priceMismatchAlert');
     let textEl = document.getElementById('priceMismatchAlertText');
 
+    // Nếu không phải tab BẢNG LÊN GIÁ thì ẩn thông báo đi và thoát
     if (currentMode !== 'BANG_LEN_GIA') {
+        if (alertEl) alertEl.classList.add('d-none');
+        return;
+    }
+
+    if (!tabRows || tabRows.length === 0) {
         if (alertEl) alertEl.classList.add('d-none');
         return;
     }
@@ -2748,7 +2753,6 @@ function checkPriceMismatchInBangLenGia(tabRows) {
     }
 
     let mismatchedItems = [];
-    // Chỉ quét các tab nào đã được mở và lưu trong bộ nhớ cache trình duyệt
     let availableSourceTabs = Object.keys(tabDataCache).filter(t => t !== 'BANG_LEN_GIA');
 
     tabRows.forEach(row => {
@@ -2758,7 +2762,7 @@ function checkPriceMismatchInBangLenGia(tabRows) {
         if (!code) return;
 
         if (currentCash <= 0) {
-            mismatchedItems.push(`${code} (Trống giá trên bảng lên giá)`);
+            mismatchedItems.push(`${code} (Trống giá)`);
             return;
         }
 
@@ -2788,20 +2792,15 @@ function checkPriceMismatchInBangLenGia(tabRows) {
             }
         }
 
-        // Nếu tìm thấy trong cache các tab đã mở mà giá bị lệch hoặc trống
-        if (foundMatch) {
-            if (standardPrice <= 0) {
-                mismatchedItems.push(`${code} (Tab gốc đang để trống giá)`);
-            } else if (currentCash !== standardPrice) {
-                mismatchedItems.push(`${code} (Bảng lên giá: ${currentCash.toLocaleString('vi-VN')} ≠ Tab gốc: ${standardPrice.toLocaleString('vi-VN')})`);
-            }
+        if (foundMatch && standardPrice > 0 && currentCash !== standardPrice) {
+            mismatchedItems.push(`${code} (${currentCash.toLocaleString('vi-VN')} ≠ Gốc ${standardPrice.toLocaleString('vi-VN')})`);
         }
     });
 
     if (mismatchedItems.length > 0) {
         if (alertEl) {
             alertEl.classList.remove('d-none');
-            textEl.innerHTML = `⚠️ Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có vấn đề về giá (trống giá hoặc lệch so với tab gốc): <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
+            textEl.innerHTML = `⚠️ Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có giá tiền mặt lệch so với tab gốc: <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
         }
     } else {
         if (alertEl) alertEl.classList.add('d-none');
