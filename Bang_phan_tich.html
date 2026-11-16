@@ -2727,7 +2727,7 @@ function exportFilteredQuotationExcel() {
     URL.revokeObjectURL(url);
 }
 
-    
+    // CHECK BẢNG LÊN GIÁ
 function checkPriceMismatchInBangLenGia(tabRows) {
     let alertEl = document.getElementById('priceMismatchAlert');
     let textEl = document.getElementById('priceMismatchAlertText');
@@ -2750,32 +2750,69 @@ function checkPriceMismatchInBangLenGia(tabRows) {
 
     let mismatchedItems = [];
 
+    // Các tab nguồn có chứa giá chuẩn để đối chiếu
+    let sourceTabsToRutGon = ['LAPTOP', 'PC', 'LCD', 'AIO', 'LINH_KIEN'];
+
     // Duyệt qua từng dòng trên bảng lên giá để kiểm tra
     tabRows.forEach(row => {
-        let code = String(row[codeIdx] || '').trim();
+        let code = String(row[codeIdx] || '').trim().toUpperCase();
         let currentCash = parseFloat(String(row[cashIdx] || '').replace(/[^\d]/g, '')) || 0;
         let currentCredit = parseFloat(String(row[creditIdx] || '').replace(/[^\d]/g, '')) || 0;
 
-        // 👉 ĐOẠN NÀY BẠN ĐỐI CHƯỚC VỚI DỮ LIỆU GỐC HOẶC ĐIỀU KIỆN SAI SÓT CỦA BẠN
-        // Ví dụ: Kiểm tra nếu giá tiền mặt bằng 0, hoặc lệch so với một mốc quy định, 
-        // hoặc bạn có thể so sánh chéo với dữ liệu từ tab LAPTOP/PC/LCD đã được lưu trong tabDataCache.
-        
-        let targetTabCache = tabDataCache['LAPTOP']; // Hoặc tab tương ứng
-        if (targetTabCache && Array.isArray(targetTabCache) && targetTabCache.length > 1) {
-            // Logic tìm kiếm mã tương ứng ở tab gốc để so sánh giá...
-            // (Tùy thuộc vào cấu trúc lưu trữ dữ liệu thực tế của bạn trên Google Sheets)
+        if (!code) return;
+
+        // Kiểm tra điều kiện cơ bản: Nếu giá bị trống hoặc <= 0 thì coi như lỗi/sai
+        if (currentCash <= 0 || currentCredit <= 0) {
+            mismatchedItems.push(`${code} (Trống giá)`);
+            return;
         }
 
-        // Giả lập điều kiện phát hiện giá bị trống hoặc bằng 0 (hoặc sai logic của bạn):
-        if (code && (currentCash <= 0 || currentCredit <= 0)) {
-            mismatchedItems.push(code);
+        // --- NÂNG CAO: Tự động quét qua các tab gốc để đối chiếu giá xem có bị lệch không ---
+        let foundMatch = false;
+        let standardCash = 0;
+        let standardCredit = 0;
+
+        for (let tName of sourceTabsToRutGon) {
+            let cacheData = tabDataCache[tName];
+            if (cacheData && Array.isArray(cacheData) && cacheData.length > 1) {
+                let tabConfigs = SHEET_CONFIGS[tName] || [];
+                // Tìm cột chứa mã và cột chứa giá tiền mặt/công nợ ở tab gốc
+                let tCodeIdx = tabConfigs.findIndex(c => {
+                    let l = c.label.trim().toUpperCase();
+                    return l.includes('MÃ HÀNG HÓA') || l.includes('MÃ KTB') || l.includes('MÃ PART');
+                });
+                let tCashIdx = tabConfigs.findIndex(c => c.cashPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN TIỀN MẶT'));
+                let tCreditIdx = tabConfigs.findIndex(c => c.creditPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN CÔNG NỢ'));
+
+                if (tCodeIdx !== -1) {
+                    // Tìm dòng có mã trùng khớp trong tab gốc
+                    let matchedRow = cacheData.slice(1).find(r => String(r[tCodeIdx] || '').trim().toUpperCase() === code);
+                    if (matchedRow) {
+                        foundMatch = true;
+                        if (tCashIdx !== -1) standardCash = parseFloat(String(matchedRow[tCashIdx] || '').replace(/[^\d]/g, '')) || 0;
+                        if (tCreditIdx !== -1) standardCredit = parseFloat(String(matchedRow[tCreditIdx] || '').replace(/[^\d]/g, '')) || 0;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Nếu tìm thấy ở tab gốc và giá trên Bảng Lên Giá bị lệch so với giá chuẩn gốc
+        if (foundMatch) {
+            let isCashWrong = standardCash > 0 && currentCash !== standardCash;
+            let isCreditWrong = standardCredit > 0 && currentCredit !== standardCredit;
+
+            if (isCashWrong || isCreditWrong) {
+                mismatchedItems.push(`${code} (Lệch giá gốc)`);
+            }
         }
     });
 
+    // Hiển thị thông báo nếu phát hiện mã bị sai/lệch
     if (mismatchedItems.length > 0) {
         if (alertEl) {
             alertEl.classList.remove('d-none');
-            textEl.innerHTML = `Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có Giá tiền mặt hoặc Giá công nợ bị trống/sai: <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
+            textEl.innerHTML = `⚠️ Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có Giá tiền mặt hoặc Giá công nợ bị trống hoặc lệch so với tab gốc: <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
         }
     } else {
         if (alertEl) alertEl.classList.add('d-none');
