@@ -2629,14 +2629,23 @@ function exportFilteredQuotationExcel() {
         <meta charset="UTF-8">
         <style>
             table { border-collapse: collapse; width: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 10pt; }
-            th { background-color: #0d6efd; color: #ffffff; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #94a3b8; }
-            td { border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
+            th { background-color: #0d6efd; color: #ffffff; font-weight: bold; text-align: center; padding: 12px 10px; border: 1px solid #94a3b8; }
             
-            /* Tô màu riêng cho Cột C, D, E, F (Index 2, 3, 4, 5) ở dòng dữ liệu thường */
+            /* Tăng chiều cao hàng (padding) lên để khoảng cách hàng thoáng hơn (đạt khoảng 40px tổng chiều cao) */
+            td { border: 1px solid #cbd5e1; padding: 14px 8px; vertical-align: middle; }
+            
+            /* Tô màu riêng cho Cột quan trọng */
             .col-highlight { background-color: #F0FDF4; border: 1px solid #BBF7D0; }
             
-            /* Tô màu nền và in đậm cho dòng tiêu đề nhóm / dòng trống (ví dụ dòng "LAPTOP", "PC",...) */
-            .group-row td { background-color: #E2E8F0 !important; font-weight: bold; color: #1E293B; border: 1px solid #CBD5E1; }
+            /* Trang trí dòng tiêu đề nhóm: Nền xám, in đậm, căn giữa chữ và tăng chiều cao */
+            .group-row td { 
+                background-color: #E2E8F0 !important; 
+                font-weight: bold; 
+                color: #1E293B; 
+                border: 1px solid #CBD5E1; 
+                text-align: center !important; 
+                padding: 14px 8px;
+            }
             
             .numeric { text-align: right; mso-number-format:"\\#,##0"; }
             .center { text-align: center; }
