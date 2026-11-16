@@ -318,7 +318,7 @@
             </div>
         </div>
 
-        <!-- BẢNG THÔNG BÁO LỆCH GIÁ TRÊN BẢNG LÊN GIÁ -->
+        <!-- BẢNG THÔNG BÁO LỆCH GIÁ BÁN TIỀN MẶT TRÊN TAB BẢNG LÊN GIÁ -->
         <div id="priceMismatchAlert" class="alert alert-danger py-2 px-3 mb-2 small d-none d-flex justify-content-between align-items-center" style="flex-shrink: 0;">
             <div>
                 <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>
@@ -2730,82 +2730,128 @@ function exportFilteredQuotationExcel() {
 }
 
     // CHECK BẢNG LÊN GIÁ
+let isPreloadingSourceTabs = false;
+
+// Nạp tuần tự từng tab gốc chưa có trong cache để tránh quá tải Google Apps Script
+async function loadMissingSourceTabsSequentially(onCompleteCallback) {
+    if (isPreloadingSourceTabs) return;
+    const sourceTabs = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
+    const missingTabs = sourceTabs.filter(t => !tabDataCache[t]);
+
+    if (missingTabs.length === 0) return;
+
+    isPreloadingSourceTabs = true;
+    const alertEl = document.getElementById('priceMismatchAlert');
+    const textEl = document.getElementById('priceMismatchAlertText');
+
+    if (alertEl && textEl && currentMode === 'BANG_LEN_GIA') {
+        alertEl.classList.remove('d-none');
+        textEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang tải dữ liệu giá từ các tab gốc (${missingTabs.join(', ')}) để đối chiếu...`;
+    }
+
+    for (const tName of missingTabs) {
+        try {
+            const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(tName)}&nocache=false&t=${Date.now()}`);
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+                tabDataCache[tName] = data;
+            }
+        } catch (err) {
+            console.warn(`Bỏ qua tab ${tName} do lỗi mạng tạm thời:`, err);
+        }
+    }
+
+    isPreloadingSourceTabs = false;
+    if (typeof onCompleteCallback === 'function' && currentMode === 'BANG_LEN_GIA') {
+        onCompleteCallback();
+    }
+}
+
+// Hàm kiểm tra chênh lệch Giá Bán Tiền Mặt giữa BẢNG LÊN GIÁ và các tab gốc
 function checkPriceMismatchInBangLenGia(tabRows) {
-    let alertEl = document.getElementById('priceMismatchAlert');
-    let textEl = document.getElementById('priceMismatchAlertText');
+    const alertEl = document.getElementById('priceMismatchAlert');
+    const textEl = document.getElementById('priceMismatchAlertText');
 
-    // Nếu không phải tab BẢNG LÊN GIÁ thì ẩn thông báo đi và thoát
-    if (currentMode !== 'BANG_LEN_GIA') {
-        if (alertEl) alertEl.classList.add('d-none');
+    if (!alertEl || !textEl) return;
+
+    // Ẩn thông báo nếu không ở tab BẢNG LÊN GIÁ
+    if (currentMode !== 'BANG_LEN_GIA' || !Array.isArray(tabRows) || tabRows.length === 0) {
+        alertEl.classList.add('d-none');
         return;
     }
 
-    if (!tabRows || tabRows.length === 0) {
-        if (alertEl) alertEl.classList.add('d-none');
-        return;
-    }
-
-    let activeCols = getActiveColumns();
-    let codeIdx = activeCols.findIndex(c => c.code || c.label.trim().toUpperCase().includes('MÃ HÀNG HÓA'));
-    let cashIdx = activeCols.findIndex(c => c.cashPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN TIỀN MẶT'));
+    const activeCols = getActiveColumns();
+    const codeIdx = activeCols.findIndex(c => c.code || c.label.trim().toUpperCase().includes('MÃ HÀNG HÓA'));
+    const cashIdx = activeCols.findIndex(c => c.cashPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN TIỀN MẶT'));
 
     if (codeIdx === -1 || cashIdx === -1) {
-        if (alertEl) alertEl.classList.add('d-none');
+        alertEl.classList.add('d-none');
         return;
     }
 
-    let mismatchedItems = [];
-    let availableSourceTabs = Object.keys(tabDataCache).filter(t => t !== 'BANG_LEN_GIA');
+    const sourceTabs = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
 
+    // Nếu còn tab gốc chưa có dữ liệu trong cache -> tải tuần tự rồi tự động chạy lại hàm kiểm tra
+    const hasUnloadedTabs = sourceTabs.some(t => !tabDataCache[t]);
+    if (hasUnloadedTabs && !isPreloadingSourceTabs) {
+        loadMissingSourceTabsSequentially(() => checkPriceMismatchInBangLenGia(tabRows));
+    }
+
+    // Tạo bản đồ tra cứu nhanh: { MÃ_HÀNG: { tabName, sourceCash } } từ các tab gốc đã nạp
+    const sourcePriceMap = {};
+    sourceTabs.forEach(tName => {
+        const cacheData = tabDataCache[tName];
+        if (!Array.isArray(cacheData) || cacheData.length <= 1) return;
+
+        const tabConfigs = SHEET_CONFIGS[tName] || [];
+        const tCodeIdx = tabConfigs.findIndex(c => {
+            const lbl = c.label.trim().toUpperCase();
+            return c.code || lbl === 'MÃ HÀNG HÓA' || lbl === 'MÃ KTB' || lbl === 'MÃ PART';
+        });
+        const tCashIdx = tabConfigs.findIndex(c => {
+            const lbl = c.label.trim().toUpperCase();
+            return c.cashPrice || lbl.includes('GIÁ BÁN TIỀN MẶT') || lbl === 'GIÁ BÁN LẺ';
+        });
+
+        if (tCodeIdx !== -1 && tCashIdx !== -1) {
+            cacheData.slice(1).forEach(r => {
+                const itemCode = String(r[tCodeIdx] || '').trim().toUpperCase();
+                if (itemCode) {
+                    const itemCash = parseFloat(String(r[tCashIdx] || '').replace(/[^\d]/g, '')) || 0;
+                    sourcePriceMap[itemCode] = { tabName: tName, sourceCash: itemCash };
+                }
+            });
+        }
+    });
+
+    const mismatchedItems = [];
+
+    // Đối chiếu từng dòng trên BẢNG LÊN GIÁ
     tabRows.forEach(row => {
-        let code = String(row[codeIdx] || '').trim().toUpperCase();
-        let currentCash = parseFloat(String(row[cashIdx] || '').replace(/[^\d]/g, '')) || 0;
-
+        const code = String(row[codeIdx] || '').trim().toUpperCase();
         if (!code) return;
 
-        if (currentCash <= 0) {
-            mismatchedItems.push(`${code} (Trống giá)`);
-            return;
-        }
+        const currentCash = parseFloat(String(row[cashIdx] || '').replace(/[^\d]/g, '')) || 0;
+        const sourceInfo = sourcePriceMap[code];
 
-        let foundMatch = false;
-        let standardPrice = 0;
-
-        for (let tName of availableSourceTabs) {
-            let cacheData = tabDataCache[tName];
-            if (cacheData && Array.isArray(cacheData) && cacheData.length > 1) {
-                let tabConfigs = SHEET_CONFIGS[tName] || [];
-                
-                let tCodeIdx = tabConfigs.findIndex(c => c.code || c.label.trim().toUpperCase().includes('MÃ HÀNG HÓA') || c.label.trim().toUpperCase().includes('MÃ KTB') || c.label.trim().toUpperCase().includes('MÃ PART') || c.label.trim().toUpperCase().includes('SKU'));
-                let tCashIdx = tabConfigs.findIndex(c => c.cashPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN TIỀN MẶT') || c.label.trim().toUpperCase().includes('GIÁ TIỀN MẶT'));
-                let tCreditIdx = tabConfigs.findIndex(c => c.creditPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN CÔNG NỢ') || c.label.trim().toUpperCase().includes('GIÁ CÔNG NỢ') || c.label.trim().toUpperCase().includes('GIÁ BÁN ĐỀ XUẤT'));
-
-                if (tCodeIdx !== -1) {
-                    let matchedRow = cacheData.slice(1).find(r => String(r[tCodeIdx] || '').trim().toUpperCase() === code);
-                    if (matchedRow) {
-                        foundMatch = true;
-                        let valCash = tCashIdx !== -1 ? parseFloat(String(matchedRow[tCashIdx] || '').replace(/[^\d]/g, '')) || 0 : 0;
-                        let valCredit = tCreditIdx !== -1 ? parseFloat(String(matchedRow[tCreditIdx] || '').replace(/[^\d]/g, '')) || 0 : 0;
-                        
-                        standardPrice = valCash > 0 ? valCash : valCredit;
-                        break;
-                    }
-                }
+        if (sourceInfo) {
+            // Tìm thấy mã ở tab gốc: so sánh trực tiếp 2 cột Giá Bán Tiền Mặt
+            if (currentCash !== sourceInfo.sourceCash) {
+                const lenGiaStr = currentCash > 0 ? currentCash.toLocaleString('vi-VN') : 'Trống';
+                const gocStr = sourceInfo.sourceCash > 0 ? sourceInfo.sourceCash.toLocaleString('vi-VN') : 'Trống';
+                mismatchedItems.push(`${code} (Bảng lên giá: ${lenGiaStr} ≠ ${sourceInfo.tabName}: ${gocStr})`);
             }
-        }
-
-        if (foundMatch && standardPrice > 0 && currentCash !== standardPrice) {
-            mismatchedItems.push(`${code} (${currentCash.toLocaleString('vi-VN')} ≠ Gốc ${standardPrice.toLocaleString('vi-VN')})`);
+        } else if (currentCash <= 0) {
+            // Mã không nằm trong 6 tab phần cứng trên nhưng bị để trống giá tiền mặt
+            mismatchedItems.push(`${code} (Trống giá tiền mặt)`);
         }
     });
 
     if (mismatchedItems.length > 0) {
-        if (alertEl) {
-            alertEl.classList.remove('d-none');
-            textEl.innerHTML = `⚠️ Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có giá tiền mặt lệch so với tab gốc: <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
-        }
-    } else {
-        if (alertEl) alertEl.classList.add('d-none');
+        alertEl.classList.remove('d-none');
+        textEl.innerHTML = `Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> lệch <b>Giá bán tiền mặt</b> so với tab gốc: <strong class="text-danger">${mismatchedItems.join(' | ')}</strong>`;
+    } else if (!isPreloadingSourceTabs) {
+        alertEl.classList.add('d-none');
     }
 }
     
