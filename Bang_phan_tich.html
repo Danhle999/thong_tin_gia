@@ -2728,92 +2728,87 @@ function exportFilteredQuotationExcel() {
 }
 
     // CHECK BẢNG LÊN GIÁ
-function checkPriceMismatchInBangLenGia(tabRows) {
-    let alertEl = document.getElementById('priceMismatchAlert');
-    let textEl = document.getElementById('priceMismatchAlertText');
-
-    if (currentMode !== 'BANG_LEN_GIA') {
-        if (alertEl) alertEl.classList.add('d-none');
-        return;
-    }
-
-    let activeCols = getActiveColumns();
-    let codeIdx = activeCols.findIndex(c => c.label.trim().toUpperCase().includes('MÃ HÀNG HÓA'));
-    let cashIdx = activeCols.findIndex(c => c.cashPrice);
-    let creditIdx = activeCols.findIndex(c => c.creditPrice);
-
-    if (codeIdx === -1 || cashIdx === -1 || creditIdx === -1) {
-        if (alertEl) alertEl.classList.add('d-none');
-        return;
-    }
-
-    let mismatchedItems = [];
-    let sourceTabsToRutGon = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
-
-    tabRows.forEach(row => {
-        let code = String(row[codeIdx] || '').trim().toUpperCase();
-        let currentCash = parseFloat(String(row[cashIdx] || '').replace(/[^\d]/g, '')) || 0;
-        let currentCredit = parseFloat(String(row[creditIdx] || '').replace(/[^\d]/g, '')) || 0;
-
-        if (!code) return;
-
-        // 1. Kiểm tra nếu bị trống giá hoặc <= 0
-        if (currentCash <= 0 || currentCredit <= 0) {
-            mismatchedItems.push(`${code} (Trống giá)`);
-            return;
-        }
-
-        // 2. Quét qua các tab gốc để tìm và đối chiếu chính xác con số giá tiền mặt / công nợ
-        let foundMatch = false;
-        let standardCash = 0;
-        let standardCredit = 0;
-
-        for (let tName of sourceTabsToRutGon) {
-            let cacheData = tabDataCache[tName];
-            if (cacheData && Array.isArray(cacheData) && cacheData.length > 1) {
-                let tabConfigs = SHEET_CONFIGS[tName] || [];
-                
-                let tCodeIdx = tabConfigs.findIndex(c => {
-                    let l = c.label.trim().toUpperCase();
-                    return l.includes('MÃ HÀNG HÓA') || l.includes('MÃ KTB') || l.includes('MÃ PART') || l.includes('SKU');
-                });
-                
-                // Nhận diện cột giá tiền mặt và công nợ ở tab gốc
-                let tCashIdx = tabConfigs.findIndex(c => c.cashPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN TIỀN MẶT') || c.label.trim().toUpperCase().includes('GIÁ TIỀN MẶT'));
-                let tCreditIdx = tabConfigs.findIndex(c => c.creditPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN CÔNG NỢ') || c.label.trim().toUpperCase().includes('GIÁ CÔNG NỢ'));
-
-                if (tCodeIdx !== -1) {
-                    let matchedRow = cacheData.slice(1).find(r => String(r[tCodeIdx] || '').trim().toUpperCase() === code);
-                    if (matchedRow) {
-                        foundMatch = true;
-                        if (tCashIdx !== -1) standardCash = parseFloat(String(matchedRow[tCashIdx] || '').replace(/[^\d]/g, '')) || 0;
-                        if (tCreditIdx !== -1) standardCredit = parseFloat(String(matchedRow[tCreditIdx] || '').replace(/[^\d]/g, '')) || 0;
-                        break;
+        function checkPriceMismatchInBangLenGia(tabRows) {
+            let alertEl = document.getElementById('priceMismatchAlert');
+            let textEl = document.getElementById('priceMismatchAlertText');
+        
+            if (currentMode !== 'BANG_LEN_GIA') {
+                if (alertEl) alertEl.classList.add('d-none');
+                return;
+            }
+        
+            let activeCols = getActiveColumns();
+            let codeIdx = activeCols.findIndex(c => c.label.trim().toUpperCase().includes('MÃ HÀNG HÓA'));
+            // Lấy đúng vị trí cột GIÁ BÁN TIỀN MẶT trên Bảng Lên Giá
+            let cashIdx = activeCols.findIndex(c => c.cashPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN TIỀN MẶT'));
+        
+            if (codeIdx === -1 || cashIdx === -1) {
+                if (alertEl) alertEl.classList.add('d-none');
+                return;
+            }
+        
+            let mismatchedItems = [];
+            let sourceTabsToRutGon = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
+        
+            tabRows.forEach(row => {
+                let code = String(row[codeIdx] || '').trim().toUpperCase();
+                let currentCash = parseFloat(String(row[cashIdx] || '').replace(/[^\d]/g, '')) || 0;
+        
+                if (!code) return;
+        
+                // 1. Nếu giá tiền mặt bị trống hoặc bằng 0
+                if (currentCash <= 0) {
+                    mismatchedItems.push(`${code} (Trống giá tiền mặt)`);
+                    return;
+                }
+        
+                // 2. Tìm kiếm và đối chiếu với Giá Bán Tiền Mặt ở tab gốc chuyên ngành
+                let foundMatch = false;
+                let standardCash = 0;
+        
+                for (let tName of sourceTabsToRutGon) {
+                    let cacheData = tabDataCache[tName];
+                    if (cacheData && Array.isArray(cacheData) && cacheData.length > 1) {
+                        let tabConfigs = SHEET_CONFIGS[tName] || [];
+                        
+                        let tCodeIdx = tabConfigs.findIndex(c => {
+                            let l = c.label.trim().toUpperCase();
+                            return l.includes('MÃ HÀNG HÓA') || l.includes('MÃ KTB') || l.includes('MÃ PART') || l.includes('SKU');
+                        });
+                        
+                        // Chỉ tìm đúng cột Giá Bán Tiền Mặt ở tab gốc để so sánh
+                        let tCashIdx = tabConfigs.findIndex(c => c.cashPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN TIỀN MẶT') || c.label.trim().toUpperCase().includes('GIÁ TIỀN MẶT'));
+        
+                        if (tCodeIdx !== -1) {
+                            let matchedRow = cacheData.slice(1).find(r => String(r[tCodeIdx] || '').trim().toUpperCase() === code);
+                            if (matchedRow) {
+                                foundMatch = true;
+                                if (tCashIdx !== -1) {
+                                    standardCash = parseFloat(String(matchedRow[tCashIdx] || '').replace(/[^\d]/g, '')) || 0;
+                                }
+                                break;
+                            }
+                        }
                     }
                 }
+        
+                // 3. Nếu tìm thấy ở tab gốc, so sánh trực tiếp Giá Bán Tiền Mặt giữa 2 nơi
+                if (foundMatch) {
+                    if (standardCash > 0 && currentCash !== standardCash) {
+                        mismatchedItems.push(`${code} (Giá tiền mặt lệch tab gốc: ${currentCash.toLocaleString('vi-VN')} so với ${standardCash.toLocaleString('vi-VN')})`);
+                    }
+                }
+            });
+        
+            if (mismatchedItems.length > 0) {
+                if (alertEl) {
+                    alertEl.classList.remove('d-none');
+                    textEl.innerHTML = `⚠️ Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có <b>Giá bán tiền mặt</b> khác biệt so với tab gốc: <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
+                }
+            } else {
+                if (alertEl) alertEl.classList.add('d-none');
             }
         }
-
-        // Nếu tìm thấy ở tab gốc mà giá nhập vào lệch so với giá chuẩn gốc -> Đưa vào danh sách cảnh báo
-        if (foundMatch) {
-            let isCashWrong = standardCash > 0 && currentCash !== standardCash;
-            let isCreditWrong = standardCredit > 0 && currentCredit !== standardCredit;
-
-            if (isCashWrong || isCreditWrong) {
-                mismatchedItems.push(`${code} (Lệch giá gốc)`);
-            }
-        }
-    });
-
-    if (mismatchedItems.length > 0) {
-        if (alertEl) {
-            alertEl.classList.remove('d-none');
-            textEl.innerHTML = `⚠️ Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có giá tiền mặt hoặc công nợ lệch so với tab gốc: <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
-        }
-    } else {
-        if (alertEl) alertEl.classList.add('d-none');
-    }
-}
     
 </script>
 
