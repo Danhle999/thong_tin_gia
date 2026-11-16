@@ -2173,6 +2173,8 @@ function clearProfitDetailFilter() {
             });
             return obj;
         });
+        // 👉 THÊM DÒNG NÀY VÀO ĐÂY ĐỂ HỆ THỐNG TỰ ĐỘNG QUÉT VÀ BÁO LỖI KHI NẠP BẢNG
+        checkPriceMismatchInBangLenGia(rowsToProcess);
 
         if (table) table.destroy();
 
