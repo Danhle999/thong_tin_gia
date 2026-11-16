@@ -2728,29 +2728,6 @@ function exportFilteredQuotationExcel() {
 }
 
     // CHECK BẢNG LÊN GIÁ
-
-// 1. Hàm nạp ngầm dữ liệu các tab gốc vào bộ nhớ đệm
-let isSourceTabsLoaded = false;
-function preloadSourceTabsForComparison() {
-    if (isSourceTabsLoaded) return;
-    let sourceTabs = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
-    
-    sourceTabs.forEach(tName => {
-        if (!tabDataCache[tName]) {
-            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(tName)}&nocache=false&t=` + new Date().getTime())
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data) || data.dataNhap) {
-                        tabDataCache[tName] = data;
-                    }
-                })
-                .catch(err => console.error(`Không thể nạp ngầm tab ${tName}:`, err));
-        }
-    });
-    isSourceTabsLoaded = true;
-}
-
-// 2. Hàm kiểm tra và cảnh báo lệch giá trên Bảng Lên Giá
 function checkPriceMismatchInBangLenGia(tabRows) {
     let alertEl = document.getElementById('priceMismatchAlert');
     let textEl = document.getElementById('priceMismatchAlertText');
