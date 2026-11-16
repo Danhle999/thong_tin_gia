@@ -2729,6 +2729,28 @@ function exportFilteredQuotationExcel() {
 
     // CHECK BẢNG LÊN GIÁ
 
+// 1. Hàm nạp ngầm dữ liệu các tab gốc vào bộ nhớ đệm
+let isSourceTabsLoaded = false;
+function preloadSourceTabsForComparison() {
+    if (isSourceTabsLoaded) return;
+    let sourceTabs = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
+    
+    sourceTabs.forEach(tName => {
+        if (!tabDataCache[tName]) {
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=${encodeURIComponent(tName)}&nocache=false&t=` + new Date().getTime())
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data) || data.dataNhap) {
+                        tabDataCache[tName] = data;
+                    }
+                })
+                .catch(err => console.error(`Không thể nạp ngầm tab ${tName}:`, err));
+        }
+    });
+    isSourceTabsLoaded = true;
+}
+
+// 2. Hàm kiểm tra và cảnh báo lệch giá trên Bảng Lên Giá
 function checkPriceMismatchInBangLenGia(tabRows) {
     let alertEl = document.getElementById('priceMismatchAlert');
     let textEl = document.getElementById('priceMismatchAlertText');
@@ -2758,7 +2780,6 @@ function checkPriceMismatchInBangLenGia(tabRows) {
 
         if (!code) return;
 
-        // 1. Nếu trên Bảng lên giá mà để trống hoặc <= 0
         if (currentCash <= 0) {
             mismatchedItems.push(`${code} (Trống giá trên bảng lên giá)`);
             return;
@@ -2783,7 +2804,6 @@ function checkPriceMismatchInBangLenGia(tabRows) {
                         let valCash = tCashIdx !== -1 ? parseFloat(String(matchedRow[tCashIdx] || '').replace(/[^\d]/g, '')) || 0 : 0;
                         let valCredit = tCreditIdx !== -1 ? parseFloat(String(matchedRow[tCreditIdx] || '').replace(/[^\d]/g, '')) || 0 : 0;
                         
-                        // Lấy giá tiền mặt gốc, nếu tab gốc trống tiền mặt thì lấy công nợ
                         standardPrice = valCash > 0 ? valCash : valCredit;
                         break;
                     }
@@ -2791,12 +2811,9 @@ function checkPriceMismatchInBangLenGia(tabRows) {
             }
         }
 
-        // 2. Kiểm tra điều kiện báo lỗi:
         if (!foundMatch) {
-            // Nếu mã này không tìm thấy ở các tab gốc
             mismatchedItems.push(`${code} (Không thấy ở tab gốc)`);
         } else {
-            // Nếu tìm thấy nhưng tab gốc để trống giá (cả tiền mặt lẫn công nợ đều = 0) hoặc giá bị lệch
             if (standardPrice <= 0) {
                 mismatchedItems.push(`${code} (Tab gốc đang để trống giá)`);
             } else if (currentCash !== standardPrice) {
