@@ -2758,8 +2758,9 @@ function checkPriceMismatchInBangLenGia(tabRows) {
 
         if (!code) return;
 
+        // 1. Nếu trên Bảng lên giá mà để trống hoặc <= 0
         if (currentCash <= 0) {
-            mismatchedItems.push(`${code} (Trống giá)`);
+            mismatchedItems.push(`${code} (Trống giá trên bảng lên giá)`);
             return;
         }
 
@@ -2772,8 +2773,6 @@ function checkPriceMismatchInBangLenGia(tabRows) {
                 let tabConfigs = SHEET_CONFIGS[tName] || [];
                 
                 let tCodeIdx = tabConfigs.findIndex(c => c.code || c.label.trim().toUpperCase().includes('MÃ HÀNG HÓA') || c.label.trim().toUpperCase().includes('MÃ KTB') || c.label.trim().toUpperCase().includes('MÃ PART') || c.label.trim().toUpperCase().includes('SKU'));
-                
-                // CẢI TIẾN: Tìm cả cột tiền mặt hoặc cột công nợ ở tab gốc (nếu tab gốc lỡ điền ở cột nào thì lấy cột đó)
                 let tCashIdx = tabConfigs.findIndex(c => c.cashPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN TIỀN MẶT') || c.label.trim().toUpperCase().includes('GIÁ TIỀN MẶT'));
                 let tCreditIdx = tabConfigs.findIndex(c => c.creditPrice || c.label.trim().toUpperCase().includes('GIÁ BÁN CÔNG NỢ') || c.label.trim().toUpperCase().includes('GIÁ CÔNG NỢ') || c.label.trim().toUpperCase().includes('GIÁ BÁN ĐỀ XUẤT'));
 
@@ -2781,10 +2780,10 @@ function checkPriceMismatchInBangLenGia(tabRows) {
                     let matchedRow = cacheData.slice(1).find(r => String(r[tCodeIdx] || '').trim().toUpperCase() === code);
                     if (matchedRow) {
                         foundMatch = true;
-                        // Ưu tiên lấy giá tiền mặt ở tab gốc, nếu trống thì lấy sang cột công nợ/đề xuất để so sánh
                         let valCash = tCashIdx !== -1 ? parseFloat(String(matchedRow[tCashIdx] || '').replace(/[^\d]/g, '')) || 0 : 0;
                         let valCredit = tCreditIdx !== -1 ? parseFloat(String(matchedRow[tCreditIdx] || '').replace(/[^\d]/g, '')) || 0 : 0;
                         
+                        // Lấy giá tiền mặt gốc, nếu tab gốc trống tiền mặt thì lấy công nợ
                         standardPrice = valCash > 0 ? valCash : valCredit;
                         break;
                     }
@@ -2792,9 +2791,15 @@ function checkPriceMismatchInBangLenGia(tabRows) {
             }
         }
 
-        // Nếu tìm thấy ở tab gốc mà giá tiền mặt bị lệch -> Báo đỏ ngay lập tức
-        if (foundMatch) {
-            if (standardPrice > 0 && currentCash !== standardPrice) {
+        // 2. Kiểm tra điều kiện báo lỗi:
+        if (!foundMatch) {
+            // Nếu mã này không tìm thấy ở các tab gốc
+            mismatchedItems.push(`${code} (Không thấy ở tab gốc)`);
+        } else {
+            // Nếu tìm thấy nhưng tab gốc để trống giá (cả tiền mặt lẫn công nợ đều = 0) hoặc giá bị lệch
+            if (standardPrice <= 0) {
+                mismatchedItems.push(`${code} (Tab gốc đang để trống giá)`);
+            } else if (currentCash !== standardPrice) {
                 mismatchedItems.push(`${code} (Bảng lên giá: ${currentCash.toLocaleString('vi-VN')} ≠ Tab gốc: ${standardPrice.toLocaleString('vi-VN')})`);
             }
         }
@@ -2803,7 +2808,7 @@ function checkPriceMismatchInBangLenGia(tabRows) {
     if (mismatchedItems.length > 0) {
         if (alertEl) {
             alertEl.classList.remove('d-none');
-            textEl.innerHTML = `⚠️ Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có <b>Giá bán tiền mặt</b> khác biệt so với tab chuyên ngành gốc: <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
+            textEl.innerHTML = `⚠️ Phát hiện <b>${mismatchedItems.length}</b> mã trên <b>BẢNG LÊN GIÁ</b> có vấn đề về giá (trống giá hoặc lệch so với tab gốc): <strong class="text-danger">${mismatchedItems.join(', ')}</strong>`;
         }
     } else {
         if (alertEl) alertEl.classList.add('d-none');
