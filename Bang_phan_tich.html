@@ -2728,6 +2728,7 @@ function exportFilteredQuotationExcel() {
 }
 
     // CHECK BẢNG LÊN GIÁ
+// Dùng phiên bản tối ưu này để loại bỏ hoàn toàn lỗi kết nối Google Sheets
 function checkPriceMismatchInBangLenGia(tabRows) {
     let alertEl = document.getElementById('priceMismatchAlert');
     let textEl = document.getElementById('priceMismatchAlertText');
@@ -2736,8 +2737,6 @@ function checkPriceMismatchInBangLenGia(tabRows) {
         if (alertEl) alertEl.classList.add('d-none');
         return;
     }
-
-    preloadSourceTabsForComparison();
 
     let activeCols = getActiveColumns();
     let codeIdx = activeCols.findIndex(c => c.code || c.label.trim().toUpperCase().includes('MÃ HÀNG HÓA'));
@@ -2749,7 +2748,8 @@ function checkPriceMismatchInBangLenGia(tabRows) {
     }
 
     let mismatchedItems = [];
-    let sourceTabsToRutGon = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
+    // Chỉ quét các tab nào đã được mở và lưu trong bộ nhớ cache trình duyệt
+    let availableSourceTabs = Object.keys(tabDataCache).filter(t => t !== 'BANG_LEN_GIA');
 
     tabRows.forEach(row => {
         let code = String(row[codeIdx] || '').trim().toUpperCase();
@@ -2765,7 +2765,7 @@ function checkPriceMismatchInBangLenGia(tabRows) {
         let foundMatch = false;
         let standardPrice = 0;
 
-        for (let tName of sourceTabsToRutGon) {
+        for (let tName of availableSourceTabs) {
             let cacheData = tabDataCache[tName];
             if (cacheData && Array.isArray(cacheData) && cacheData.length > 1) {
                 let tabConfigs = SHEET_CONFIGS[tName] || [];
@@ -2788,9 +2788,8 @@ function checkPriceMismatchInBangLenGia(tabRows) {
             }
         }
 
-        if (!foundMatch) {
-            mismatchedItems.push(`${code} (Không thấy ở tab gốc)`);
-        } else {
+        // Nếu tìm thấy trong cache các tab đã mở mà giá bị lệch hoặc trống
+        if (foundMatch) {
             if (standardPrice <= 0) {
                 mismatchedItems.push(`${code} (Tab gốc đang để trống giá)`);
             } else if (currentCash !== standardPrice) {
