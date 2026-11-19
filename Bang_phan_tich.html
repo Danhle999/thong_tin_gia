@@ -28,6 +28,28 @@
             font-size: 15px;
         }
         
+        #loginOverlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            z-index: 999999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        .login-box {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px 28px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+        }
+        #mainAppWrapper {
+            display: none; /* Ẩn toàn bộ dữ liệu cho đến khi đăng nhập thành công */
+            height: 100%;
+        }
         
         .tabulator-tooltip {
             background-color: #0f172a !important;
@@ -269,6 +291,45 @@
     </style>
 </head>
 <body>
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <div class="text-center mb-4">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 56px; height: 56px;">
+                <i class="fa-solid fa-shield-halved fs-3"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-1">Đăng Nhập Hệ Thống</h5>
+            <small class="text-muted">Vui lòng xác thực tài khoản để truy cập dữ liệu</small>
+        </div>
+        <form id="loginForm" onsubmit="handleAppLogin(event)">
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-secondary">Tên đăng nhập</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
+                    <input type="text" id="loginUsername" class="form-control" placeholder="Nhập tài khoản..." required autocomplete="username">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-secondary">Mật khẩu</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Nhập mật khẩu..." required autocomplete="current-password">
+                    <button class="btn btn-outline-secondary" type="button" onclick="toggleLoginPassword()">
+                        <i class="fa-solid fa-eye" id="togglePwdIcon"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="loginErrorMsg" class="alert alert-danger py-2 px-3 small d-none mb-3">
+                <i class="fa-solid fa-circle-exclamation me-1"></i> Sai tên đăng nhập hoặc mật khẩu!
+            </div>
+            <button type="submit" id="btnSubmitLogin" class="btn btn-primary w-100 fw-bold py-2">
+                <i class="fa-solid fa-right-to-bracket me-1"></i> Đăng Nhập
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="mainAppWrapper">
 <div id="custom-tooltip"></div>
 <div id="loadingSpinner">
     <div class="text-center">
@@ -309,6 +370,13 @@
             </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
+            
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
+                <button class="btn btn-sm btn-outline-danger fw-bold" onclick="logoutApp()" title="Khóa màn hình">
+                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                </button>
+            </div>
         </div>
 
         <!-- BẢNG THÔNG BÁO MÃ CHƯA CÓ / THIẾU TRÊN WEBSITE -->
@@ -688,7 +756,7 @@
         </div>
     </div>
 </div>
-
+</div>
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5v32BpmO5N_hEv_H7E75NX-5ESx2umNLG1Y10DaIemHyEn0zhJ1vApga977MfAVmd/exec";
     
@@ -1172,6 +1240,7 @@ function exportScenarioExcel() {
 }
 
 function loadDataFromSheet(bypassCache = true) {
+        if (!isAuthenticated) return; // Chặn tải dữ liệu nếu chưa đăng nhập
         let timeStamp = new Date().getTime();
 
         // 1. Load ngầm dữ liệu Tồn Kho (nếu chưa có) để đối chiếu mã
@@ -2871,7 +2940,94 @@ function checkPriceMismatchInBangLenGia(tabRows) {
         alertEl.classList.add('d-none');
     }
 }
-    
+
+
+    // ==========================================
+// HỆ THỐNG XÁC THỰC ĐĂNG NHẬP BẮT BUỘC
+// ==========================================
+let isAuthenticated = false;
+
+// Danh sách tài khoản (Mã hóa SHA-256 để không lộ mật khẩu thô khi View Source)
+// Mặc định bên dưới là:
+// - admin / Ktb@2026
+// - sales / Sales@2026
+const AUTHORIZED_USERS = {
+    "admin": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", // Thay mã SHA-256 của bạn
+    "sales": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+};
+
+async function sha256Hex(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function toggleLoginPassword() {
+    const pwdInput = document.getElementById('loginPassword');
+    const icon = document.getElementById('togglePwdIcon');
+    if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+    } else {
+        pwdInput.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+    }
+}
+
+async function handleAppLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginErrorMsg');
+    const btnSubmit = document.getElementById('btnSubmitLogin');
+
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang kiểm tra...`;
+
+    const inputHash = await sha256Hex(password);
+
+    if (AUTHORIZED_USERS[username] && AUTHORIZED_USERS[username] === inputHash) {
+        isAuthenticated = true;
+        errorEl.classList.add('d-none');
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainAppWrapper').style.display = 'block';
+
+        // Khởi chạy đúng tab theo đường link URL (?mode=...)
+        initAppAfterLogin();
+    } else {
+        errorEl.classList.remove('d-none');
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('loginPassword').focus();
+    }
+
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = `<i class="fa-solid fa-right-to-bracket me-1"></i> Đăng Nhập`;
+}
+
+function logoutApp() {
+    isAuthenticated = false;
+    tabDataCache = {}; // Xóa sạch cache dữ liệu trên RAM
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('mainAppWrapper').style.display = 'none';
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('loginUsername').focus();
+}
+
+function initAppAfterLogin() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    if (mode && SHEET_CONFIGS[mode]) {
+        switchTableMode(mode);
+    } else {
+        loadDataFromSheet(true);
+    }
+}
+
+window.onload = function() {
+    // Luôn focus vào ô tài khoản và KHÔNG tự động gọi loadDataFromSheet()
+    document.getElementById('loginUsername').focus();
+};
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
