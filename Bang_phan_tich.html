@@ -3016,25 +3016,15 @@ function logoutApp() {
 }
 
 function initAppAfterLogin() {
-    applyUserTabPermissions(currentLoggedInUser);
-
-    const isAll = currentAllowedTabs.includes("*");
     const urlParams = new URLSearchParams(window.location.search);
-    const requestedMode = urlParams.get("mode");
-
-    if (requestedMode && SHEET_CONFIGS[requestedMode] && (isAll || currentAllowedTabs.includes(requestedMode))) {
-        switchTableMode(requestedMode);
-        return;
-    }
-
-    if (isAll) {
-        loadDataFromSheet(true);
-    } else if (currentAllowedTabs.length > 0) {
-        switchTableMode(currentAllowedTabs[0]);
+    const mode = urlParams.get('mode');
+    if (mode && SHEET_CONFIGS[mode]) {
+        switchTableMode(mode);
     } else {
-        alert("Tài khoản này chưa được cấp quyền xem tab nào!");
+        loadDataFromSheet(true);
     }
 }
+    
 // Khai báo danh sách tab được phép cho từng tài khoản
 window.onload = function() {
     // Luôn focus vào ô tài khoản và KHÔNG tự động gọi loadDataFromSheet()
