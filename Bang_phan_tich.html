@@ -979,11 +979,6 @@
 
     function getActiveColumns() { return SHEET_CONFIGS[currentMode] || []; }
     
-        const isAllAllowed = currentAllowedTabs.includes("*");
-    if (isAuthenticated && !isAllAllowed && !currentAllowedTabs.includes(mode)) {
-        alert("Bạn không có quyền truy cập tab " + mode);
-        return;
-    }
     
     function switchTableMode(mode) {
         // Cập nhật URL trên thanh địa chỉ mà không reload trang
@@ -3046,52 +3041,8 @@ window.onload = function() {
     document.getElementById('loginUsername').focus();
 };
 
-    const USER_ALLOWED_TABS = {
-    "admin": ["*"],
-    "sales": ["BANG_LEN_GIA", "BANG_GIA_DELL", "BANG_GIA_HP", "BANG_GIA_LENOVO", "BANG_GIA_ASUS"]
-};
 
-let currentAllowedTabs = [];
-let currentLoggedInUser = "";
 
-//Ẩn các nút tab không được phép & tự chọn tab đầu tiên hợp lệ khi đăng nhập
-    function applyUserTabPermissions(username) {
-    currentLoggedInUser = username;
-    const allowed = USER_ALLOWED_TABS[username] || [];
-    currentAllowedTabs = allowed;
-
-    const isAll = allowed.includes("*");
-
-    // Map id nút với tên mode tương ứng trong Bang_phan_tich.html
-    const buttonModeMap = {
-        "btnModeLaptop": "LAPTOP",
-        "btnModePc": "PC",
-        "btnModeLcd": "LCD",
-        "btnModeAio": "AIO",
-        "btnModeScanMayIn": "SCAN_MAY_IN",
-        "btnModeLinhKien": "LINH_KIEN",
-        "btnModeBanHang": "BAN_HANG",
-        "btnModeNhapKho": "NHAP_KHO",
-        "btnModeTonKho": "TON_KHO",
-        "btnModeWebsite": "WEBSITE",
-        "btnModeThongKeQuy": "THONG_KE_QUY",
-        "btnModeLoiNhuan": "BAO_CAO_LOI_NHUAN",
-        "btnModeKichBan": "KICH_BAN_BAN_HANG",
-        "btnModeBangLenGia": "BANG_LEN_GIA",
-        "btnModeBaoGia1": "BANG_GIA_DELL",
-        "btnModeBaoGia2": "BANG_GIA_HP",
-        "btnModeBaoGia3": "BANG_GIA_LENOVO",
-        "btnModeBaoGia4": "BANG_GIA_ASUS",
-        "btnModeRebate": "REBATE"
-    };
-
-    Object.entries(buttonModeMap).forEach(([btnId, modeName]) => {
-        const btn = document.getElementById(btnId);
-        if (!btn) return;
-        const canSee = isAll || allowed.includes(modeName);
-        btn.style.display = canSee ? "" : "none";
-    });
-}
     
 </script>
 
