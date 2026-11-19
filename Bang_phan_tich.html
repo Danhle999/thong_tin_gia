@@ -981,6 +981,12 @@
     
     
     function switchTableMode(mode) {
+        if (!isAuthenticated) return;
+        const isAllAllowed = currentAllowedTabs.includes("*");
+        if (!isAllAllowed && !currentAllowedTabs.includes(mode)) {
+            alert("Tài khoản của bạn không có quyền xem tab: " + mode);
+            return;
+        }
         // Cập nhật URL trên thanh địa chỉ mà không reload trang
         window.history.pushState(null, '', '?mode=' + mode);
         
@@ -2944,25 +2950,30 @@ function checkPriceMismatchInBangLenGia(tabRows) {
 
 
     // ==========================================
-// HỆ THỐNG XÁC THỰC ĐĂNG NHẬP BẮT BUỘC
+// ==========================================
+// HỆ THỐNG XÁC THỰC & PHÂN QUYỀN TAB
 // ==========================================
 let isAuthenticated = false;
+let currentLoggedInUser = "";
+let currentAllowedTabs = [];
 
-// Danh sách tài khoản (Mã hóa SHA-256 để không lộ mật khẩu thô khi View Source)
-// Mặc định bên dưới là:
-// - admin / Ktb@2026
-// - sales / Sales@2026
-const AUTHORIZED_USERS = {
-    "admin": "ba3f2dbc2f8123d8a6c1c58304c8433f92cbbf78cb4ce0492c97eb5f3a00f398", // Thay mã SHA-256 của bạn
-    "sales": "ba3f2dbc2f8123d8a6c1c58304c8433f92cbbf78cb4ce0492c97eb5f3a00f398"
+// 1. DANH SÁCH TÀI KHOẢN & MẬT KHẨU (Đổi mật khẩu trực tiếp tại đây)
+const USER_ACCOUNTS = {
+    "admin": "KTB2224",
+    "baogia": "KTB2224"
 };
 
-async function sha256Hex(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
+// 2. PHÂN QUYỀN TAB CHO TỪNG TÀI KHOẢN
+const USER_ALLOWED_TABS = {
+    "admin": ["*"],
+    "baogia": [
+        "BANG_LEN_GIA",
+        "BANG_GIA_DELL",
+        "BANG_GIA_HP",
+        "BANG_GIA_LENOVO",
+        "BANG_GIA_ASUS"
+    ]
+};
 
 function toggleLoginPassword() {
     const pwdInput = document.getElementById('loginPassword');
@@ -2976,39 +2987,68 @@ function toggleLoginPassword() {
     }
 }
 
-async function handleAppLogin(event) {
+function applyUserTabPermissions(username) {
+    currentLoggedInUser = username;
+    const allowed = USER_ALLOWED_TABS[username] || [];
+    currentAllowedTabs = allowed;
+    const isAll = allowed.includes("*");
+
+    const buttonModeMap = {
+        "btnModeLaptop": "LAPTOP",
+        "btnModePc": "PC",
+        "btnModeLcd": "LCD",
+        "btnModeAio": "AIO",
+        "btnModeScanMayIn": "SCAN_MAY_IN",
+        "btnModeLinhKien": "LINH_KIEN",
+        "btnModeBanHang": "BAN_HANG",
+        "btnModeNhapKho": "NHAP_KHO",
+        "btnModeTonKho": "TON_KHO",
+        "btnModeWebsite": "WEBSITE",
+        "btnModeThongKeQuy": "THONG_KE_QUY",
+        "btnModeLoiNhuan": "BAO_CAO_LOI_NHUAN",
+        "btnModeKichBan": "KICH_BAN_BAN_HANG",
+        "btnModeBangLenGia": "BANG_LEN_GIA",
+        "btnModeBaoGia1": "BANG_GIA_DELL",
+        "btnModeBaoGia2": "BANG_GIA_HP",
+        "btnModeBaoGia3": "BANG_GIA_LENOVO",
+        "btnModeBaoGia4": "BANG_GIA_ASUS",
+        "btnModeRebate": "REBATE"
+    };
+
+    Object.entries(buttonModeMap).forEach(([btnId, modeName]) => {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        const canSee = isAll || allowed.includes(modeName);
+        btn.style.display = canSee ? "" : "none";
+    });
+}
+
+function handleAppLogin(event) {
     event.preventDefault();
     const username = document.getElementById('loginUsername').value.trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
     const errorEl = document.getElementById('loginErrorMsg');
-    const btnSubmit = document.getElementById('btnSubmitLogin');
 
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i> Đang kiểm tra...`;
-
-    const inputHash = await sha256Hex(password);
-
-    if (AUTHORIZED_USERS[username] && AUTHORIZED_USERS[username] === inputHash) {
+    if (USER_ACCOUNTS[username] && USER_ACCOUNTS[username] === password) {
         isAuthenticated = true;
+        currentLoggedInUser = username;
         errorEl.classList.add('d-none');
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainAppWrapper').style.display = 'block';
 
-        // Khởi chạy đúng tab theo đường link URL (?mode=...)
         initAppAfterLogin();
     } else {
         errorEl.classList.remove('d-none');
         document.getElementById('loginPassword').value = '';
         document.getElementById('loginPassword').focus();
     }
-
-    btnSubmit.disabled = false;
-    btnSubmit.innerHTML = `<i class="fa-solid fa-right-to-bracket me-1"></i> Đăng Nhập`;
 }
 
 function logoutApp() {
     isAuthenticated = false;
-    tabDataCache = {}; // Xóa sạch cache dữ liệu trên RAM
+    currentLoggedInUser = "";
+    currentAllowedTabs = [];
+    tabDataCache = {};
     document.getElementById('loginPassword').value = '';
     document.getElementById('mainAppWrapper').style.display = 'none';
     document.getElementById('loginOverlay').style.display = 'flex';
@@ -3016,18 +3056,29 @@ function logoutApp() {
 }
 
 function initAppAfterLogin() {
+    applyUserTabPermissions(currentLoggedInUser);
+
+    const isAll = currentAllowedTabs.includes("*");
     const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode');
-    if (mode && SHEET_CONFIGS[mode]) {
-        switchTableMode(mode);
-    } else {
+    const requestedMode = urlParams.get("mode");
+
+    // Nếu link có ?mode=... và nằm trong danh sách tab được phép thì mở đúng tab đó
+    if (requestedMode && SHEET_CONFIGS[requestedMode] && (isAll || currentAllowedTabs.includes(requestedMode))) {
+        switchTableMode(requestedMode);
+        return;
+    }
+
+    // Nếu không có ?mode= hoặc ?mode= nằm ngoài quyền thì mở tab đầu tiên được phép
+    if (isAll) {
         loadDataFromSheet(true);
+    } else if (currentAllowedTabs.length > 0) {
+        switchTableMode(currentAllowedTabs[0]);
+    } else {
+        alert("Tài khoản này chưa được cấp quyền xem tab nào!");
     }
 }
-    
-// Khai báo danh sách tab được phép cho từng tài khoản
+
 window.onload = function() {
-    // Luôn focus vào ô tài khoản và KHÔNG tự động gọi loadDataFromSheet()
     document.getElementById('loginUsername').focus();
 };
 
