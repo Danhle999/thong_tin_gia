@@ -872,7 +872,7 @@
             { label: 'Thương hiệu', width: 150 },
             { label: 'Mã sản phẩm', code: true, width: 350 },
             { label: 'Tên Sản phẩm', desc: true, width: 450 },
-            { label: 'Giá bán', numeric: true }
+            { label: 'Giá bán', numeric: true, width: 120 }
         ],
         'THONG_KE_QUY': [
             { label: 'Quý / Thời gian', width: 140 },
@@ -1031,7 +1031,7 @@
         let isLoiNhuan = (mode === 'BAO_CAO_LOI_NHUAN');
         let isKichBan = (mode === 'KICH_BAN_BAN_HANG');
         // Khai báo thêm biến nhận diện các tab Báo giá
-        let isBaoGia = ['BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO', 'BANG_GIA_ASUS'].includes(mode);
+        let isBaoGia = ['WEBSITE','BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO', 'BANG_GIA_ASUS'].includes(mode);
         
         let btnPDF = document.getElementById('btnExportPDF');
         let btnExcel = document.getElementById('btnExportExcel'); // <--- Thêm dòng này
