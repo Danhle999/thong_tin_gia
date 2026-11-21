@@ -1954,10 +1954,12 @@ function clearProfitDetailFilter() {
         }
 
         let activeCols = getActiveColumns();
+        
         let columnsConfig = [
             { formatter: "rownum", hozAlign: "center", width: 60, headerSort: false, frozen: true, title: "STT", bottomCalc: function() { return "TỔNG"; } }
         ];
-
+        
+    if (!isReadOnlyUser()) {
         columnsConfig.push({
             title: "Thao tác",
             field: "_actionCol",
@@ -2049,7 +2051,8 @@ function clearProfitDetailFilter() {
                 }
             }
         });
-
+    }
+    
         let idxCodeCol = activeCols.findIndex(c => c.code);
         let idxDescCol = activeCols.findIndex(c => c.desc);
         let idxCashCol = activeCols.findIndex(c => c.cashPrice);
@@ -2085,6 +2088,7 @@ function clearProfitDetailFilter() {
                 minWidth: 80, 
                 editor: "input",
                 editable: function(cell) {
+                    if (isReadOnlyUser()) return false;
                     let rowData = cell.getRow().getData();
                     // Phải đang bấm Sửa (_isEditing = true) VÀ đúng là cột giá/chi phí mới cho phép edit
                     return (rowData._isEditing && isPriceOrCostColumn);
@@ -2430,6 +2434,10 @@ function clearProfitDetailFilter() {
     }
 
     function saveRowToSheet(sheetRowIndex, fullRowData) {
+        if (isReadOnlyUser()) {
+            alert("Tài khoản 'baogia' chỉ có quyền xem dữ liệu!");
+            return;
+        }
         showLoading(true, `Đang ghi dữ liệu vào Sheet '${currentMode}'...`);
         
         // CHÈN DÒNG NÀY: Xóa bộ đệm của tab hiện tại để lần sau bắt buộc tải dữ liệu mới
@@ -2453,6 +2461,10 @@ function clearProfitDetailFilter() {
     }
 
     function addRow() {
+        if (isReadOnlyUser()) {
+            alert("Tài khoản 'baogia' chỉ có quyền xem dữ liệu!");
+            return;
+        }
         var activeCols = getActiveColumns();
         var emptyRow = new Array(activeCols.length).fill('');
         showLoading(true, `Đang thêm dòng mới vào Sheet '${currentMode}'...`);
@@ -2475,6 +2487,10 @@ function clearProfitDetailFilter() {
     }
 
     function handleExcelUpload(event) {
+        if (isReadOnlyUser()) {
+            alert("Tài khoản 'baogia' chỉ có quyền xem dữ liệu!");
+            return;
+        }
         var file = event.target.files[0];
         if (!file) return;
 
@@ -3084,7 +3100,19 @@ window.onload = function() {
 };
 
 
+function isReadOnlyUser() {
+    return currentLoggedInUser === "baogia";
+}
 
+function applyReadOnlyMode() {
+    const readOnly = isReadOnlyUser();
+
+    // Ẩn nút Thêm dòng mới và nút Nhập từ Excel khi là tài khoản chỉ xem
+    const btnAdd = document.getElementById("btnAddRow");
+    const excelContainer = document.getElementById("excelUploadContainer");
+    if (btnAdd) btnAdd.style.display = readOnly ? "none" : "";
+    if (excelContainer) excelContainer.style.display = readOnly ? "none" : "";
+}
     
 </script>
 
