@@ -2155,11 +2155,16 @@ function clearProfitDetailFilter() {
 
                     let codeVal = idxCodeCol !== -1 ? String(rowData["col_" + idxCodeCol] || '').trim() : '';
                     let descVal = idxDescCol !== -1 ? String(rowData["col_" + idxDescCol] || '').trim() : '';
-                    
+
+                    // Bỏ mã lặp ở cuối dạng (...) hoặc _MÃ_SKU
+                    descVal = descVal
+                        .replace(/\([^)]*\)\s*$/, '')
+                        .replace(/_[A-Za-z0-9-]+\s*$/, '')
+                        .trim();
+
                     let rawCash = idxCashCol !== -1 ? String(rowData["col_" + idxCashCol] || '').trim() : '';
                     let rawCredit = idxCreditCol !== -1 ? String(rowData["col_" + idxCreditCol] || '').trim() : '';
 
-                    // CẢI TIẾN: Tự động quét toàn bộ các cột trong dòng để tìm xem cột nào chứa giá trị GIẢM, TĂNG hoặc NEW
                     let rawIcon = '';
                     for (let key in rowData) {
                         if (key.startsWith('col_')) {
@@ -2185,8 +2190,8 @@ function clearProfitDetailFilter() {
                     if (!codeVal && !descVal && !cashStr && !creditStr) return '';
 
                     return `<div class="zalo-price-box">
-                        <div class="fw-bold">${codeVal}</div>
-                        <div>${descVal}</div>
+                        <div class="fw-bold mb-1">📌 Mã SP: ${codeVal}</div>
+                        <div class="mb-2">${descVal}</div>
                         ${cashStr ? `<div>${cashStr}</div>` : ''}
                         ${creditStr ? `<div>${creditStr}${iconSymbol}</div>` : ''}
                     </div>`;
