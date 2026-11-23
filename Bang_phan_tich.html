@@ -2295,16 +2295,6 @@ function clearProfitDetailFilter() {
                     }
                     return prevFormatter ? prevFormatter(cell) : cell.getValue();
                 };
-
-                colDef.cellClick = function(e, cell) {
-                    let rawVal = String(cell.getValue() ?? '').trim();
-                    if (rawVal !== '' && rawVal.toLowerCase() !== 'xem lại') {
-                        let rowData = cell.getRow().getData();
-                        let maHang = rowData["col_2"] || rowData["col_1"] || '';
-                        let tenHang = rowData["col_30"] || rowData["col_24"] || rowData["col_26"] || rowData["col_23"] || '';
-                        alert(`📦 Hàng gửi NPP: ${rawVal}\n• Mã: ${maHang}\n• Sản phẩm: ${tenHang}`);
-                    }
-                };
             }
             
             columnsConfig.push(colDef);
