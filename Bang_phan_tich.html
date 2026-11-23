@@ -2284,6 +2284,35 @@ function clearProfitDetailFilter() {
             paginationSizeSelector: [25, 50, 100, 200, 500],
             movableColumns: true,
             columnDefaults: { resizable: true},
+
+            // THÊM ĐOẠN NÀY ĐỂ TỰ TÍNH GIÁ COST KHI SỬA Ở TAB NHẬP KHO
+            cellEdited: function(cell) {
+                if (currentMode === 'NHAP_KHO') {
+                    let field = cell.getField();
+                    if (['col_10', 'col_13', 'col_14', 'col_15', 'col_18', 'col_19'].includes(field)) {
+                        let row = cell.getRow();
+                        let d = row.getData();
+
+                        let parseNum = (val) => parseFloat(String(val || '0').replace(/[^\d.-]/g, '')) || 0;
+
+                        let donGia      = parseNum(d.col_10);
+                        let sellInHang  = parseNum(d.col_13);
+                        let sellOutHang = parseNum(d.col_14);
+                        let chietKhau   = parseNum(d.col_15);
+                        let sellInNpp   = parseNum(d.col_18);
+                        let sellOutNpp  = parseNum(d.col_19);
+
+                        let giaCost = donGia - sellInHang - sellOutHang - chietKhau - sellInNpp - sellOutNpp;
+                        d.col_12 = giaCost;
+
+                        let costCell = row.getCell('col_12');
+                        if (costCell) {
+                            costCell.setValue(giaCost, true); // true = silent, không trigger lại cellEdited
+                        }
+                    }
+                }
+            },
+            
             // ĐẶT TOOLTIP Ở ĐÂY (Cấp bảng chính, dùng tham số cell)
             tooltip: function(cell) {
                 if (!['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN'].includes(currentMode)) {
