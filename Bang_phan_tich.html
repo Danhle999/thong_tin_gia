@@ -2259,8 +2259,6 @@ function clearProfitDetailFilter() {
         }
 
         checkMissingTonKhoItems(rowsToProcess);
-        // Thêm dòng kích hoạt kiểm tra giá:
-        checkPriceMismatchInBangLenGia(rowsToProcess);
 
         let tableData = rowsToProcess.map((row, rowIndex) => {
             let actualSheetRow = startRowOffset + rowIndex;
