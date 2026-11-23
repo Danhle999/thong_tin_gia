@@ -2974,14 +2974,16 @@ function checkPriceMismatchInBangLenGia(tabRows) {
     }
 
     const sourceTabs = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
-
     const hasUnloadedTabs = sourceTabs.some(t => !tabDataCache[t]);
-    if (hasUnloadedTabs && !isPreloadingSourceTabs) {
+
+    if (hasUnloadedTabs) {
         loadMissingSourceTabsSequentially(() => checkPriceMismatchInBangLenGia(tabRows));
+        return;
     }
 
-    // Lưu cả sourceCash và sourceCredit cho từng mã ở tab gốc
+    const normCode = (v) => String(v || '').trim().toUpperCase().replace(/\s+/g, '');
     const sourcePriceMap = {};
+
     sourceTabs.forEach(tName => {
         const cacheData = tabDataCache[tName];
         if (!Array.isArray(cacheData) || cacheData.length <= 1) return;
@@ -3002,7 +3004,7 @@ function checkPriceMismatchInBangLenGia(tabRows) {
 
         if (tCodeIdx !== -1 && (tCashIdx !== -1 || tCreditIdx !== -1)) {
             cacheData.slice(1).forEach(r => {
-                const itemCode = String(r[tCodeIdx] || '').trim().toUpperCase();
+                const itemCode = normCode(r[tCodeIdx]);
                 if (itemCode) {
                     const itemCash = tCashIdx !== -1
                         ? (parseFloat(String(r[tCashIdx] || '').replace(/[^\d]/g, '')) || 0)
@@ -3012,6 +3014,7 @@ function checkPriceMismatchInBangLenGia(tabRows) {
                         : null;
                     sourcePriceMap[itemCode] = {
                         tabName: tName,
+                        rawCode: String(r[tCodeIdx] || '').trim(),
                         sourceCash: itemCash,
                         sourceCredit: itemCredit
                     };
@@ -3024,8 +3027,12 @@ function checkPriceMismatchInBangLenGia(tabRows) {
     const fmtMoney = (v) => (v && v > 0 ? v.toLocaleString('vi-VN') : 'Trống');
 
     tabRows.forEach(row => {
-        const code = String(row[codeIdx] || '').trim().toUpperCase();
+        const rawCode = String(row[codeIdx] || '').trim();
+        const code = normCode(rawCode);
         if (!code) return;
+
+        const sourceInfo = sourcePriceMap[code];
+        if (!sourceInfo) return;
 
         const currentCash = cashIdx !== -1
             ? (parseFloat(String(row[cashIdx] || '').replace(/[^\d]/g, '')) || 0)
@@ -3034,26 +3041,15 @@ function checkPriceMismatchInBangLenGia(tabRows) {
             ? (parseFloat(String(row[creditIdx] || '').replace(/[^\d]/g, '')) || 0)
             : null;
 
-        const sourceInfo = sourcePriceMap[code];
-
-        if (sourceInfo) {
-            const diffs = [];
-            if (currentCash !== null && sourceInfo.sourceCash !== null && currentCash !== sourceInfo.sourceCash) {
-                diffs.push(`Tiền mặt: ${fmtMoney(currentCash)} ≠ ${fmtMoney(sourceInfo.sourceCash)}`);
-            }
-            if (currentCredit !== null && sourceInfo.sourceCredit !== null && currentCredit !== sourceInfo.sourceCredit) {
-                diffs.push(`Công nợ: ${fmtMoney(currentCredit)} ≠ ${fmtMoney(sourceInfo.sourceCredit)}`);
-            }
-            if (diffs.length > 0) {
-                mismatchedItems.push(`${code} (${sourceInfo.tabName} — ${diffs.join(', ')})`);
-            }
-        } else {
-            const missingTypes = [];
-            if (currentCash !== null && currentCash <= 0) missingTypes.push('tiền mặt');
-            if (currentCredit !== null && currentCredit <= 0) missingTypes.push('công nợ');
-            if (missingTypes.length > 0) {
-                mismatchedItems.push(`${code} (Trống giá ${missingTypes.join(' & ')})`);
-            }
+        const diffs = [];
+        if (currentCash !== null && sourceInfo.sourceCash !== null && currentCash !== sourceInfo.sourceCash) {
+            diffs.push(`Tiền mặt: ${fmtMoney(currentCash)} ≠ ${fmtMoney(sourceInfo.sourceCash)}`);
+        }
+        if (currentCredit !== null && sourceInfo.sourceCredit !== null && currentCredit !== sourceInfo.sourceCredit) {
+            diffs.push(`Công nợ: ${fmtMoney(currentCredit)} ≠ ${fmtMoney(sourceInfo.sourceCredit)}`);
+        }
+        if (diffs.length > 0) {
+            mismatchedItems.push(`${rawCode} (${sourceInfo.tabName} — ${diffs.join(', ')})`);
         }
     });
 
