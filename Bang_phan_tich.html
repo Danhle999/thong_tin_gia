@@ -27,7 +27,13 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 15px;
         }
-        
+        .cell-npp-alert {
+            background-color: #fff3cd !important;
+            color: #664d03 !important;
+            font-weight: bold !important;
+            border-left: 3px solid #ffc107 !important;
+            cursor: pointer;
+        }
         #loginOverlay {
             position: fixed;
             inset: 0;
@@ -2276,6 +2282,31 @@ function clearProfitDetailFilter() {
                 };
             }
 
+            
+            if (colNameUpper === 'HÀNG GỬI NPP') {
+                let prevFormatter = colDef.formatter;
+                colDef.formatter = function(cell) {
+                    let rawVal = String(cell.getValue() ?? '').trim();
+                    let el = cell.getElement();
+                    if (rawVal !== '' && rawVal.toLowerCase() !== 'xem lại') {
+                        el.classList.add('cell-npp-alert');
+                    } else {
+                        el.classList.remove('cell-npp-alert');
+                    }
+                    return prevFormatter ? prevFormatter(cell) : cell.getValue();
+                };
+
+                colDef.cellClick = function(e, cell) {
+                    let rawVal = String(cell.getValue() ?? '').trim();
+                    if (rawVal !== '' && rawVal.toLowerCase() !== 'xem lại') {
+                        let rowData = cell.getRow().getData();
+                        let maHang = rowData["col_2"] || rowData["col_1"] || '';
+                        let tenHang = rowData["col_30"] || rowData["col_24"] || rowData["col_26"] || rowData["col_23"] || '';
+                        alert(`📦 Hàng gửi NPP: ${rawVal}\n• Mã: ${maHang}\n• Sản phẩm: ${tenHang}`);
+                    }
+                };
+            }
+            
             columnsConfig.push(colDef);
         });
 
