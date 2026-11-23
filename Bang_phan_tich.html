@@ -125,8 +125,30 @@
             flex-shrink: 0;
         }
 
-        .view-mode-btn-group .btn { font-weight: 600; font-size: 0.9rem; }
-        .view-mode-btn-group .btn.active { box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); }
+        .view-mode-btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+        .view-mode-btn-group .btn {
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 4px 9px;
+            border-radius: 6px !important;
+            white-space: nowrap;
+        }
+        .view-mode-btn-group .btn.active {
+            background-color: #0d6efd !important;
+            color: #ffffff !important;
+            border-color: #0d6efd !important;
+            box-shadow: 0 2px 5px rgba(13, 110, 253, 0.25);
+        }
         
         .tabulator { font-size: 0.95rem; }
 
@@ -342,32 +364,41 @@
     <div class="table-container">
         <!-- HEADER TRANG & NÚT CHUYỂN TAB -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
+            <div class="d-flex justify-content-between align-items-center mb-2 gap-2" style="flex-shrink: 0;">
             <div>
-                <h4 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu (Tabulator)</h4>
-                <small class="text-muted fs-6" id="modeDescription">Đang hiển thị Trang tính: LAPTOP</small>
+                <h5 class="text-primary fw-bold m-0"><i class="fa-solid fa-boxes-packing me-2"></i>Hệ Thống Quản Lý Dữ Liệu (Tabulator)</h5>
+                <small class="text-muted" id="modeDescription">Đang hiển thị Trang tính: LAPTOP</small>
             </div>
-            
-            <div class="btn-group view-mode-btn-group flex-wrap gap-1" role="group">
-                <button type="button" id="btnModeLaptop" class="btn btn-warning active" onclick="switchTableMode('LAPTOP')">LAPTOP</button>
-                <button type="button" id="btnModePc" class="btn btn-outline-dark" onclick="switchTableMode('PC')">PC</button>
-                <button type="button" id="btnModeLcd" class="btn btn-outline-danger" onclick="switchTableMode('LCD')">LCD</button>
-                <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">AIO</button>
-                <button type="button" id="btnModeScanMayIn" class="btn btn-outline-primary" onclick="switchTableMode('SCAN_MAY_IN')">MÁY IN / SCAN</button>
-                <button type="button" id="btnModeLinhKien" class="btn btn-outline-warning" onclick="switchTableMode('LINH_KIEN')">LINH KIỆN</button>
-                <button type="button" id="btnModeBanHang" class="btn btn-outline-success" onclick="switchTableMode('BAN_HANG')">BÁN HÀNG</button>
-                <button type="button" id="btnModeNhapKho" class="btn btn-outline-primary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
-                <button type="button" id="btnModeTonKho" class="btn btn-outline-info" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
-                <button type="button" id="btnModeWebsite" class="btn btn-outline-primary" onclick="switchTableMode('WEBSITE')"><i class="fa-solid fa-globe me-1"></i>WEBSITE</button>
-                <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-dark" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
-                <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-success" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
-                <button type="button" id="btnModeKichBan" class="btn btn-outline-danger" onclick="switchTableMode('KICH_BAN_BAN_HANG')"><i class="fa-solid fa-calculator me-1"></i>KỊCH BẢN BÁN HÀNG</button>
-                <button type="button" id="btnModeBangLenGia" class="btn btn-outline-danger" onclick="switchTableMode('BANG_LEN_GIA')"><i class="fa-solid fa-tags me-1"></i>BẢNG LÊN GIÁ</button>
-                <button type="button" id="btnModeBaoGia1" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
-                <button type="button" id="btnModeBaoGia2" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
-                <button type="button" id="btnModeBaoGia3" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
-                <button type="button" id="btnModeBaoGia4" class="btn btn-outline-warning" onclick="switchTableMode('BANG_GIA_ASUS')">BÁO GIÁ ASUS</button>
-                <button type="button" id="btnModeRebate" class="btn btn-outline-warning" onclick="switchTableMode('REBATE')"><i class="fa-solid fa-hand-holding-dollar me-1"></i>QUẢN LÝ REBATE</button>
+
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
+                <button class="btn btn-sm btn-outline-danger fw-bold" onclick="logoutApp()" title="Khóa màn hình">
+                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                </button>
             </div>
+        </div>
+
+        <div class="view-mode-btn-group" role="group">
+            <button type="button" id="btnModeLaptop" class="btn btn-outline-secondary active" onclick="switchTableMode('LAPTOP')">LAPTOP</button>
+            <button type="button" id="btnModePc" class="btn btn-outline-secondary" onclick="switchTableMode('PC')">PC</button>
+            <button type="button" id="btnModeLcd" class="btn btn-outline-secondary" onclick="switchTableMode('LCD')">LCD</button>
+            <button type="button" id="btnModeAio" class="btn btn-outline-secondary" onclick="switchTableMode('AIO')">AIO</button>
+            <button type="button" id="btnModeScanMayIn" class="btn btn-outline-secondary" onclick="switchTableMode('SCAN_MAY_IN')">MÁY IN / SCAN</button>
+            <button type="button" id="btnModeLinhKien" class="btn btn-outline-secondary" onclick="switchTableMode('LINH_KIEN')">LINH KIỆN</button>
+            <button type="button" id="btnModeBanHang" class="btn btn-outline-secondary" onclick="switchTableMode('BAN_HANG')">BÁN HÀNG</button>
+            <button type="button" id="btnModeNhapKho" class="btn btn-outline-secondary" onclick="switchTableMode('NHAP_KHO')">NHẬP KHO</button>
+            <button type="button" id="btnModeTonKho" class="btn btn-outline-secondary" onclick="switchTableMode('TON_KHO')">TỒN KHO</button>
+            <button type="button" id="btnModeWebsite" class="btn btn-outline-secondary" onclick="switchTableMode('WEBSITE')"><i class="fa-solid fa-globe me-1"></i>WEBSITE</button>
+            <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-secondary" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
+            <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-secondary" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
+            <button type="button" id="btnModeKichBan" class="btn btn-outline-secondary" onclick="switchTableMode('KICH_BAN_BAN_HANG')"><i class="fa-solid fa-calculator me-1"></i>KỊCH BẢN BÁN HÀNG</button>
+            <button type="button" id="btnModeBangLenGia" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_LEN_GIA')"><i class="fa-solid fa-tags me-1"></i>BẢNG LÊN GIÁ</button>
+            <button type="button" id="btnModeBaoGia1" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
+            <button type="button" id="btnModeBaoGia2" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
+            <button type="button" id="btnModeBaoGia3" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
+            <button type="button" id="btnModeBaoGia4" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_ASUS')">BÁO GIÁ ASUS</button>
+            <button type="button" id="btnModeRebate" class="btn btn-outline-secondary" onclick="switchTableMode('REBATE')"><i class="fa-solid fa-hand-holding-dollar me-1"></i>QUẢN LÝ REBATE</button>
+        </div>
 
             <span class="badge bg-info text-dark fs-6" id="rowCountBadge">Hiển thị: 0 dòng</span>
             
@@ -995,34 +1026,34 @@
         currentMode = mode;
         
         document.querySelectorAll('.view-mode-btn-group .btn').forEach(btn => {
-            btn.className = 'btn ' + btn.className.replace(/btn-(warning|dark|danger|secondary|success|primary|info)/g, 'btn-outline-$1').replace('active', '').trim();
+            btn.classList.remove('active');
         });
-        
-        let btnObj = {
-            'LAPTOP': { id: 'btnModeLaptop', cls: 'btn-warning' },
-            'PC': { id: 'btnModePc', cls: 'btn-dark' },
-            'LCD': { id: 'btnModeLcd', cls: 'btn-danger' },
-            'AIO': { id: 'btnModeAio', cls: 'btn-secondary' },
-            'SCAN_MAY_IN': { id: 'btnModeScanMayIn', cls: 'btn-primary' },
-            'LINH_KIEN': { id: 'btnModeLinhKien', cls: 'btn-warning' },
-            'BAN_HANG': { id: 'btnModeBanHang', cls: 'btn-success' },
-            'NHAP_KHO': { id: 'btnModeNhapKho', cls: 'btn-primary' },
-            'TON_KHO': { id: 'btnModeTonKho', cls: 'btn-info' },
-            'WEBSITE': { id: 'btnModeWebsite', cls: 'btn-primary' },
-            'THONG_KE_QUY': { id: 'btnModeThongKeQuy', cls: 'btn-dark' },
-            'BAO_CAO_LOI_NHUAN': { id: 'btnModeLoiNhuan', cls: 'btn-success' },
-            'KICH_BAN_BAN_HANG': { id: 'btnModeKichBan', cls: 'btn-danger' },
-            'BANG_LEN_GIA': { id: 'btnModeBangLenGia', cls: 'btn-danger' },
-            'BANG_GIA_DELL': { id: 'btnModeBaoGia1', cls: 'btn-warning' },
-            'BANG_GIA_HP': { id: 'btnModeBaoGia2', cls: 'btn-warning' },
-            'BANG_GIA_LENOVO': { id: 'btnModeBaoGia3', cls: 'btn-warning' },
-            'BANG_GIA_ASUS': { id: 'btnModeBaoGia4', cls: 'btn-warning' },
-            'REBATE': { id: 'btnModeRebate', cls: 'btn-warning' }
+
+        let btnId = {
+            'LAPTOP': 'btnModeLaptop',
+            'PC': 'btnModePc',
+            'LCD': 'btnModeLcd',
+            'AIO': 'btnModeAio',
+            'SCAN_MAY_IN': 'btnModeScanMayIn',
+            'LINH_KIEN': 'btnModeLinhKien',
+            'BAN_HANG': 'btnModeBanHang',
+            'NHAP_KHO': 'btnModeNhapKho',
+            'TON_KHO': 'btnModeTonKho',
+            'WEBSITE': 'btnModeWebsite',
+            'THONG_KE_QUY': 'btnModeThongKeQuy',
+            'BAO_CAO_LOI_NHUAN': 'btnModeLoiNhuan',
+            'KICH_BAN_BAN_HANG': 'btnModeKichBan',
+            'BANG_LEN_GIA': 'btnModeBangLenGia',
+            'BANG_GIA_DELL': 'btnModeBaoGia1',
+            'BANG_GIA_HP': 'btnModeBaoGia2',
+            'BANG_GIA_LENOVO': 'btnModeBaoGia3',
+            'BANG_GIA_ASUS': 'btnModeBaoGia4',
+            'REBATE': 'btnModeRebate'
         }[mode];
 
-        if (btnObj) {
-            let targetBtn = document.getElementById(btnObj.id);
-            if (targetBtn) targetBtn.className = `btn ${btnObj.cls} active`;
+        if (btnId) {
+            let targetBtn = document.getElementById(btnId);
+            if (targetBtn) targetBtn.classList.add('active');
         }
         
         let cols = getActiveColumns();
