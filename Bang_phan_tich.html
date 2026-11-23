@@ -475,6 +475,12 @@
 
         <!-- BẢNG TABULATOR THƯỜNG -->
         <div id="example-table"></div>
+        
+        <!-- THỂ HIỆN HÀNG GỬI NPP KHÁC "XEM LẠI" DƯỚI BẢNG -->
+        <div id="nppConsignmentBar" class="alert alert-warning py-2 px-3 mb-2 small d-none" style="flex-shrink: 0;">
+            <i class="fa-solid fa-truck-ramp-box text-dark me-1"></i>
+            <span id="nppConsignmentText"></span>
+        </div>
 
         <!-- TAB KỊCH BẢN BÁN HÀNG -->
         <div id="kichBanView" class="dashboard-container">
@@ -2318,6 +2324,7 @@ function clearProfitDetailFilter() {
         }
 
         checkMissingTonKhoItems(rowsToProcess);
+        checkNppConsignmentItems(rowsToProcess);
 
         let tableData = rowsToProcess.map((row, rowIndex) => {
             let actualSheetRow = startRowOffset + rowIndex;
@@ -3233,6 +3240,46 @@ function applyReadOnlyMode() {
     if (btnAdd) btnAdd.style.display = readOnly ? "none" : "";
     if (excelContainer) excelContainer.style.display = readOnly ? "none" : "";
 }
+
+
+    function checkNppConsignmentItems(rowsToProcess) {
+        const barEl = document.getElementById('nppConsignmentBar');
+        const textEl = document.getElementById('nppConsignmentText');
+        if (!barEl || !textEl) return;
+
+        if (!Array.isArray(rowsToProcess) || rowsToProcess.length === 0) {
+            barEl.classList.add('d-none');
+            return;
+        }
+
+        const activeCols = getActiveColumns();
+        const nppColIdx = activeCols.findIndex(c => c.label.trim().toUpperCase() === 'HÀNG GỬI NPP');
+        if (nppColIdx === -1) {
+            barEl.classList.add('d-none');
+            return;
+        }
+
+        const codeColIdx = activeCols.findIndex(c => {
+            const lbl = c.label.trim().toUpperCase();
+            return c.code || lbl === 'MÃ HÀNG HÓA' || lbl === 'MÃ PART' || lbl === 'MÃ KTB';
+        });
+
+        const items = [];
+        rowsToProcess.forEach(row => {
+            const nppVal = String(row[nppColIdx] ?? '').trim();
+            if (nppVal !== '' && nppVal.toLowerCase() !== 'xem lại') {
+                const maHang = codeColIdx !== -1 ? String(row[codeColIdx] ?? '').trim() : '';
+                items.push(maHang ? `${maHang} (${nppVal})` : nppVal);
+            }
+        });
+
+        if (items.length > 0) {
+            barEl.classList.remove('d-none');
+            textEl.innerHTML = `Có <b>${items.length}</b> dòng có <b>Hàng gửi NPP</b> khác "xem lại": <strong class="text-danger">${items.join(', ')}</strong>`;
+        } else {
+            barEl.classList.add('d-none');
+        }
+    }
     
 </script>
 
