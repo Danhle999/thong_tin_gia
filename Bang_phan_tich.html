@@ -2622,16 +2622,6 @@ function clearProfitDetailFilter() {
         reader.readAsArrayBuffer(file);
     }
 
-    window.onload = function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode');
-        if (mode && SHEET_CONFIGS[mode]) {
-            switchTableMode(mode);
-        } else {
-            loadDataFromSheet(true);
-        }
-    };
-
 
     let isHideHetHangActive = false;
 function toggleHideHetHang() {
@@ -2926,7 +2916,10 @@ async function loadMissingSourceTabsSequentially(onCompleteCallback) {
     const sourceTabs = ['LAPTOP', 'PC', 'LCD', 'AIO', 'SCAN_MAY_IN', 'LINH_KIEN'];
     const missingTabs = sourceTabs.filter(t => !tabDataCache[t]);
 
-    if (missingTabs.length === 0) return;
+    if (missingTabs.length === 0) {
+        if (typeof onCompleteCallback === 'function') onCompleteCallback();
+        return;
+    }
 
     isPreloadingSourceTabs = true;
     const alertEl = document.getElementById('priceMismatchAlert');
