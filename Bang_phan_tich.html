@@ -2107,7 +2107,7 @@ function clearProfitDetailFilter() {
 
         activeCols.forEach((col, index) => {
             let colNameUpper = col.label.trim().toUpperCase();
-
+            let isChaoHangEditable = (currentMode === 'CHAO_HANG') && ['TRẠNG THÁI CHÀO', 'GHI CHÚ', 'NGƯỜI THỰC HIỆN'].includes(colNameUpper);
             // CHỈ CHO PHÉP CHỈNH SỬA CÁC CỘT GIÁ VÀ CHI PHÍ (GIÁ BÁN, GIÁ COST, COST_KTB)
             let isPriceOrCostColumn = colNameUpper.includes('GIÁ BÁN') || 
                                        colNameUpper.includes('GIÁ COST') || 
