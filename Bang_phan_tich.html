@@ -2042,7 +2042,7 @@ function clearProfitDetailFilter() {
                     
                     activeCols.forEach((col, i) => {
                         let colNameUpper = col.label.trim().toUpperCase();
-                        
+                        let isChaoHangEditable = (currentMode === 'CHAO_HANG') && ['TRẠNG THÁI CHÀO', 'GHI CHÚ', 'NGƯỜI THỰC HIỆN'].includes(colNameUpper);
                         // Điều kiện giống hệt lúc bạn khóa ô, có chặn thêm chữ CHECK và %
                         let isEditable = (
                             colNameUpper.includes('GIÁ BÁN') || 
