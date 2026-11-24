@@ -906,12 +906,17 @@
             { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
         ],
         'CHAO_HANG': [
-            { label: 'Mã khách hàng', code: true, width: 150 },
-            { label: 'Tên khách hàng', customer: true, width: 280 },
-            { label: 'Ngày ghi sổ', date: true, width: 130 },
-            { label: 'Mã hàng hóa', code: true, width: 180 },
-            { label: 'Diễn giải', desc: true, width: 420 },
-            { label: 'Người thực hiện', width: 160 }
+            { label: 'Mã khách hàng', code: true, width: 130 },
+            { label: 'Tên khách hàng', customer: true, width: 240 },
+            { label: 'Ngày ghi sổ', date: true, width: 115 },
+            { label: 'Mã hàng hóa', code: true, width: 160 },
+            { label: 'Diễn giải', desc: true, width: 280 },
+            { label: 'Người thực hiện', width: 140 },
+            { label: 'Số ngày chưa mua', numeric: true, width: 100 },
+            { label: 'Tần suất chào', width: 135 },
+            { label: 'Đề xuất chào hàng', desc: true, width: 320 },
+            { label: 'Trạng thái chào', width: 140 },
+            { label: 'Ghi chú', width: 200 }
         ],
         'BANG_LEN_GIA': [
             { label: 'Mã hàng hóa', code: true, width: 180 },
@@ -1065,6 +1070,7 @@
         let isKichBan = (mode === 'KICH_BAN_BAN_HANG');
         // Khai báo thêm biến nhận diện các tab Báo giá
         let isBaoGia = ['WEBSITE','BANG_LEN_GIA', 'BANG_GIA_DELL', 'BANG_GIA_HP', 'BANG_GIA_LENOVO', 'BANG_GIA_ASUS'].includes(mode);
+        let canCopyZalo = isBaoGia || mode === 'CHAO_HANG';
         
         let btnPDF = document.getElementById('btnExportPDF');
         let btnExcel = document.getElementById('btnExportExcel'); // <--- Thêm dòng này
@@ -1089,10 +1095,13 @@
         // Điều khiển Nút Copy Zalo: Chỉ hiện khi ở các tab Báo giá
         let btnCopy = document.getElementById('btnCopyZalo');
         if (btnCopy) {
-            if (isBaoGia) {
-                btnCopy.classList.remove('d-none'); // Hiện nút
+            if (canCopyZalo) {
+                btnCopy.classList.remove('d-none');
+                btnCopy.innerHTML = mode === 'CHAO_HANG'
+                    ? '<i class="fa-solid fa-copy me-1"></i>Copy Chào Hàng Zalo'
+                    : '<i class="fa-solid fa-copy me-1"></i>Copy D/S Zalo';
             } else {
-                btnCopy.classList.add('d-none');    // Ẩn nút
+                btnCopy.classList.add('d-none');
             }
         }
         if (isKichBan) {
@@ -2316,12 +2325,30 @@ function clearProfitDetailFilter() {
         checkMissingTonKhoItems(rowsToProcess);
         checkNppConsignmentItems(rowsToProcess);
 
+        if (currentMode === 'CHAO_HANG' && !tabDataCache['BANG_LEN_GIA']) {
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BANG_LEN_GIA&nocache=false&t=${Date.now()}`)
+                .then(res => res.json())
+                .then(blgData => {
+                    if (Array.isArray(blgData) && blgData.length > 0) {
+                        tabDataCache['BANG_LEN_GIA'] = blgData;
+                        if (currentMode === 'CHAO_HANG') buildTabulatorTable(rawData);
+                    }
+                })
+                .catch(err => console.warn("Không nạp được BANG_LEN_GIA:", err));
+        }
+
+        let bangLenGiaMap = buildBangLenGiaLookupMap();
+
         let tableData = rowsToProcess.map((row, rowIndex) => {
             let actualSheetRow = startRowOffset + rowIndex;
             let obj = { sheetRowIndex: actualSheetRow, _isEditing: false }; 
             activeCols.forEach((col, index) => {
                 obj["col_" + index] = row[index] !== undefined && row[index] !== null ? row[index] : '';
             });
+
+            if (currentMode === 'CHAO_HANG') {
+                enrichChaoHangRow(obj, bangLenGiaMap);
+            }
             return obj;
         });
         // 👉 THÊM DÒNG NÀY VÀO ĐÂY ĐỂ HỆ THỐNG TỰ ĐỘNG QUÉT VÀ BÁO LỖI KHI NẠP BẢNG
@@ -3209,7 +3236,7 @@ window.onload = function() {
 
 
 function isReadOnlyUser() {
-    return currentLoggedInUser === "baogia";
+    return currentLoggedInUser === "baogia" && currentMode !== "CHAO_HANG";
 }
 
 function applyReadOnlyMode() {
@@ -3261,7 +3288,131 @@ function applyReadOnlyMode() {
             barEl.classList.add('d-none');
         }
     }
-    
+
+
+    function buildBangLenGiaLookupMap() {
+        const blgCache = tabDataCache['BANG_LEN_GIA'];
+        const map = { byCode: {}, promoList: [], inStockList: [] };
+        if (!Array.isArray(blgCache) || blgCache.length <= 1) return map;
+
+        const normCode = (v) => String(v || '').trim().toUpperCase().replace(/\s+/g, '');
+        blgCache.slice(1).forEach(r => {
+            const rawCode = String(r[0] || '').trim();
+            const codeKey = normCode(rawCode);
+            if (!codeKey) return;
+
+            const name = String(r[1] || '').trim();
+            const cash = parseFloat(String(r[2] || '').replace(/[^\d]/g, '')) || 0;
+            const credit = parseFloat(String(r[3] || '').replace(/[^\d]/g, '')) || 0;
+            const status = String(r[4] || '').trim().toUpperCase();
+            const priceDate = r[5] || '';
+            const note = String(r[7] || '').trim();
+            const stock = parseFloat(String(r[8] || '').replace(/[^\d.-]/g, '')) || 0;
+            const sold = parseFloat(String(r[9] || '').replace(/[^\d.-]/g, '')) || 0;
+
+            const item = { rawCode, codeKey, name, cash, credit, status, priceDate, note, stock, sold };
+            map.byCode[codeKey] = item;
+            if (stock > 0) {
+                map.inStockList.push(item);
+                if (status === 'GIẢM' || status === 'NEW') map.promoList.push(item);
+            }
+        });
+
+        map.promoList.sort((a, b) => (b.sold - a.sold) || (b.stock - a.stock));
+        map.inStockList.sort((a, b) => (b.sold - a.sold) || (b.stock - a.stock));
+        return map;
+    }
+
+    function enrichChaoHangRow(obj, blgMap) {
+        const dateVal = obj.col_2;
+        const codeRaw = String(obj.col_3 || '').trim();
+        const codeKey = codeRaw.toUpperCase().replace(/\s+/g, '');
+
+        let daysDiff = '';
+        let freqLabel = '';
+        let bucket = 4;
+
+        if (dateVal) {
+            const d = new Date(dateVal);
+            if (!isNaN(d.getTime())) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                d.setHours(0, 0, 0, 0);
+                daysDiff = Math.max(0, Math.floor((today - d) / (1000 * 60 * 60 * 24)));
+
+                if (daysDiff <= 30) { freqLabel = 'Tuần hiện 2 lần'; bucket = 1; }
+                else if (daysDiff <= 60) { freqLabel = '1 tuần 1 lần'; bucket = 2; }
+                else if (daysDiff <= 90) { freqLabel = '2 tuần 1 lần'; bucket = 3; }
+                else { freqLabel = '1 tháng 1 lần'; bucket = 4; }
+            }
+        }
+
+        if (obj.col_6 === '' || obj.col_6 === undefined) obj.col_6 = daysDiff;
+        if (!obj.col_7) obj.col_7 = freqLabel;
+
+        if (!obj.col_8) {
+            const fmt = (n) => (n > 0 ? n.toLocaleString('vi-VN') + 'đ' : 'Liên hệ');
+            const matched = blgMap.byCode[codeKey];
+            const hotPick = blgMap.promoList[0] || blgMap.inStockList[0];
+
+            if (bucket === 1) {
+                if (matched && matched.stock > 0) {
+                    const tag = matched.status ? ` [${matched.status}]` : '';
+                    obj.col_8 = `Chào lại mã vừa mua ${matched.rawCode}${tag} (Tồn: ${matched.stock}) | TM: ${fmt(matched.cash)} - CN: ${fmt(matched.credit)}`;
+                } else if (hotPick) {
+                    obj.col_8 = `Mã cũ ${codeRaw} hết tồn -> Chào mã sẵn kho ${hotPick.rawCode} (${hotPick.name}) | TM: ${fmt(hotPick.cash)}`;
+                } else {
+                    obj.col_8 = `Nhắc đơn gần nhất (${codeRaw}) & hỏi nhu cầu lấy thêm trong tháng`;
+                }
+            } else if (bucket === 2) {
+                if (matched && matched.stock > 0) {
+                    obj.col_8 = `Cập nhật giá mới mã cũ ${matched.rawCode} (Tồn: ${matched.stock}) | TM: ${fmt(matched.cash)} - CN: ${fmt(matched.credit)}`;
+                } else if (hotPick) {
+                    obj.col_8 = `Mã cũ ${codeRaw} hết hàng -> Đề xuất thay thế ${hotPick.rawCode} [${hotPick.status || 'SẴN KHO'}] | TM: ${fmt(hotPick.cash)}`;
+                } else {
+                    obj.col_8 = `Kiểm tra nhu cầu định kỳ 1-2 tháng cho mã ${codeRaw}`;
+                }
+            } else if (bucket === 3) {
+                if (hotPick) {
+                    const oldNote = (matched && matched.stock > 0) ? ` (Mã cũ ${matched.rawCode} còn ${matched.stock}, TM: ${fmt(matched.cash)})` : '';
+                    obj.col_8 = `Mở lại nhu cầu bằng mã ${hotPick.status || 'GIÁ TỐT'}: ${hotPick.rawCode} - TM: ${fmt(hotPick.cash)}${oldNote}`;
+                } else if (matched) {
+                    obj.col_8 = `Gửi lại báo giá mới mã ${matched.rawCode} | TM: ${fmt(matched.cash)} - CN: ${fmt(matched.credit)}`;
+                } else {
+                    obj.col_8 = `Gửi bảng giá mới các dòng đang giảm/sẵn kho để hâm nóng khách`;
+                }
+            } else {
+                if (hotPick) {
+                    obj.col_8 = `Chào thăm dò định kỳ tháng: ${hotPick.rawCode} (${hotPick.name}) [${hotPick.status || 'SẴN KHO'}] - TM: ${fmt(hotPick.cash)}`;
+                } else {
+                    obj.col_8 = `Gửi bảng giá tổng hợp tháng & cập nhật chính sách hỗ trợ dự án`;
+                }
+            }
+        }
+    }
+
+
+    if (currentMode === 'CHAO_HANG') {
+            let textChaoHang = "DANH SÁCH CHÀO HÀNG KHÁCH HÀNG\n\n";
+            activeRows.forEach(r => {
+                const maKH = String(r.col_0 || '').trim();
+                const tenKH = String(r.col_1 || '').trim();
+                const ngayMua = r.col_2 ? new Date(r.col_2).toLocaleDateString('vi-VN') : '';
+                const maSP = String(r.col_3 || '').trim();
+                const tanSuat = String(r.col_7 || '').trim();
+                const deXuat = String(r.col_8 || '').trim();
+
+                textChaoHang += `🏢 ${tenKH} (${maKH})\n`;
+                if (ngayMua || maSP) textChaoHang += `🕒 Mua gần nhất: ${ngayMua} | Mã cũ: ${maSP}\n`;
+                if (tanSuat) textChaoHang += `📅 Tần suất: ${tanSuat}\n`;
+                if (deXuat) textChaoHang += `💡 Đề xuất chào: ${deXuat}\n`;
+                textChaoHang += `------------------------\n`;
+            });
+            navigator.clipboard.writeText(textChaoHang).then(() => {
+                alert(`✅ Đã copy thành công ${activeRows.length} khách hàng chào hàng để dán vào Zalo!`);
+            }).catch(() => alert("Trình duyệt không hỗ trợ copy!"));
+            return;
+        }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
