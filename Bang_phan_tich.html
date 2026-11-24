@@ -387,6 +387,7 @@
             <button type="button" id="btnModeThongKeQuy" class="btn btn-outline-secondary" onclick="switchTableMode('THONG_KE_QUY')">THỐNG KÊ QUÝ</button>
             <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-secondary" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
             <button type="button" id="btnModeKichBan" class="btn btn-outline-secondary" onclick="switchTableMode('KICH_BAN_BAN_HANG')"><i class="fa-solid fa-calculator me-1"></i>KỊCH BẢN BÁN HÀNG</button>
+            <button type="button" id="btnModePhanTichKh" class="btn btn-outline-secondary" onclick="switchTableMode('PHAN_TICH_KHACH_HANG')"><i class="fa-solid fa-user-tie me-1"></i>PHÂN TÍCH KHÁCH HÀNG</button>
             <button type="button" id="btnModeBangLenGia" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_LEN_GIA')"><i class="fa-solid fa-tags me-1"></i>BẢNG LÊN GIÁ</button>
             <button type="button" id="btnModeBaoGia1" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
             <button type="button" id="btnModeBaoGia2" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
@@ -777,6 +778,85 @@
             </div>
         </div>
     </div>
+    <!-- TAB PHÂN TÍCH KHÁCH HÀNG & CHÀO HÀNG -->
+        <div id="customerAnalysisView" class="dashboard-container">
+            <!-- BỘ LỌC & THỐNG KÊ NHANH -->
+            <div class="scenario-card">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-magnifying-glass me-1"></i>Tìm Mã / Tên Khách Hàng:</label>
+                        <input type="text" id="caSearchCustomer" class="form-control form-control-sm" placeholder="Nhập tên hoặc mã KH..." onkeyup="filterCustomerAnalysisTable()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-layer-group me-1"></i>Nhóm Khách Hàng:</label>
+                        <select id="caFilterSegment" class="form-select form-select-sm" onchange="filterCustomerAnalysisTable()">
+                            <option value="">-- Tất cả nhóm --</option>
+                            <option value="VIP / Dự án lớn">VIP / Dự án lớn</option>
+                            <option value="Đại lý / Mua đều">Đại lý / Mua đều</option>
+                            <option value="Khách lẻ / Rải rác">Khách lẻ / Rải rác</option>
+                            <option value="Lâu chưa mua">Lâu chưa mua</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar-day me-1"></i>Từ ngày:</label>
+                        <input type="date" id="caDateFrom" class="form-control form-control-sm" onchange="renderCustomerAnalysisTab()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold mb-1 small"><i class="fa-solid fa-calendar-check me-1"></i>Đến ngày:</label>
+                        <input type="date" id="caDateTo" class="form-control form-control-sm" onchange="renderCustomerAnalysisTab()">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label fw-bold mb-1 small">Lâu mua (ngày):</label>
+                        <input type="number" id="caInactiveDays" class="form-control form-control-sm text-center" value="45" min="1" onchange="renderCustomerAnalysisTab()">
+                    </div>
+                    <div class="col-md-2 d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-secondary w-50" onclick="resetCustomerAnalysisFilters()"><i class="fa-solid fa-rotate-left"></i></button>
+                        <button class="btn btn-sm btn-primary w-50" onclick="reloadCustomerAnalysisSources()"><i class="fa-solid fa-rotate"></i> Nạp lại</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BẢNG 1: DANH SÁCH KHÁCH HÀNG PHÂN TÍCH -->
+            <div class="scenario-card">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h6 class="fw-bold text-primary m-0"><i class="fa-solid fa-users me-2"></i>1. Tổng Hợp Hành Vi Mua Hàng (Bấm vào 1 khách hàng để xem gợi ý chào giá)</h6>
+                    <span class="badge bg-secondary" id="caCustomerCountBadge">0 khách hàng</span>
+                </div>
+                <div id="table-customer-summary" style="height: 270px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+            </div>
+
+            <!-- KHUNG 2: ĐỐI CHIẾU BẢNG LÊN GIÁ & SOẠN TIN NHẮN CHÀO HÀNG -->
+            <div class="row g-2">
+                <div class="col-md-7">
+                    <div class="scenario-card h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-success m-0" id="caSelectedCustomerTitle"><i class="fa-solid fa-tags me-2"></i>2. Đối Chiếu Bảng Lên Giá Cho Khách Hàng</h6>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input" type="checkbox" id="caOnlyInStock" checked onchange="refreshSelectedCustomerPitch()">
+                                <label class="form-check-label small fw-bold" for="caOnlyInStock">Chỉ lấy mã còn tồn / có giá</label>
+                            </div>
+                        </div>
+                        <div id="table-customer-pitch-items" style="height: 260px; border: 1px solid #dee2e6; border-radius: 4px;"></div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="scenario-card h-100 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark m-0"><i class="fa-solid fa-comment-dots text-primary me-2"></i>3. Tin Nhắn Chào Hàng Zalo</h6>
+                            <div class="d-flex gap-1">
+                                <select id="caPriceDisplayMode" class="form-select form-select-sm" style="width: auto;" onchange="refreshSelectedCustomerPitch()">
+                                    <option value="BOTH">Tiền mặt + Công nợ</option>
+                                    <option value="CASH">Chỉ Tiền mặt</option>
+                                    <option value="CREDIT">Chỉ Công nợ</option>
+                                </select>
+                                <button class="btn btn-sm btn-success fw-bold" onclick="copyCustomerPitchZalo()"><i class="fa-solid fa-copy me-1"></i>Copy</button>
+                            </div>
+                        </div>
+                        <textarea id="caZaloPitchBox" class="form-control font-monospace flex-grow-1" style="font-size: 0.85rem; background-color: #f8fafc;" placeholder="Chọn một khách hàng ở bảng trên để tạo nội dung chào hàng..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
 </div>
 </div>
 <script>
@@ -985,6 +1065,9 @@
     let barChartInstance = null;
     let doughnutChartInstance = null;
     let scenarioChartInstance = null;
+    let tableCustomerSummary = null;
+    let tableCustomerPitch = null;
+    let selectedCustomerRecord = null;
     let globalActualData = [];
     let globalTargetData = [];
     
@@ -1068,6 +1151,17 @@
                 btnExcel.classList.add('d-none');    // Ẩn nút Excel
             }
         }
+
+
+        let isPhanTichKh = (mode === 'PHAN_TICH_KHACH_HANG');
+
+        document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan || isPhanTichKh) ? 'none' : 'flex';
+        document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan || isPhanTichKh) ? 'none' : 'block';
+        document.getElementById('example-table').style.display = (isThongKe || isLoiNhuan || isKichBan || isPhanTichKh) ? 'none' : 'block';
+        document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
+        document.getElementById('profitReportView').style.display = isLoiNhuan ? 'flex' : 'none';
+        document.getElementById('kichBanView').style.display = isKichBan ? 'flex' : 'none';
+        document.getElementById('customerAnalysisView').style.display = isPhanTichKh ? 'flex' : 'none';
 
         document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
         document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
@@ -3125,7 +3219,8 @@ function applyUserTabPermissions(username) {
         "btnModeBaoGia2": "BANG_GIA_HP",
         "btnModeBaoGia3": "BANG_GIA_LENOVO",
         "btnModeBaoGia4": "BANG_GIA_ASUS",
-        "btnModeRebate": "REBATE"
+        "btnModeRebate": "REBATE",
+        "btnModePhanTichKh": "PHAN_TICH_KHACH_HANG"
     };
 
     Object.entries(buttonModeMap).forEach(([btnId, modeName]) => {
@@ -3249,7 +3344,399 @@ function applyReadOnlyMode() {
             barEl.classList.add('d-none');
         }
     }
-    
+
+
+
+    // ==========================================
+    // PHÂN TÍCH KHÁCH HÀNG & ĐỐI CHIẾU BẢNG LÊN GIÁ
+    // ==========================================
+    async function loadCustomerAnalysisData(forceReload = false) {
+        if (!isAuthenticated) return;
+        document.getElementById('missingFromTabAlert').classList.add('d-none');
+        document.getElementById('priceMismatchAlert').classList.add('d-none');
+
+        const needBanHang = forceReload || !Array.isArray(tabDataCache['BAN_HANG']);
+        const needBangLenGia = forceReload || !Array.isArray(tabDataCache['BANG_LEN_GIA']);
+
+        if (needBanHang || needBangLenGia) {
+            showLoading(true, "Đang nạp dữ liệu BÁN HÀNG & BẢNG LÊN GIÁ để phân tích...");
+            try {
+                const t = Date.now();
+                const tasks = [];
+                if (needBanHang) {
+                    tasks.push(
+                        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BAN_HANG&nocache=${forceReload}&t=${t}`)
+                            .then(r => r.json())
+                            .then(d => { if (Array.isArray(d)) tabDataCache['BAN_HANG'] = d; })
+                    );
+                }
+                if (needBangLenGia) {
+                    tasks.push(
+                        fetch(`${GOOGLE_SCRIPT_URL}?action=getData&sheetName=BANG_LEN_GIA&nocache=${forceReload}&t=${t}`)
+                            .then(r => r.json())
+                            .then(d => { if (Array.isArray(d)) tabDataCache['BANG_LEN_GIA'] = d; })
+                    );
+                }
+                await Promise.all(tasks);
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi khi tải dữ liệu Bán hàng / Bảng lên giá!");
+            } finally {
+                showLoading(false);
+            }
+        }
+        renderCustomerAnalysisTab();
+    }
+
+    function reloadCustomerAnalysisSources() {
+        loadCustomerAnalysisData(true);
+    }
+
+    function parseSheetMoney(val) {
+        if (val === null || val === undefined || val === '') return 0;
+        if (typeof val === 'number') return val;
+        const cleaned = String(val).replace(/[^\d.-]/g, '');
+        return parseFloat(cleaned) || 0;
+    }
+
+    function parseSheetDate(val) {
+        if (!val) return null;
+        if (val instanceof Date && !isNaN(val.getTime())) return val;
+        const str = String(val).trim();
+        const vnMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (vnMatch) {
+            return new Date(Number(vnMatch[3]), Number(vnMatch[2]) - 1, Number(vnMatch[1]));
+        }
+        const d = new Date(str);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function normalizeProductCode(code) {
+        return String(code || '').trim().toUpperCase().replace(/\s+/g, '');
+    }
+
+    function renderCustomerAnalysisTab() {
+        const banHangRaw = Array.isArray(tabDataCache['BAN_HANG']) ? tabDataCache['BAN_HANG'].slice(1) : [];
+        const dateFromVal = document.getElementById('caDateFrom').value;
+        const dateToVal = document.getElementById('caDateTo').value;
+        const inactiveThreshold = parseInt(document.getElementById('caInactiveDays').value, 10) || 45;
+
+        const dateFrom = dateFromVal ? new Date(dateFromVal) : null;
+        const dateTo = dateToVal ? new Date(dateToVal) : null;
+        if (dateTo) dateTo.setHours(23, 59, 59, 999);
+
+        const now = new Date();
+        const customerMap = {};
+
+        // Index cột theo SHEET_CONFIGS['BAN_HANG']:
+        // 0: Mã KH, 1: Tên KH, 2: Số đơn hàng, 3: Ngày ghi sổ,
+        // 6: Mã hàng hóa(5), 7: Diễn giải(6), 8: SL bán(7), 9: Đơn giá,
+        // 10: Thành tiền bán(8), 12: SL trả lại(10), 13: Thành tiền trả lại(11)
+        banHangRaw.forEach(r => {
+            const cusCode = String(r[0] || '').trim();
+            const cusName = String(r[1] || '').trim();
+            if (!cusCode && !cusName) return;
+
+            const orderDate = parseSheetDate(r[3]);
+            if (dateFrom && orderDate && orderDate < dateFrom) return;
+            if (dateTo && orderDate && orderDate > dateTo) return;
+
+            const key = (cusCode || cusName).toUpperCase();
+            if (!customerMap[key]) {
+                customerMap[key] = {
+                    cusKey: key,
+                    cusCode: cusCode || '-',
+                    cusName: cusName || cusCode,
+                    ordersSet: new Set(),
+                    netQty: 0,
+                    netRevenue: 0,
+                    lastOrderDate: null,
+                    products: {}
+                };
+            }
+
+            const entry = customerMap[key];
+            const orderNo = String(r[2] || '').trim();
+            if (orderNo) entry.ordersSet.add(orderNo);
+
+            const soldQty = parseSheetMoney(r[8]);
+            const returnQty = parseSheetMoney(r[12]);
+            const soldAmt = parseSheetMoney(r[10]);
+            const returnAmt = parseSheetMoney(r[13]);
+
+            const rowNetQty = soldQty - returnQty;
+            const rowNetAmt = soldAmt - returnAmt;
+
+            entry.netQty += rowNetQty;
+            entry.netRevenue += rowNetAmt;
+
+            if (orderDate && (!entry.lastOrderDate || orderDate > entry.lastOrderDate)) {
+                entry.lastOrderDate = orderDate;
+            }
+
+            const rawProdCode = String(r[6] || '').trim();
+            const prodDesc = String(r[7] || '').trim();
+            const normCode = normalizeProductCode(rawProdCode);
+            if (normCode) {
+                if (!entry.products[normCode]) {
+                    entry.products[normCode] = {
+                        code: rawProdCode,
+                        normCode: normCode,
+                        name: prodDesc,
+                        qty: 0,
+                        revenue: 0,
+                        lastBought: orderDate
+                    };
+                }
+                entry.products[normCode].qty += rowNetQty;
+                entry.products[normCode].revenue += rowNetAmt;
+                if (orderDate && (!entry.products[normCode].lastBought || orderDate > entry.products[normCode].lastBought)) {
+                    entry.products[normCode].lastBought = orderDate;
+                }
+            }
+        });
+
+        const customerList = Object.values(customerMap).map(c => {
+            const orderCount = c.ordersSet.size || 1;
+            const daysSinceLast = c.lastOrderDate
+                ? Math.floor((now - c.lastOrderDate) / (1000 * 60 * 60 * 24))
+                : 999;
+
+            let segment = 'Khách lẻ / Rải rác';
+            if (daysSinceLast >= inactiveThreshold) {
+                segment = 'Lâu chưa mua';
+            } else if (c.netRevenue >= 300000000 || c.netQty >= 30) {
+                segment = 'VIP / Dự án lớn';
+            } else if (orderCount >= 3 || c.netRevenue >= 80000000) {
+                segment = 'Đại lý / Mua đều';
+            }
+
+            const topProducts = Object.values(c.products)
+                .sort((a, b) => b.revenue - a.revenue)
+                .slice(0, 3)
+                .map(p => `${p.code} (${p.qty})`)
+                .join(', ');
+
+            return {
+                ...c,
+                orderCount,
+                daysSinceLast,
+                lastOrderStr: c.lastOrderDate ? c.lastOrderDate.toLocaleDateString('vi-VN') : '',
+                segment,
+                topProducts
+            };
+        }).sort((a, b) => b.netRevenue - a.netRevenue);
+
+        document.getElementById('rowCountBadge').innerText = `Khách hàng: ${customerList.length}`;
+        document.getElementById('caCustomerCountBadge').innerText = `${customerList.length} khách hàng`;
+
+        if (tableCustomerSummary) tableCustomerSummary.destroy();
+        tableCustomerSummary = new Tabulator("#table-customer-summary", {
+            data: customerList,
+            layout: "fitColumns",
+            height: "270px",
+            selectable: 1,
+            pagination: "local",
+            paginationSize: 15,
+            columns: [
+                { formatter: "rownum", title: "STT", width: 55, hozAlign: "center" },
+                { title: "Mã KH", field: "cusCode", width: 110 },
+                { title: "Tên Khách Hàng", field: "cusName", width: 240 },
+                {
+                    title: "Phân Nhóm",
+                    field: "segment",
+                    width: 150,
+                    hozAlign: "center",
+                    formatter: function(cell) {
+                        const v = cell.getValue();
+                        const badgeMap = {
+                            'VIP / Dự án lớn': 'bg-danger',
+                            'Đại lý / Mua đều': 'bg-success',
+                            'Khách lẻ / Rải rác': 'bg-primary',
+                            'Lâu chưa mua': 'bg-warning text-dark'
+                        };
+                        return `<span class="badge ${badgeMap[v] || 'bg-secondary'}">${v}</span>`;
+                    }
+                },
+                { title: "Số Đơn", field: "orderCount", width: 80, hozAlign: "right" },
+                { title: "SL Thực Mua", field: "netQty", width: 105, hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Doanh Thu Ròng (VNĐ)", field: "netRevenue", width: 165, hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." }, bottomCalc: customSumCalc, bottomCalcFormatter: "money", bottomCalcFormatterParams: { precision: 0, thousand: "." } },
+                { title: "Mua Gần Nhất", field: "lastOrderStr", width: 115, hozAlign: "center" },
+                { title: "Số Ngày Chưa Mua", field: "daysSinceLast", width: 125, hozAlign: "right" },
+                { title: "Top Mã Đã Mua", field: "topProducts", minWidth: 220 }
+            ]
+        });
+
+        tableCustomerSummary.on("rowClick", function(e, row) {
+            selectedCustomerRecord = row.getData();
+            refreshSelectedCustomerPitch();
+        });
+
+        if (customerList.length > 0) {
+            selectedCustomerRecord = customerList[0];
+            refreshSelectedCustomerPitch();
+        } else {
+            selectedCustomerRecord = null;
+            document.getElementById('caZaloPitchBox').value = '';
+        }
+    }
+
+    function filterCustomerAnalysisTable() {
+        if (!tableCustomerSummary) return;
+        const kw = document.getElementById('caSearchCustomer').value.trim().toLowerCase();
+        const seg = document.getElementById('caFilterSegment').value;
+
+        tableCustomerSummary.setFilter(data => {
+            const matchKw = !kw ||
+                String(data.cusCode || '').toLowerCase().includes(kw) ||
+                String(data.cusName || '').toLowerCase().includes(kw) ||
+                String(data.topProducts || '').toLowerCase().includes(kw);
+            const matchSeg = !seg || data.segment === seg;
+            return matchKw && matchSeg;
+        });
+    }
+
+    function resetCustomerAnalysisFilters() {
+        document.getElementById('caSearchCustomer').value = '';
+        document.getElementById('caFilterSegment').value = '';
+        document.getElementById('caDateFrom').value = '';
+        document.getElementById('caDateTo').value = '';
+        document.getElementById('caInactiveDays').value = 45;
+        renderCustomerAnalysisTab();
+    }
+
+    function refreshSelectedCustomerPitch() {
+        if (!selectedCustomerRecord) return;
+        const cus = selectedCustomerRecord;
+        document.getElementById('caSelectedCustomerTitle').innerHTML =
+            `<i class="fa-solid fa-tags me-2"></i>2. Đối Chiếu Bảng Lên Giá: <span class="text-primary">${cus.cusName}</span>`;
+
+        const bangLenGiaRaw = Array.isArray(tabDataCache['BANG_LEN_GIA']) ? tabDataCache['BANG_LEN_GIA'].slice(1) : [];
+        const onlyInStock = document.getElementById('caOnlyInStock').checked;
+
+        // Index cột BANG_LEN_GIA:
+        // 0: Mã hàng hóa, 1: Tên Hàng, 2: GIÁ BÁN TIỀN MẶT, 3: GIÁ BÁN CÔNG NỢ,
+        // 4: TÌNH TRẠNG, 5: NGÀY LÊN GIÁ, 7: GHI CHÚ, 8: SL TỒN
+        const priceListMap = {};
+        const allPriceRows = [];
+
+        bangLenGiaRaw.forEach(r => {
+            const code = String(r[0] || '').trim();
+            const normCode = normalizeProductCode(code);
+            if (!normCode) return;
+
+            const item = {
+                code: code,
+                normCode: normCode,
+                name: String(r[1] || '').trim(),
+                cashPrice: parseSheetMoney(r[2]),
+                creditPrice: parseSheetMoney(r[3]),
+                status: String(r[4] || '').trim().toUpperCase(),
+                priceDate: parseSheetDate(r[5]),
+                note: String(r[7] || '').trim(),
+                stockQty: parseSheetMoney(r[8])
+            };
+            priceListMap[normCode] = item;
+            allPriceRows.push(item);
+        });
+
+        const matchedItems = [];
+        const usedCodes = new Set();
+
+        // 1. Ưu tiên mã khách hàng đã từng mua và có trong BẢNG LÊN GIÁ
+        Object.values(cus.products).forEach(bought => {
+            const pItem = priceListMap[bought.normCode];
+            if (!pItem) return;
+            usedCodes.add(bought.normCode);
+
+            const isOutOfStock = pItem.stockQty <= 0 && (pItem.cashPrice <= 0 && pItem.creditPrice <= 0);
+            if (onlyInStock && (pItem.stockQty <= 0 || pItem.note.toLowerCase().includes('hết hàng'))) return;
+
+            let priorityScore = 2;
+            if (pItem.status === 'GIẢM' || pItem.status === 'NEW') priorityScore = 1;
+
+            matchedItems.push({
+                ...pItem,
+                priorityLabel: priorityScore === 1 ? 'Đã mua + Giá mới/Giảm' : 'Đã từng mua',
+                priorityScore: priorityScore,
+                boughtQty: bought.qty,
+                priceDateStr: pItem.priceDate ? pItem.priceDate.toLocaleDateString('vi-VN') : ''
+            });
+        });
+
+        // 2. Bổ sung tối đa 5 mã NEW / GIẢM đang còn tồn trên BẢNG LÊN GIÁ để chào mở rộng
+        allPriceRows
+            .filter(p => !usedCodes.has(p.normCode) && (p.status === 'NEW' || p.status === 'GIẢM') && p.stockQty > 0)
+            .slice(0, 5)
+            .forEach(p => {
+                matchedItems.push({
+                    ...p,
+                    priorityLabel: 'Gợi ý mã Hot/Giảm',
+                    priorityScore: 3,
+                    boughtQty: 0,
+                    priceDateStr: p.priceDate ? p.priceDate.toLocaleDateString('vi-VN') : ''
+                });
+            });
+
+        matchedItems.sort((a, b) => a.priorityScore - b.priorityScore || b.boughtQty - a.boughtQty);
+
+        if (tableCustomerPitch) tableCustomerPitch.destroy();
+        tableCustomerPitch = new Tabulator("#table-customer-pitch-items", {
+            data: matchedItems,
+            layout: "fitColumns",
+            height: "260px",
+            columns: [
+                { title: "Nhóm Gợi Ý", field: "priorityLabel", width: 155 },
+                { title: "Mã Hàng Hóa", field: "code", width: 145 },
+                { title: "Tên Hàng", field: "name", minWidth: 210 },
+                { title: "Đã Mua", field: "boughtQty", width: 75, hozAlign: "right" },
+                { title: "Tồn", field: "stockQty", width: 65, hozAlign: "right" },
+                { title: "Tình Trạng", field: "status", width: 95, hozAlign: "center" },
+                { title: "Giá Tiền Mặt", field: "cashPrice", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } },
+                { title: "Giá Công Nợ", field: "creditPrice", width: 120, hozAlign: "right", formatter: "money", formatterParams: { precision: 0, thousand: "." } }
+            ]
+        });
+
+        buildCustomerZaloMessage(cus, matchedItems);
+    }
+
+    function buildCustomerZaloMessage(cus, items) {
+        const mode = document.getElementById('caPriceDisplayMode').value;
+        const greeting = cus.segment === 'Lâu chưa mua'
+            ? `Chào anh/chị ${cus.cusName}, lâu rồi chưa thấy đơn mới từ bên mình, Công ty TNHH Tin học Kim Thiên Bảo gửi anh/chị cập nhật nhanh bảng giá mới nhất cho các dòng sản phẩm bên mình quan tâm:`
+            : `Chào anh/chị ${cus.cusName}, bên em (Kim Thiên Bảo) gửi anh/chị cập nhật giá tốt & tình trạng tồn kho hôm nay cho các mã sản phẩm phù hợp với bên mình:`;
+
+        const topPitch = items.slice(0, 8);
+        if (topPitch.length === 0) {
+            document.getElementById('caZaloPitchBox').value =
+                `${greeting}\n\n(Hiện chưa có mã trùng khớp còn tồn trên BẢNG LÊN GIÁ — anh/chị có thể tắt nút "Chỉ lấy mã còn tồn" để xem toàn bộ lịch sử mã đã mua).`;
+            return;
+        }
+
+        const lines = topPitch.map(it => {
+            const icon = it.status === 'GIẢM' ? ' ⬇️ GIẢM' : (it.status === 'NEW' ? ' 💥 NEW' : (it.status === 'TĂNG' ? ' ⬆️ TĂNG' : ''));
+            const priceParts = [];
+            if ((mode === 'BOTH' || mode === 'CASH') && it.cashPrice > 0) {
+                priceParts.push(`💰 Tiền mặt: ${it.cashPrice.toLocaleString('vi-VN')}đ`);
+            }
+            if ((mode === 'BOTH' || mode === 'CREDIT') && it.creditPrice > 0) {
+                priceParts.push(`💳 Công nợ: ${it.creditPrice.toLocaleString('vi-VN')}đ`);
+            }
+            const stockNote = it.stockQty > 0 ? ` | Tồn: ${it.stockQty}` : '';
+            return `📌 [${it.code}] ${it.name}${icon}\n   ${priceParts.join(' | ')} (Full VAT)${stockNote}`;
+        });
+
+        const footer = `\nAnh/chị cần giữ hàng hoặc lấy số lượng dự án thì nhắn em giữ giá và tồn kho tốt nhất nhé!`;
+        document.getElementById('caZaloPitchBox').value = `${greeting}\n\n${lines.join('\n\n')}\n${footer}`;
+    }
+
+    function copyCustomerPitchZalo() {
+        const txt = document.getElementById('caZaloPitchBox').value;
+        if (!txt) return;
+        navigator.clipboard.writeText(txt).then(() => {
+            alert("✅ Đã copy nội dung chào hàng Zalo!");
+        });
+    }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
