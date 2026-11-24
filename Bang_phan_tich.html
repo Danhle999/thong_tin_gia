@@ -1182,6 +1182,8 @@
         if (isKichBan) {
             autoBalanceScenario();
             document.getElementById('missingFromTabAlert').classList.add('d-none');
+        } else if (isPhanTichKh) {
+            loadCustomerAnalysisData(false);
         } else {
             resetAllFilters(false);
             loadDataFromSheet(false);
