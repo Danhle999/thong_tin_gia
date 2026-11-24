@@ -388,6 +388,7 @@
             <button type="button" id="btnModeLoiNhuan" class="btn btn-outline-secondary" onclick="switchTableMode('BAO_CAO_LOI_NHUAN')"><i class="fa-solid fa-chart-line me-1"></i>BÁO CÁO LỢI NHUẬN</button>
             <button type="button" id="btnModeKichBan" class="btn btn-outline-secondary" onclick="switchTableMode('KICH_BAN_BAN_HANG')"><i class="fa-solid fa-calculator me-1"></i>KỊCH BẢN BÁN HÀNG</button>
             <button type="button" id="btnModeBangLenGia" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_LEN_GIA')"><i class="fa-solid fa-tags me-1"></i>BẢNG LÊN GIÁ</button>
+            <button type="button" id="btnModeChaoHang" class="btn btn-outline-secondary" onclick="switchTableMode('CHAO_HANG')"><i class="fa-solid fa-bullhorn me-1"></i>CHÀO HÀNG</button>
             <button type="button" id="btnModeBaoGia1" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_DELL')">BÁO GIÁ DELL</button>
             <button type="button" id="btnModeBaoGia2" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_HP')">BÁO GIÁ HP</button>
             <button type="button" id="btnModeBaoGia3" class="btn btn-outline-secondary" onclick="switchTableMode('BANG_GIA_LENOVO')">BÁO GIÁ LENOVO</button>
@@ -904,6 +905,14 @@
             { label: 'Tổng Số Lượng Nhập', numeric: true, width: 160 },
             { label: 'Tổng Giá Trị Nhập (VNĐ)', numeric: true, width: 220 }
         ],
+        'CHAO_HANG': [
+            { label: 'Mã khách hàng', code: true, width: 150 },
+            { label: 'Tên khách hàng', customer: true, width: 280 },
+            { label: 'Ngày ghi sổ', date: true, width: 130 },
+            { label: 'Mã hàng hóa', code: true, width: 180 },
+            { label: 'Diễn giải', desc: true, width: 420 },
+            { label: 'Người thực hiện', width: 160 }
+        ],
         'BANG_LEN_GIA': [
             { label: 'Mã hàng hóa', code: true, width: 180 },
             { label: 'Tên Hàng', desc: true, width: 350 },
@@ -1039,7 +1048,8 @@
             'BANG_GIA_HP': 'btnModeBaoGia2',
             'BANG_GIA_LENOVO': 'btnModeBaoGia3',
             'BANG_GIA_ASUS': 'btnModeBaoGia4',
-            'REBATE': 'btnModeRebate'
+            'REBATE': 'btnModeRebate',
+            'CHAO_HANG': 'btnModeChaoHang'
         }[mode];
 
         if (btnId) {
@@ -2025,7 +2035,7 @@ function clearProfitDetailFilter() {
                         let colNameUpper = col.label.trim().toUpperCase();
                         
                         // Điều kiện giống hệt lúc bạn khóa ô, có chặn thêm chữ CHECK và %
-                        let isEditable = (
+                        let isEditable = (currentMode === 'CHAO_HANG') || (
                             colNameUpper.includes('GIÁ BÁN') || 
                             colNameUpper.includes('GIÁ COST') || 
                             colNameUpper.includes('COST_KTB') || 
@@ -2090,7 +2100,8 @@ function clearProfitDetailFilter() {
             let colNameUpper = col.label.trim().toUpperCase();
 
             // CHỈ CHO PHÉP CHỈNH SỬA CÁC CỘT GIÁ VÀ CHI PHÍ (GIÁ BÁN, GIÁ COST, COST_KTB)
-            let isPriceOrCostColumn = colNameUpper.includes('GIÁ BÁN') || 
+            let isPriceOrCostColumn = (currentMode === 'CHAO_HANG') ||
+                                       colNameUpper.includes('GIÁ BÁN') || 
                                        colNameUpper.includes('GIÁ COST') || 
                                        colNameUpper.includes('COST_KTB') || 
                                        colNameUpper.includes('SELL IN HÃNG') ||
@@ -3080,6 +3091,7 @@ const USER_ACCOUNTS = {
 const USER_ALLOWED_TABS = {
     "admin": ["*"],
     "baogia": [
+        "CHAO_HANG",
         "BANG_LEN_GIA",
         "BANG_GIA_DELL",
         "BANG_GIA_HP",
@@ -3125,7 +3137,8 @@ function applyUserTabPermissions(username) {
         "btnModeBaoGia2": "BANG_GIA_HP",
         "btnModeBaoGia3": "BANG_GIA_LENOVO",
         "btnModeBaoGia4": "BANG_GIA_ASUS",
-        "btnModeRebate": "REBATE"
+        "btnModeRebate": "REBATE",
+        "btnModeChaoHang": "CHAO_HANG"
     };
 
     Object.entries(buttonModeMap).forEach(([btnId, modeName]) => {
