@@ -1396,6 +1396,8 @@ function loadDataFromSheet(bypassCache = true) {
                 renderProfitReportTab(tabDataCache[currentMode]);
             } else if (currentMode === 'KICH_BAN_BAN_HANG') {
                 autoBalanceScenario();
+            } else if (currentMode === 'PHAN_TICH_KHACH_HANG') {
+                loadCustomerAnalysisData(bypassCache);
             } else {
                 buildTabulatorTable(tabDataCache[currentMode]);
             }
