@@ -2035,7 +2035,7 @@ function clearProfitDetailFilter() {
                         let colNameUpper = col.label.trim().toUpperCase();
                         
                         // Điều kiện giống hệt lúc bạn khóa ô, có chặn thêm chữ CHECK và %
-                        let isEditable = (currentMode === 'CHAO_HANG') || (
+                        let isEditable = (
                             colNameUpper.includes('GIÁ BÁN') || 
                             colNameUpper.includes('GIÁ COST') || 
                             colNameUpper.includes('COST_KTB') || 
@@ -2100,8 +2100,7 @@ function clearProfitDetailFilter() {
             let colNameUpper = col.label.trim().toUpperCase();
 
             // CHỈ CHO PHÉP CHỈNH SỬA CÁC CỘT GIÁ VÀ CHI PHÍ (GIÁ BÁN, GIÁ COST, COST_KTB)
-            let isPriceOrCostColumn = (currentMode === 'CHAO_HANG') ||
-                                       colNameUpper.includes('GIÁ BÁN') || 
+            let isPriceOrCostColumn = colNameUpper.includes('GIÁ BÁN') || 
                                        colNameUpper.includes('GIÁ COST') || 
                                        colNameUpper.includes('COST_KTB') || 
                                        colNameUpper.includes('SELL IN HÃNG') ||
