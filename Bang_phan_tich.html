@@ -27,7 +27,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 15px;
         }
-
+        
+        #customerAnalysisView {
+            min-height: 0;
+            height: calc(100vh - 140px);
+        }
+        #customerAnalysisView .scenario-card {
+            flex-shrink: 0;
+        }
+        
         #loginOverlay {
             position: fixed;
             inset: 0;
