@@ -1162,14 +1162,9 @@
         document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
         document.getElementById('profitReportView').style.display = isLoiNhuan ? 'flex' : 'none';
         document.getElementById('kichBanView').style.display = isKichBan ? 'flex' : 'none';
-        document.getElementById('customerAnalysisView').style.display = isPhanTichKh ? 'flex' : 'none';
-
-        document.getElementById('actionButtonsRow').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'flex';
-        document.getElementById('globalFilterCard').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
-        document.getElementById('example-table').style.display = (isThongKe || isLoiNhuan || isKichBan) ? 'none' : 'block';
-        document.getElementById('dashboardView').style.display = isThongKe ? 'flex' : 'none';
-        document.getElementById('profitReportView').style.display = isLoiNhuan ? 'flex' : 'none';
-        document.getElementById('kichBanView').style.display = isKichBan ? 'flex' : 'none';
+        if (document.getElementById('customerAnalysisView')) {
+            document.getElementById('customerAnalysisView').style.display = isPhanTichKh ? 'flex' : 'none';
+        }
         
         // Điều khiển Nút Copy Zalo: Chỉ hiện khi ở các tab Báo giá
         let btnCopy = document.getElementById('btnCopyZalo');
