@@ -2731,11 +2731,12 @@ function toggleHideHetHang() {
     let btn = document.getElementById('btnToggleHetHang');
     
     if (isHideHetHangActive) {
-        btn.className = "btn btn-sm btn-danger";
-        btn.innerHTML = `<i class="fa-solid fa-filter-circle-xmark me-1"></i>Đang ẩn Hết Hàng`;
-    } else {
-        btn.className = "btn btn-sm btn-outline-danger";
-        btn.innerHTML = `<i class="fa-solid fa-filter-circle-xmark me-1"></i>Ẩn Hết Hàng`;
+        isHideHetHangActive = false;
+        let btnHetHang = document.getElementById('btnToggleHetHang');
+        if (btnHetHang) {
+            btnHetHang.className = "btn btn-sm btn-outline-danger";
+            btnHetHang.innerHTML = `<i class="fa-solid fa-filter-circle-xmark me-1"></i>Ẩn Hết Hàng`;
+        }
     }
 
     if (table) {
